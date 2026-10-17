@@ -1,0 +1,115 @@
+"""Offline checks for the public repository boundary; no private files required."""
+from pathlib import Path
+import os
+import re
+import shutil
+import subprocess
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[2]
+PUBLIC_FILES = {
+    '.gitignore', '.gitattributes', 'README.md', 'CONTRIBUTING.md', 'AGENTS.md',
+    'docs/public/ARCHITEKTUR.md', 'tests/repository/test_public_layout.py',
+}
+
+
+class PublicLayoutTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.git = os.environ.get('BETRIEBSPLATTFORM_GIT') or shutil.which('git')
+        if not cls.git:
+            raise RuntimeError('Git required: set BETRIEBSPLATTFORM_GIT to an existing executable')
+        cls.scratch = tempfile.TemporaryDirectory(prefix='public-layout-')
+        cls.addClassCleanup(cls.scratch.cleanup)
+        cls.worktree = Path(cls.scratch.name)
+        subprocess.run([cls.git, 'init', '--quiet', str(cls.worktree)], check=True,
+                       capture_output=True)
+        shutil.copyfile(ROOT / '.gitignore', cls.worktree / '.gitignore')
+
+    def ignored(self, paths):
+        result = subprocess.run(
+            [self.git, '-C', str(self.worktree), 'check-ignore', '--no-index', '-z', '--stdin'],
+            input=('\0'.join(paths) + '\0').encode('utf-8'), capture_output=True,
+        )
+        self.assertIn(result.returncode, (0, 1), 'git check-ignore failed')
+        return set(result.stdout.decode('utf-8').rstrip('\0').split('\0')) - {''}
+
+    def test_public_files_and_future_source_are_allowed(self):
+        paths = sorted(PUBLIC_FILES | {
+            'src/backend/Invoice.cs', 'src/frontend/main.tsx',
+            'tests/backend/InvoiceTests.cs', 'src/frontend/package.json',
+        })
+        self.assertEqual(set(), self.ignored(paths))
+
+    def test_private_and_unknown_paths_are_ignored(self):
+        paths = [
+            'AGENTS.override.md', 'src/AGENTS.override.md', 'START_HIER.md', 'MANIFEST.sha256',
+            '.agents/skills/security-review/SKILL.md', '.agents/playbook.md',
+            '.project-harness/router.py', 'docs/PROJEKTKONTEXT.md',
+            'docs/PRUEFBERICHT.md', 'private/backup.md', '.vs/settings.json',
+            'notes.md', 'new-folder/notes.md', '.github/workflows/unreviewed.yml',
+            'src/internal/notes.md', 'docs/public/playbooks/private.md',
+        ]
+        self.assertEqual(set(paths), self.ignored(paths))
+
+    def test_public_instructions_are_self_contained(self):
+        text = (ROOT / 'AGENTS.md').read_text(encoding='utf-8')
+        for term in ('React', 'TypeScript', 'Vite', '.NET 10', 'PostgreSQL 18',
+                     'EF Core 10', 'Npgsql', 'Modularer Monolith', 'synthetischen',
+                     'Regressionstests', 'Restore-Test', 'CONTRIBUTING.md'):
+            self.assertTrue(term in text, 'Public development rule missing: ' + term)
+        for private_reference in ('.agents/', 'private/',
+                                  'Entwurf zur Freigabe'):
+            self.assertFalse(private_reference in text, 'Private or draft reference in public instructions')
+
+    def test_sensitive_formats_are_ignored_inside_allowed_directories(self):
+        names = [
+            'original.xlsx', 'original.XLSX', 'original.xlsm', 'original.xlsb',
+            'original.xls', 'original.csv', 'original.CSV', 'original.tsv',
+            'invoice.pdf', 'invoice.PDF', 'contract.docx', 'contract.doc',
+            'document.odt', 'slides.pptx', 'backup.zip', 'backup.7z',
+            'local.db', 'local.db-wal', 'local.sqlite', 'local.sqlite3-shm',
+            'database.mdf', 'database.ldf', 'database.dump', 'database.sql',
+            'copy.bak', '.env', '.env.local', 'local.env', '.env.example',
+            'key.pem', 'key.key', 'cert.pfx', 'cert.p12', '.npmrc', '.netrc',
+            'NuGet.Config', 'appsettings.json', 'appsettings.Development.json',
+            'launchSettings.json', 'credentials.json', 'client-secrets.json',
+            'profile.pubxml', 'profile.pubxml.user', 'session.log',
+        ]
+        paths = [f'{prefix}/{name}' for prefix in ('src/backend', 'tests/data', 'docs/public')
+                 for name in names]
+        self.assertEqual(set(paths), self.ignored(paths))
+
+    def test_actual_public_inventory_matches_reviewed_files(self):
+        paths = [p.relative_to(ROOT).as_posix() for p in ROOT.rglob('*')
+                 if p.is_file() and '.git' not in p.relative_to(ROOT).parts]
+        visible = set(paths) - self.ignored(paths)
+        self.assertEqual(PUBLIC_FILES, visible,
+                         'Public inventory changed: review new files before updating this list')
+
+    def test_public_markdown_links_resolve_to_public_files(self):
+        for name in PUBLIC_FILES:
+            if not name.endswith('.md'):
+                continue
+            text = (ROOT / name).read_text(encoding='utf-8')
+            for target in re.findall(r'\[[^\]]+\]\(([^)]+)\)', text):
+                self.assertNotIn('://', target, 'Only local documentation links expected')
+                resolved = (ROOT / name).parent.joinpath(target).resolve()
+                self.assertTrue(resolved.is_relative_to(ROOT))
+                self.assertIn(resolved.relative_to(ROOT).as_posix(), PUBLIC_FILES)
+                self.assertTrue(resolved.is_file())
+
+    def test_no_personal_absolute_paths_or_obvious_secret_material(self):
+        patterns = [r'(?i)[a-z]:[\\/]+Users[\\/]',
+                    r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',
+                    r'gh[pousr]_[A-Za-z0-9]{30,}', r'AKIA[0-9A-Z]{16}']
+        for name in PUBLIC_FILES:
+            text = (ROOT / name).read_text(encoding='utf-8')
+            for pattern in patterns:
+                self.assertIsNone(re.search(pattern, text),
+                                  'Public file contains a private-path or secret indicator')
+
+
+if __name__ == '__main__':
+    unittest.main()
