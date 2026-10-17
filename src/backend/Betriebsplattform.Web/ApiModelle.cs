@@ -1,0 +1,16 @@
+using Betriebsplattform.Import;
+
+namespace Betriebsplattform.Web;
+
+public sealed record Zahlungsansicht(string Datum, string Zahler, string Empfaenger, string Betrag,
+    string Zugeordnet, string Status, string Beleg, string Quellenort);
+public sealed record Rechnungsansicht(string Nummer, string Datum, string Aussteller, string Empfaenger,
+    string Betrag, string OffenerBetrag, string BestaetigtZugeordnet, string Status, string Beleg, string Quellenort,
+    IReadOnlyList<Zahlungsansicht> Zahlungen);
+public sealed record Uebersicht(bool Synthetisch, string Gesamtbetrag, string OffenerBetrag,
+    IReadOnlyList<Rechnungsansicht> Rechnungen);
+public sealed record Importzeilenansicht(int Zeile, bool HatFehler, string? Art, string? Betrag,
+    string? Datum, string? Von, string? An, IReadOnlyList<Originalzelle> Zellen, IReadOnlyList<Pruefmeldung> Meldungen);
+public sealed record Importansicht(bool Synthetisch, string? DateiHash, bool HatFehler, int Zeilenanzahl,
+    int Fehlerzeilen, string Bericht, IReadOnlyList<Pruefmeldung> Meldungen, IReadOnlyList<Importzeilenansicht> Zeilen);
+public sealed record ApiFehler(string Meldung);

@@ -18,6 +18,8 @@ Den festgelegten Stack nicht ungefragt austauschen. Zusätzliche Bibliotheken od
 
 ## Vorgehen bei Änderungen
 
+Für jede neue oder geänderte Oberfläche gilt das bestehende [Designsystem](src/frontend/DESIGN.md): verständliche deutsche Bedienung, nachvollziehbare Status, responsive Darstellung, Tastaturbedienung und überprüfte Zustände gemeinsam mit Fachlogik, Sicherheit und Tests berücksichtigen.
+
 1. Aufgabe und Risiko einordnen; Ziel, Eingaben, Ausgaben, Nicht-Ziele und offene Fachfragen klären.
 2. Vor nichttrivialen Änderungen einen verständlichen Entwurf mit einfacher Alternative erstellen. Kleine, rücknehmbare Schritte mit betroffenen Dateien und konkreten Akzeptanzfällen planen.
 3. Nur im beauftragten Umfang arbeiten. Keine ungefragten Installationen, Datenmigrationen, zusätzlichen Agenten oder externen Datenübertragungen.

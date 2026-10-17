@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Betriebsplattform.Rechnungen/Betriebsplattform.Rechnungen.csproj" />
+  <Project Path="Betriebsplattform.Import/Betriebsplattform.Import.csproj" />
+  <Project Path="Betriebsplattform.Web/Betriebsplattform.Web.csproj" />
+  <Project Path="../../tests/backend/Betriebsplattform.Rechnungen.Tests/Betriebsplattform.Rechnungen.Tests.csproj" />
+</Solution>
