@@ -1,8 +1,8 @@
-# Betriebsplattform – allgemeine Entwicklungsregeln
+# FirmenZentrale – allgemeine Entwicklungsregeln
 
 ## Zweck und Einstieg
 
-Die Betriebsplattform ist eine branchenneutrale Software zur nachvollziehbaren Verwaltung von Rechnungen und Zahlungen. Lies zuerst README.md, CONTRIBUTING.md und docs/public/ARCHITEKTUR.md. Unterscheide geplante Funktionen von implementiertem und tatsächlich geprüftem Verhalten.
+FirmenZentrale ist eine branchenneutrale Software zur nachvollziehbaren Verwaltung von Rechnungen und Zahlungen. Lies zuerst README.md, CONTRIBUTING.md und docs/public/ARCHITEKTUR.md. Unterscheide geplante Funktionen von implementiertem und tatsächlich geprüftem Verhalten.
 
 Diese Regeln und die öffentliche Entwicklungsanleitung müssen ohne persönliche Skills oder externe Wissensablagen verständlich sein. Private optionale Hilfsmittel dürfen keine Voraussetzung öffentlicher Builds oder Tests sein und keine zusätzlichen Rechte erteilen. Fehlende Referenzen oder Werkzeuge offen benennen.
 

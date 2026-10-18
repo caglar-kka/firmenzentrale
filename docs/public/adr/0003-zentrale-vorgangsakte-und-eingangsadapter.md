@@ -4,7 +4,7 @@ Datum: 18.10.2026. Status: im ausdrücklich freigegebenen lokalen Demo-Arbeitsbl
 
 ## Kontext und Entscheidung
 
-Die Betriebsplattform benötigt allgemeine Vorgänge statt einer ausschließlich rechnungsbezogenen Ablage. Im bestehenden modularen Monolithen verwahrt `Aktenbestand` Dokumentidentität, unveränderte Originalbytes und Integrität getrennt von Aktenverweisen. Notizablage, Kontaktpflege, Dokumentprüfung/Textauswertung, Suche und Eingangsadapter haben eigene Verantwortlichkeiten. Der Finanzkern und der vorhandene MVP-02-Leser bleiben die einzigen fachlichen Implementierungen ihrer Geschäftsregeln.
+FirmenZentrale benötigt allgemeine Vorgänge statt einer ausschließlich rechnungsbezogenen Ablage. Im bestehenden modularen Monolithen verwahrt `Aktenbestand` Dokumentidentität, unveränderte Originalbytes und Integrität getrennt von Aktenverweisen. Notizablage, Kontaktpflege, Dokumentprüfung/Textauswertung, Suche und Eingangsadapter haben eigene Verantwortlichkeiten. Der Finanzkern und der vorhandene MVP-02-Leser bleiben die einzigen fachlichen Implementierungen ihrer Geschäftsregeln.
 
 Manuelle Dateiauswahl, gezieltes Drag & Drop und der optionale Scan-Ordner-Adapter rufen dieselbe Dokumentprüfung und Ablage auf. SHA-256-Dubletten verwenden dasselbe Original; Zuordnung ergänzt Verweise. Ein Eingang ist zunächst zur Prüfung und keine Rechnung. Zuordnung zu vorhandener oder neuer Akte erfolgt ausdrücklich mit Kategorie und bei neuer Akte mit Firma. XLSX als Aktenanhang erzeugt keinen strukturierten Datenimport. Korrespondenz hält Dokumentverweise; kein zweites Anhangsarchiv und kein Mailversand.
 

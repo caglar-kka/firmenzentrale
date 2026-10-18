@@ -1,6 +1,6 @@
 # Designsystem – integrierter Arbeitsraum
 
-**Stand 18.10.2026:** Der Nutzer hat die Arbeitsraumrichtung Graphit/Off-White/Indigo ausdrücklich als vorläufige Grundlage akzeptiert. Sie ist jetzt die reguläre Oberfläche. Die Rechnungsdetailansicht ist ausdrücklich nicht abgenommen; die vereinfachte Fassung benötigt erneut menschliche Sichtprüfung. „Betriebsplattform“, B-Zeichen und Akzentfarbe bleiben vorläufig; endgültiger Produktname/Logo folgen separat. Keine weitere Designsuche aus diesem Auftrag ableiten.
+**Stand 18.10.2026:** Der Nutzer hat die Arbeitsraumrichtung Graphit/Off-White/Indigo ausdrücklich als vorläufige Grundlage akzeptiert. Sie ist jetzt die reguläre Oberfläche. Die Rechnungsdetailansicht ist ausdrücklich nicht abgenommen; die vereinfachte Fassung benötigt erneut menschliche Sichtprüfung. „FirmenZentrale“ ist der vorläufige öffentliche Produktname (Working Product Name). B-Zeichen und Akzentfarbe bleiben vorläufig; der Name kann sich mit der Produktentwicklung ändern. Interne technische Namen bleiben unverändert. Keine weitere Designsuche aus diesem Auftrag ableiten.
 
 Verbindlich gemeinsam mit [AGENTS.md](../../AGENTS.md), [Architektur](../../docs/public/ARCHITEKTUR.md) und [Entwicklungsnachweis](../../docs/public/MVP-01-NACHWEIS.md). Frühere A/B/C-Entwürfe und der isolierte Prototyp sind historisch dokumentiert und privat bytegenau gesichert, keine parallelen aktiven Designs.
 

@@ -1,118 +1,101 @@
-# Betriebsplattform
+[English](README.md) | [Deutsch](README.de.md)
 
-Eine branchenneutrale Betriebssoftware in Entwicklung zur nachvollziehbaren Verwaltung von Vorgängen, Dokumenten, Rechnungen und Zahlungen.
+# FirmenZentrale
 
-## Entwicklungsstand
+A modular business operations platform for SMEs in the DACH region.
 
-MVP-01 enthält den getesteten Rechnungs- und Zahlungskern, MVP-02 die begrenzte XLSX-Importvorschau. MVP-03 verbindet beide mit einem lokalen ASP.NET-Core-Host und einer React-/TypeScript-/Vite-Oberfläche: Rechnungen, Teilzahlungen, offene Beträge und Prüfmeldungen mit Originalwerten und Quellen. Ausschließlich synthetische Beispiele; keine echte Buchhaltung oder Datenbankintegration.
+**Working product name — subject to change as the product evolves.**
 
-ISD wird vorläufig als Firma/Geschäftspartner behandelt. Der vollständige Firmenname ist nicht bestätigt; die Rolle ergibt sich aus dem konkreten Vorgang. Originalbezeichnungen wie `ISD-Testdaten` bleiben erhalten.
+## Overview
 
-## Erste Produktstrecke
+FirmenZentrale brings documents, digital case files, invoices, contacts, correspondence and business workflows into one central workspace. It targets small and medium-sized businesses in Germany, Austria and Switzerland.
 
-- Rechnung mit Aussteller, Empfänger, Datum und Betrag erfassen.
-- Zahlung mit Zahler, Zahlungsempfänger, Datum und Beleg nachvollziehen.
-- Zahlungen und Teilzahlungen Rechnungen zuordnen und den offenen Betrag ermitteln.
-- Herkunft und Änderungen nachvollziehbar halten.
-- XLSX-Testvorlage mit SHA-256, Blatt-/Zeilen-/Zellquellen und Prüfbericht lesen, ohne Buchungen oder Zahlungsbestätigungen.
+The application currently focuses on German. Repository documentation is primarily English at the entry point, with this [German README](README.de.md); most technical documentation remains German. Current examples use `de-DE` formatting and EUR. This does not imply country-specific tax compliance, CHF support or international production readiness.
 
-Entwicklung und Tests verwenden ausschließlich synthetische Daten. Ein manuell gesetzter Status ersetzt keinen Zahlungsbeleg. Importierte Dateien dürfen keine ungeprüften finanziellen Aktionen auslösen.
+## Current Status
 
-## Festgelegter Tech-Stack
+Development-stage, local-first prototype. MVP-01.5 consolidates the existing workflows, search, data quality and focused security controls. Only fictional/synthetic data is supported. There is no production authentication or production PostgreSQL persistence; working data is held in memory and can be lost on restart.
 
-| Bereich | Technologie |
-|---|---|
+## Core Capabilities
+
+- Digital case files with documents, versioned internal notes and recorded external correspondence. Recording correspondence does not send it.
+- Document inbox, direct filing to a known case, controlled uploads/drag and drop, duplicate-file checks and reassignment with history and version checks.
+- Read-only previews for supported documents, loaded on selection; original invoices and payment evidence remain distinct.
+- Invoices, partial payments, confirmed allocations and outstanding amounts, distinguishing incoming and outgoing payments. A manual status is not bank evidence.
+- Central companies, people and contact persons, structured contact details, change proposals requiring a decision, and duplicate warnings without automatic merging.
+- Tolerant global search, list filters/sorting and configurable business categories.
+- A limited XLSX preview/confirmation/import/report workflow using the existing template, with explicit in-memory takeover of valid invoice rows. Payment rows remain for review.
+
+## Tech Stack
+
+| Area | Technology / status |
+| --- | --- |
 | Frontend | React, TypeScript (strict), Vite |
 | Backend | ASP.NET Core, C#, .NET 10 |
-| Datenbank | PostgreSQL 18, EF Core 10, Npgsql |
-| Architektur | Modularer Monolith |
-| Betrieb | Lokal zuerst, später optional hybrid |
+| Persistence | In-memory prototype; PostgreSQL 18, EF Core 10 and Npgsql are planned |
+| Structure | Modular monolith; local-first operation |
 
-## Einstieg
+## Architecture
 
-Mit installiertem .NET-10-SDK aus der Repository-Wurzel:
+One React frontend and one ASP.NET Core host reuse central domain services for invoices/payments, case files, documents, contacts and import. The inbox is an intake gateway, not a permanent archive or mandatory route: documents can be filed directly when the target case is known. Internal notes and external correspondence have different meanings.
+
+Technical namespaces and project paths still use the original internal naming. No productive database integration or general workflow engine is implied. See the [architecture documentation](docs/public/ARCHITEKTUR.md) and [ADRs](docs/public/adr/0001-rechnungs-und-zahlungskern.md).
+
+## Getting Started
+
+Requirements: .NET 10 SDK, Node.js 24, npm and Git. From the repository root:
 
 ```powershell
 dotnet restore src/backend/Betriebsplattform.slnx
-dotnet test src/backend/Betriebsplattform.slnx --no-restore
-```
-
-Restore benötigt entweder die Testpakete im lokalen NuGet-Cache oder einen ausdrücklich erlaubten Paketdownload. Fachkern, Importmodul und Host benötigen keine externen NuGet-Pakete.
-
-## Lokalen Prototyp starten
-
-Voraussetzungen: .NET-10-SDK, Node 24 und npm sowie die festgelegten Pakete im lokalen Cache. Aus der Repository-Wurzel nach dem .NET-Restore:
-
-```powershell
 Push-Location src/frontend
-npm.cmd install --offline --ignore-scripts --no-audit --no-fund
-npm.cmd test
+npm.cmd ci --ignore-scripts --no-audit --no-fund
 npm.cmd run build
 Pop-Location
+```
+
+Package restore/install requires registry access unless all required packages are cached. Add `--offline` to the npm command when using a complete local cache. This skips neither the need for dependency review nor the separately documented security checks. Testing instructions are in the [contribution guide](CONTRIBUTING.md).
+
+## Running Locally
+
+After the frontend build and .NET restore:
+
+```powershell
 dotnet build src/backend/Betriebsplattform.slnx --no-restore --configuration Release
 dotnet run --project src/backend/Betriebsplattform.Web --configuration Release --no-build --no-restore --no-launch-profile
 ```
 
-Danach im Browser `http://127.0.0.1:5180` öffnen. Beenden mit `Strg+C` im Backend-Terminal. Die Anwendung bindet ausschließlich IPv4-Loopback. Sie zeigt feste künstliche Rechnungen und drei lokal erzeugte XLSX-Prüffälle; zusätzlich lässt sich eine lokale synthetische XLSX-Datei über den Bereich „Importe“ prüfen und nach Bestätigung in die flüchtige Demo übernehmen. Offene Beträge werden ausschließlich im Backend berechnet. Eine Zahlung zur Prüfung bleibt ohne Saldenwirkung.
+Open `http://127.0.0.1:5180`. Stop with `Ctrl+C`. The host binds to IPv4 loopback; it is not approved for public, LAN or mobile use.
 
-Der Offline-Befehl bricht bei fehlenden Cachepaketen ab; vor Downloads ist eine eigene Freigabe erforderlich. Keine öffentlichen Entwicklungsserver oder Datenbanken starten. Dieser Prototyp hat keine Anmeldung und ist nicht für reale Daten oder LAN-/Mobilzugriff freigegeben.
+For the optional synthetic scan-folder intake, append `-- --scan-demo` to the run command and place only synthetic files in `src/backend/private/scan-eingang`. The adapter reads stable files, checks duplicates and leaves source files intact. Use **Aktualisieren** in the inbox. Direct scanner control and OCR are not implemented.
 
-Die Tests erzeugen ausschließlich künstliche Daten. Nach `dotnet test` liegen die Beispieldatei `MVP-02-synthetisch.xlsx` und der lesbare `MVP-02-Pruefbericht.txt` unter `tests/backend/Betriebsplattform.Rechnungen.Tests/bin/Debug/net10.0/`. Diese erzeugten Dateien bleiben von Git ausgeschlossen. Der Bericht zeigt eine Rechnung, eine unbestätigte Zahlung und einen fehlerhaften Betrag. Der MVP-02-Leser selbst schreibt nicht. Der lokale Webablauf kann inzwischen ausgewählte gültige Rechnungen nach ausdrücklicher Bestätigung in den In-Memory-Demobestand übernehmen; Zahlungszeilen bleiben zur Prüfung.
+## Development Data & Safety
 
-- [Architektur und geplante Struktur](docs/public/ARCHITEKTUR.md)
-- [Mitarbeit und Git-Regeln](CONTRIBUTING.md)
-- [Fachregeln und Grenzen von MVP-01](docs/public/adr/0001-rechnungs-und-zahlungskern.md)
-- [Entwicklungsnachweise MVP-01 bis MVP-03](docs/public/MVP-01-NACHWEIS.md)
+Never use real customer, company, personnel, financial or credential data in the application, repository, issues or attachments. Original documents remain unchanged; uncertain contact changes, assignments and import rows require human review. No macros are executed and no payment is confirmed from Excel status text.
 
-## Vertraulichkeit und Lizenz
+Document attachments currently accept PDF, JPG/JPEG, PNG, DOCX, XLSX, TXT and CSV, subject to server-side type/content/size checks (maximum 20 MB; some contents have stricter limits). Preview support depends on the format. Attaching Excel is separate from importing structured Excel data.
 
-Keine echten Firmen-, Kunden-, Personal-, Zahlungs- oder Zugangsdaten in Quellcode, Tests, Issues oder Anhänge aufnehmen. Die Datenbank ist nicht für einen öffentlichen Zugriff vorgesehen.
+The structured importer supports only the synthetic, macro-free MVP-02 XLSX template: maximum 2 MiB, one visible `ISD-Testdaten` sheet and the nine columns `DatensatzId`, `Art`, `Nummer`, `Von`, `An`, `Datum`, `Betrag`, `Waehrung`, `Beleg`. It does not support arbitrary workbooks. `ISD` is a retained source/template label, not a confirmed invoice type or verified complete company name. Generated fixtures, uploads and local runtime data remain Git-excluded. No public database exposure is configured.
 
-Eine Lizenz wurde noch nicht ausgewählt. Dieses Projekt erteilt derzeit keine ausdrückliche Open-Source-Lizenz.
+## Current Limitations
 
-## Integrierter Arbeitsraum
+- No production authentication, tenant isolation, persistent PostgreSQL storage or production deployment approval.
+- In-memory records, imports and histories are temporary; they are not a durable business archive.
+- No production email integration or sending, direct scanner integration, general OCR or AI classification.
+- No complete accounting system, automated financial posting, general Excel migration or country-specific tax implementation.
+- Production backup/restore, access control, operational monitoring and further accessibility/security validation remain pilot gates. Existing checks do not establish production readiness.
 
-Die vorläufig akzeptierte Graphit-/Off-White-/Indigo-Gestaltung ist die reguläre Oberfläche unter `http://127.0.0.1:5180/#rechnungen`. Kein Vorschauparameter erforderlich. Rechnungsbestand mit Suche, Zahlungsfilter und Sortierung; Rechnungsnummer öffnet die eigene Zahlungs-/Belegansicht. Der sichtbare Button „Zurück zur Rechnungsübersicht“ und der Breadcrumb erhalten Suchbegriff, Filter, Sortierung und den Tastaturfokus.
+## Documentation
 
-Aussteller/Empfänger und Zahler/Zahlungsempfänger bleiben ausdrücklich getrennt. Bestätigte Zuordnung und offene Beträge kommen aus dem Backend, Fälligkeiten sind nicht erfasst. Der Importablauf bewahrt Originalwerte und Zell-/Dateiquellen; eine Übernahme ist nach ausdrücklicher Bestätigung ausschließlich in die flüchtige lokale Demo möglich. Tablet- und Quelltabellen besitzen eigene Tastatur-Scrollbereiche, mobil beschriftete Datensätze.
+- [Architecture](docs/public/ARCHITEKTUR.md)
+- ADRs: [invoice/payment core](docs/public/adr/0001-rechnungs-und-zahlungskern.md), [demo import and PDF preview](docs/public/adr/0002-lokaler-demoimport-und-pdf-vorschau.md), [case files and intake adapters](docs/public/adr/0003-zentrale-vorgangsakte-und-eingangsadapter.md), [contacts and categories](docs/public/adr/0004-kontakte-kategorien-und-arbeitsumgebung.md)
+- [Contribution guide](CONTRIBUTING.md)
+- [Development evidence and known limits](docs/public/MVP-01-NACHWEIS.md)
+- [Frontend design rules](src/frontend/DESIGN.md)
 
-Es läuft eine Anwendung mit gemeinsamen Komponenten und Tokens. Frühere A/B/C-Quellen und Tests wurden privat erhalten; historische Importdateien sind nur Kompatibilitätsverweise. Verbindliche UI-Quelle: [Designsystem](src/frontend/DESIGN.md). Aktuelle Prüfungen und Grenzen: [Entwicklungsnachweis](docs/public/MVP-01-NACHWEIS.md).
+## Roadmap / Next Milestone
 
-Die vollständige Dokumenten- und Belegakte bleibt [fachlich vorbereitet](docs/public/ARCHITEKTUR.md); DOK-01 implementiert jetzt ausschließlich einen lesenden synthetischen PDF-Ausschnitt. Rechnung SYNTH-2026-002 besitzt eine echte künstliche Originalrechnung und einen PDF-Zahlungsbeleg an der 300-Euro-Zahlung. Lesbare Vorschau direkt rechts in der Rechnung, optional vergrößert; Schließen/Escape kehrt zur gleichen Rechnung zurück. Keine PDF-Uploads oder Änderungen an den serverseitigen PDF-Originalen. Alle Dateien sind öffentliche synthetische Demo-Inhalte ohne produktiven Zugriffsschutz. Name/Logo bleiben Arbeitstitel. Regionale Vorbereitung DE/AT/CH unverändert, aktiv de-DE/EUR; keine zusätzliche CHF-/Steuerlogik.
+MVP-02A is the next planned milestone toward controlled PostgreSQL persistence. Schema/migrations, durable transactions/audit, access boundaries and backup/restore must be implemented and verified separately. This README does not mark those items as delivered or authorize productive data migration. Optional integrations and further modules remain later work.
 
-Die Rechnungsdetails zeigen außerdem rollenbezogene synthetische Kontakte mit E-Mail-/Telefonlinks, soweit vorhanden. Diese übergeben an eine konfigurierte lokale Anwendung; sie senden keine Nachricht und bestätigen keinen Anruf. Testadressen/-nummern sind nicht erreichbar. Fehlende Angaben erscheinen ohne Scheinaktionen. Die [Architektur](docs/public/ARCHITEKTUR.md) enthält die fachliche Matrix beider Zahlungsrichtungen und den gemeinsamen Vorgangs-/Dokumenten-/Kommunikationsplan; andere Verpflichtungen und Ratenpläne sind noch nicht implementiert. Die aktuelle Gesamtbestandssumme trennt Forderungen und Verbindlichkeiten noch nicht.
+## License
 
-
-DOK-01 priorisiert Desktop: kompakte Kontaktzeilen mit Mail-/Telefonicons und aufklappbaren Kontaktdetails, natürliche Rechnungsbegriffe und explizite Demo-Unternehmensperspektive. Bei Rechnung 002: eigene Zahlungen 300,00 + 200,00 EUR, noch zu bezahlen 460,00 EUR. Kein neuer Geldfluss und keine Bearbeitungshistorie erfunden. Fehlende PDF liefert eine verständliche 404-Seite; Metadatenfehler können erneut geladen werden. Unbekannte Dokumentkennungen öffnen keine beliebigen Dateien.
-
-
-## Vereinfachte Rechnungsakte und lokaler Demoimport
-
-Eine Aktionsgruppe mit Kontaktwahl, sicheren mailto-/tel-Links, echtem Notizdialog und Kontaktinformationen. Notizen liegen in der zentralen In-Memory-Akte mit Version, Verlauf und reversibler Archivierung; sie gehen beim Serverneustart verloren. Originalrechnung und Zahlungsbeleg bleiben getrennt, nutzen aber dieselbe interne PDF-Vorschau. Technische Herkunftsdaten bleiben außerhalb des normalen Arbeitsplatzes in der expliziten Diagnose erhalten.
-
-Unter „Importe“ zuerst ausschließlich synthetische Daten bestätigen. Eine synthetische Übungsdatei kann lokal heruntergeladen und danach wirklich über „Excel-Datei auswählen“ hochgeladen werden. Unterstützt wird nur die vorhandene MVP-02-Vorlage: makrofreie XLSX bis 2 MiB, genau ein sichtbares Blatt `ISD-Testdaten`, neun feste Spalten `DatensatzId`, `Art`, `Nummer`, `Von`, `An`, `Datum`, `Betrag`, `Waehrung`, `Beleg`. Kein allgemeines Mapping anderer Blätter oder Spalten und kein Import sämtlicher Unternehmensbücher.
-
-Blatt/Firmen bewusst bestätigen, gültige Rechnungszeilen auswählen und Übernahme separat bestätigen. Bericht und Originalwerte bleiben unter „Bisherige Importe“ zugänglich. Die übernommenen Rechnungen erscheinen im regulären Bestand; Zahlungszeilen werden nicht übernommen, bestätigt oder zugeordnet. Dateiinhalt, Quellkennung und Rechnungskennung schützen vor Wiederholung. Grenze: 20 Dateien und 5.000 importierte Rechnungen je Backend-Prozess. Neustart verliert Dateien, Herkunftshistorie und importierte Rechnungen. Keine produktive Persistenz oder Authentifizierung.
-
-Die Oberfläche ist nicht durch Codex abgenommen. Browser-Dateiauswahl, 200-%-Zoom, Screenreader und OS-Mail-/Telefonieübergabe sind entsprechend dem [aktuellen Prüfbericht](docs/public/MVP-01-NACHWEIS.md) gesondert zu beurteilen. [Architekturentscheidung zur Demo](docs/public/adr/0002-lokaler-demoimport-und-pdf-vorschau.md).
-
-## Digitale Vorgangsakte und Dokumenteneingang (lokale Demo)
-
-Rechnungsdetails und allgemeine Vorgänge besitzen eine kompakte Akte mit Dokumenten, versionierten Notizen und manuell erfasster Korrespondenz. `Posteingang` nimmt synthetische Dateien per Dateiauswahl oder gezieltem Drag & Drop auf; nach Prüfung ordnet der Benutzer sie einer bestehenden oder neuen Akte zu. PDF/PNG/JPG/TXT/DOCX/XLSX bis 2 MiB; Office-Dateien werden nicht ausgeführt. XLSX als Anhang ist vom vorhandenen Datenimport getrennt. Bereits gleiche Inhalte werden nicht erneut als Original gespeichert. Kontaktänderungen benötigen eine sichtbare Entscheidung; die zentrale Suche bietet Vorschläge ab zwei Zeichen.
-
-Ein optionaler **synthetischer Scan-Ordner** lässt sich aus der Repository-Wurzel starten:
-
-```powershell
-dotnet run --project src/backend/Betriebsplattform.Web --configuration Release --no-build --no-restore --no-launch-profile -- --scan-demo
-```
-
-Nur eigene Testdateien in `src/backend/private/scan-eingang` ablegen. Der Adapter liest stabile Dateien automatisch in den gemeinsamen Eingang, löscht keine Quelldateien und erkennt gleiche Inhalte. Im Posteingang `Aktualisieren` verwenden. Keine direkte Scannersteuerung/OCR eingerichtet und keine Treiber installiert. Alle Akten-, Kontakt- und Importänderungen sind flüchtig; keine realen Daten verwenden. Architektur und bewusst konservative Vorschaugrenzen: [ADR 0003](docs/public/adr/0003-zentrale-vorgangsakte-und-eingangsadapter.md).
-
-
-## Büroarbeitsplatz mit erfundenen Beispieldaten
-
-Ein globaler Footer kennzeichnet den Entwicklungsbestand. Erfundene Firmen, Personen, allgemeine Geschäftsvorgänge, Rechnungen und Dokumente bilden ein zusammenhängendes Szenario. Kontakte werden zentral als Firma oder Person mit Ansprechpartnerbezug, Anschrift, mehreren Telefon-/E-Mail-Werten, Hauptwert, Verlauf und Archiv gepflegt. Kategorienverwaltung bietet gemeinsame Rubriken, eine Unterebene und Archivierung; Zahlungs-/Bearbeitungsstatus bleiben fest definiert.
-
-Sidebar und Browser Back/Forward führen zwischen Bereichsübersichten und Datensätzen. Vorgänge/Posteingang sind such- und filterbare Arbeitslisten mit Pagination. Korrespondenz kann mehrere durchsuchbar ausgewählte Dokumente referenzieren und denselben Upload direkt im Dialog verwenden. Es gibt keinen Versand. Die normale Oberfläche enthält keine JSON-/Prüfdatenaktionen. Diagnose ist nur bei explizitem Serverstart mit `--diagnose` aktiv; die lokale Verwaltungsidentität ist keine produktive Authentifizierung.
-
-Änderungen sind flüchtig. Kontakt-/Kategorienverwaltung ist serverseitig über eine injizierbare Aktionspolitik vorbereitet, produktive Rollen/Mandantenrechte bleiben offen. Der optionale Scan-Ordner und die begrenzte XLSX-Teststrecke bleiben erhalten. [Architekturentscheidung](docs/public/adr/0004-kontakte-kategorien-und-arbeitsumgebung.md) und [tatsächlich ausgeführte Prüfungen](docs/public/MVP-01-NACHWEIS.md) dokumentieren Grenzen und Abnahmepunkte.
+No open-source license has been selected. Public availability alone does not grant an explicit open-source license.

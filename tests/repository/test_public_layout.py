@@ -44,7 +44,7 @@ PUBLIC_FILES = {
     'docs/public/adr/0002-lokaler-demoimport-und-pdf-vorschau.md',
     'src/backend/Betriebsplattform.Web/DemoDokumente.cs', 'src/frontend/src/Dokumente.tsx',
     'src/frontend/src/Kontaktkarte.tsx', 'src/frontend/src/kontaktaktionen.ts',
-    '.gitignore', '.gitattributes', 'README.md', 'CONTRIBUTING.md', 'AGENTS.md',
+    '.gitignore', '.gitattributes', 'README.md', 'README.de.md', 'CONTRIBUTING.md', 'AGENTS.md',
     'docs/public/ARCHITEKTUR.md', 'tests/repository/test_public_layout.py',
     'docs/public/adr/0001-rechnungs-und-zahlungskern.md',
     'docs/public/MVP-01-NACHWEIS.md',
@@ -170,6 +170,8 @@ class PublicLayoutTests(unittest.TestCase):
             for target in re.findall(r'\[[^\]]+\]\(([^)]+)\)', text):
                 # Reviewed primary-source citations are references, never build dependencies.
                 if target in {
+                    'https://github.com/advisories/GHSA-68fv-2mgg-jv7q',
+                    'https://github.com/vitejs/vite/security/advisories/GHSA-rq7h-c2jc-7f22',
                     'https://www.bundesnetzagentur.de/DE/Fachthemen/Telekommunikation/Nummerierung/DramaNumbers/artikel.html',
                     'https://learn.microsoft.com/en-us/windows-hardware/drivers/image/wia-architecture-overview',
                     'https://learn.microsoft.com/en-us/uwp/api/windows.devices.scanners',
