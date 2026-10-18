@@ -35,3 +35,17 @@ export function rechnungenFiltern(rechnungen: Rechnung[], suche: string, status:
     .sort((a, b) => sortierung === 'datum' ? b.datum.localeCompare(a.datum) || a.nummer.localeCompare(b.nummer, 'de')
       : a[sortierung].localeCompare(b[sortierung], 'de', { numeric: true }));
 }
+
+
+// Ausschließlich Anzeige einer expliziten, konsistenten Demo-Perspektive; keine Geldberechnung.
+export function eigeneRolle(r: Rechnung): 'Aussteller' | 'Empfänger' | null {
+  const p = r.perspektive;
+  return p && ((p.rolle === 'Aussteller' && p.unternehmen === r.aussteller) || (p.rolle === 'Empfänger' && p.unternehmen === r.empfaenger)) ? p.rolle : null;
+}
+export function zahlungsrichtung(r: Rechnung, z: Rechnung['zahlungen'][number]): string | null {
+  if (!eigeneRolle(r) || !r.perspektive) return null;
+  const eigen = r.perspektive.unternehmen;
+  if (z.zahler === eigen && z.empfaenger !== eigen) return 'Eigene Zahlung';
+  if (z.empfaenger === eigen && z.zahler !== eigen) return z.status === 'Bestätigt (synthetisch)' ? 'Zahlung erhalten' : 'Zahlungseingang zur Prüfung';
+  return null;
+}

@@ -312,4 +312,36 @@ public sealed class RechnungskernTests
         Assert.Throws<ArgumentException>(() => kern.Zuordnen(Guid.NewGuid(), rechnung.Id, zahlung.Id, 1m, Quelle(), "TEST", default));
         Assert.Empty(kern.Zuordnungen);
     }
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void BestaetigteTeilzahlungenFunktionierenBeiBeidenRollenDesEigenenUnternehmens(bool ausgehend)
+    {
+        // Perspektive ist im Test explizit, im Kern noch kein eigenes Attribut.
+        var kern = new Rechnungskern();
+        var aussteller = ausgehend ? "SYNTH-EIGEN" : "SYNTH-LIEFERANT";
+        var empfaenger = ausgehend ? "SYNTH-KUNDE" : "SYNTH-EIGEN";
+        var datum = new DateOnly(2026, 10, 17);
+        var rechnung = new Rechnung(Guid.NewGuid(), "SYNTH-BEIDE-RICHTUNGEN", aussteller, empfaenger, datum, 240m, new("SYNTH-RE", "synthetisch/Rechnung"));
+        kern.RechnungErfassen(rechnung);
+        void Zuordnen(decimal betrag, bool bestaetigt)
+        {
+            var z = new Zahlung(Guid.NewGuid(), empfaenger, aussteller, datum, betrag, new("SYNTH-ZA", "synthetisch/Zahlung"));
+            kern.ZahlungErfassen(z);
+            if (bestaetigt)
+            {
+                kern.ZahlungBestaetigen(z.Id, z.Nachweis, "SYNTH-PRUEFER", new DateTimeOffset(2026, 10, 17, 12, 0, 0, TimeSpan.Zero));
+                kern.Zuordnen(Guid.NewGuid(), rechnung.Id, z.Id, betrag, z.Nachweis, "SYNTH-PRUEFER", new DateTimeOffset(2026, 10, 17, 12, 0, 0, TimeSpan.Zero));
+            }
+            else Assert.Throws<InvalidOperationException>(() => kern.Zuordnen(Guid.NewGuid(), rechnung.Id, z.Id, betrag, z.Nachweis, "SYNTH-PRUEFER", new DateTimeOffset(2026, 10, 17, 12, 0, 0, TimeSpan.Zero)));
+        }
+        Zuordnen(60m, true);
+        Zuordnen(40m, true);
+        Assert.Equal(140m, kern.OffenerBetrag(rechnung.Id));
+        Zuordnen(140m, false);
+        Assert.Equal(140m, kern.OffenerBetrag(rechnung.Id));
+        Zuordnen(140m, true);
+        Assert.Equal(0m, kern.OffenerBetrag(rechnung.Id));
+        Assert.Equal(3, kern.Zuordnungen.Count);
+    }
 }

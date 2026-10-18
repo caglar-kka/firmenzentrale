@@ -70,10 +70,17 @@ Keine echten Firmen-, Kunden-, Personal-, Zahlungs- oder Zugangsdaten in Quellco
 
 Eine Lizenz wurde noch nicht ausgewählt. Dieses Projekt erteilt derzeit keine ausdrückliche Open-Source-Lizenz.
 
-## Design- und UX-Sprint
+## Integrierter Arbeitsraum
 
-Die Rechnungsübersicht bietet eine kompakte Tabelle mit Suche nach Nummer, Partnern, Beleg oder Quelle, Zahlungsstatusfilter und Nummern-/Datums-/Partnersortierung. Die Rechnungsnummer öffnet Zahlungen und Herkunft. Bestätigte Zuordnungssummen und offene Beträge kommen aus dem Backend. Fälligkeiten wurden nicht erfasst; es gibt keine erfundenen Überfälligkeitsanzeigen.
+Die vorläufig akzeptierte Graphit-/Off-White-/Indigo-Gestaltung ist die reguläre Oberfläche unter `http://127.0.0.1:5180/#rechnungen`. Kein Vorschauparameter erforderlich. Rechnungsbestand mit Suche, Zahlungsfilter und Sortierung; Rechnungsnummer öffnet die eigene Zahlungs-/Belegansicht. Der sichtbare Button „Zurück zur Rechnungsübersicht“ und der Breadcrumb erhalten Suchbegriff, Filter, Sortierung und den Tastaturfokus.
 
-Die Excel-Vorschau zeigt einen Prüfablauf, eine Datensatztabelle mit Fehler-/Warnfilter und erreichbaren Originalwerten. Datei-Hash und Vollbericht sind einklappbar. Kein Upload und keine Buchung. Bei Tabletbreite scrollen Tabellen in einem eigenen Bereich (auch per Links-/Rechts-Pfeiltaste bei Fokus); auf schmalen Bildschirmen stehen beschriftete Datensätze untereinander.
+Aussteller/Empfänger und Zahler/Zahlungsempfänger bleiben ausdrücklich getrennt. Bestätigte Zuordnung und offene Beträge kommen aus dem Backend, Fälligkeiten sind nicht erfasst. Die Importvorschau bewahrt Originalwerte und Zell-/Dateiquellen; keine Buchung oder Freigabeaktion. Tablet- und Quelltabellen besitzen eigene Tastatur-Scrollbereiche, mobil beschriftete Datensätze.
 
-Verbindliche Oberflächengrundlage: [Designsystem](src/frontend/DESIGN.md). Regionale Darstellung ist für DE/AT/CH vorbereitet; aktiv bleibt de-DE/EUR. CHF-Verarbeitung ist nicht implementiert. Nachweise und offene Accessibility-Prüfungen stehen im bestehenden [Entwicklungsnachweis](docs/public/MVP-01-NACHWEIS.md). Bei bereits vorhandenen Paketen ist keine erneute Installation vor Test und Build erforderlich.
+Es läuft eine Anwendung mit gemeinsamen Komponenten und Tokens. Frühere A/B/C-Quellen und Tests wurden privat erhalten; historische Importdateien sind nur Kompatibilitätsverweise. Verbindliche UI-Quelle: [Designsystem](src/frontend/DESIGN.md). Aktuelle Prüfungen und Grenzen: [Entwicklungsnachweis](docs/public/MVP-01-NACHWEIS.md).
+
+Die vollständige Dokumenten- und Belegakte bleibt [fachlich vorbereitet](docs/public/ARCHITEKTUR.md); DOK-01 implementiert jetzt ausschließlich einen lesenden synthetischen PDF-Ausschnitt. Rechnung SYNTH-2026-002 besitzt eine echte künstliche Originalrechnung und einen PDF-Zahlungsbeleg an der 300-Euro-Zahlung. Öffnen im neuen Browser-Tab, zum Zurückkehren den PDF-Tab schließen. Keine Uploads oder PDF-Veränderungen. Alle Dateien sind öffentliche synthetische Demo-Inhalte ohne produktiven Zugriffsschutz. Name/Logo bleiben Arbeitstitel. Regionale Vorbereitung DE/AT/CH unverändert, aktiv de-DE/EUR; keine zusätzliche CHF-/Steuerlogik.
+
+Die Rechnungsdetails zeigen außerdem rollenbezogene synthetische Kontakte mit E-Mail-/Telefonlinks, soweit vorhanden. Diese übergeben an eine konfigurierte lokale Anwendung; sie senden keine Nachricht und bestätigen keinen Anruf. Testadressen/-nummern sind nicht erreichbar. Fehlende Angaben erscheinen ohne Scheinaktionen. Die [Architektur](docs/public/ARCHITEKTUR.md) enthält die fachliche Matrix beider Zahlungsrichtungen und den gemeinsamen Vorgangs-/Dokumenten-/Kommunikationsplan; andere Verpflichtungen und Ratenpläne sind noch nicht implementiert. Die aktuelle Gesamtbestandssumme trennt Forderungen und Verbindlichkeiten noch nicht.
+
+
+DOK-01 priorisiert Desktop: kompakte Kontaktzeilen mit Mail-/Telefonicons und aufklappbaren Kontaktdetails, natürliche Rechnungsbegriffe und explizite Demo-Unternehmensperspektive. Bei Rechnung 002: eigene Zahlungen 300,00 + 200,00 EUR, noch zu bezahlen 460,00 EUR. Kein neuer Geldfluss und keine Bearbeitungshistorie erfunden. Fehlende PDF liefert eine verständliche 404-Seite; Metadatenfehler können erneut geladen werden. Unbekannte Dokumentkennungen öffnen keine beliebigen Dateien.

@@ -1,0 +1,11 @@
+.studio {
+  --text: #242631; --leise: #5d626f; --grund: #f6f6f3; --flaeche: #ffffff; --weich: #f0f0f5;
+  --akzent: #5745c5; --akzent-dunkel: #423292; --akzent-hell: #efedfb; --fokus: #5745c5;
+  --rand: #dedee5; --eingaberand: #858594; --rail: #252730; --rail-text: #f8f8fb; --rail-leise: #bfc1cd;
+  --rail-active: #41404e; --rail-hover: #383a45; --rail-fokus: #c5bcff; --rail-kante: #a79af5; --rail-rand: #60616d; --nachweis-bg: #eeedf3;
+  --neutral-text: #465368; --neutral-bg: #eaf0f5; --erfolg-text: #17633f; --erfolg-bg: #e8f4ed;
+  --arbeit-text: #8c4a12; --arbeit-bg: #fff1de; --warnung-text: #78590b; --warnung-bg: #fff6d9; --fehler-text: #b42338; --fehler-bg: #fcecef;
+  --kopf-bg: #ffffff; --kopf-text: #242631; --kopf-leise: #5d626f; --kopf-badge: #f0f0f5;
+  --tabellenkopf: #f7f7fa; --tabellentext: #555a69; --detail: #f4f3fa; --zeile-alternativ: #fbfbfd;
+  --zweite-text: #423292; --zweite-farbe: #5745c5; --zweite-hell: #efedfb;
+}

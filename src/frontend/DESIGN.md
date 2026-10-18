@@ -1,90 +1,75 @@
-# Designsystem der Betriebsplattform
+# Designsystem – integrierter Arbeitsraum
 
-Status: verbindliche UI-Grundlage für den lokalen Prototyp, vorläufige visuelle Richtung bis zur persönlichen Sichtabnahme. Gilt zusammen mit [AGENTS.md](../../AGENTS.md) und [Architektur](../../docs/public/ARCHITEKTUR.md). Kein zweites Engineering-Regelwerk und keine Zusage vollständiger Barrierefreiheitskonformität.
+**Stand 18.10.2026:** Der Nutzer hat die Arbeitsraumrichtung Graphit/Off-White/Indigo ausdrücklich als vorläufige Grundlage akzeptiert. Sie ist jetzt die reguläre Oberfläche. Die aktuelle Integration wartet auf menschliche Funktionsabnahme. „Betriebsplattform“, B-Zeichen und Akzentfarbe bleiben vorläufig; endgültiger Produktname/Logo folgen separat. Keine weitere Designsuche aus diesem Auftrag ableiten.
 
-## Identität und Entscheidung
+Verbindlich gemeinsam mit [AGENTS.md](../../AGENTS.md), [Architektur](../../docs/public/ARCHITEKTUR.md) und [Entwicklungsnachweis](../../docs/public/MVP-01-NACHWEIS.md). Frühere A/B/C-Entwürfe und der isolierte Prototyp sind historisch dokumentiert und privat bytegenau gesichert, keine parallelen aktiven Designs.
 
-Leistungsfähige Geschäftssoftware mit ruhiger, verständlicher Bedienung für DACH-KMU. Firmenneutral; weder Pilotmarke noch fremde Logos, Designs oder Assets. Die bereitgestellten zwölf Software-Referenzen dienen als Prinzipien: kompakte Vorgangslisten, belegbare Details, konsistente Navigation und getrennte Finanz-/Prüfstatus. Keine neue Wettbewerbsbewertung durchgeführt.
+## Identität, Sprache und fachliche Grenzen
 
-Zwei konzeptionelle Richtungen wurden verglichen:
+Firmenneutrale KMU-Software für DACH, Pilotbetrieb ohne kundenspezifische Produktmarke. Ruhige helle Arbeitsfläche, eindeutige dunkle Orientierung, eine Indigo-Aktionsfarbe. Lebendigkeit aus Typografie, Proportionen und bedienbaren Komponenten; keine bunten Kennzahlen, Verläufe, großen Schatten oder unnötigen Animationen. Keine medizinisch belegte Ergonomie oder geprüfte achtstündige Nutzung behaupten.
 
-| Richtung | Wirkung und Vorteil | Nachteil |
-| --- | --- | --- |
-| Petrol und kühles Papier | Klar, sachlich, dezente Orientierung, ausreichend Abstand zu Warnfarben | Weniger wohnlich; großflächiges Petrol vermeiden |
-| Graphit und warmer Sand | Zurückhaltend, papiernah, vertraute Dokumentanmutung | Bernsteinwarnungen heben sich weniger klar vom Umfeld ab |
+Deutsche UI: Rechnungen, Rechnungsbestand, Zahlungen, bestätigte Zuordnung, offener Betrag, Importvorschau, Datensätze prüfen, Beleg und Herkunft. Nur vorhandene Rollen benennen: Aussteller/Empfänger beziehungsweise Zahler/Zahlungsempfänger. Keine pauschale Gleichsetzung mit Kunden oder Lieferanten. ISD bleibt vorläufig Geschäftspartner ohne bestätigten vollständigen Firmennamen; Rolle je Vorgang.
 
-Gewählt: Petrol und kühles Papier. Neutrale Arbeitsflächen dominieren, Akzentflächen bleiben klein. Keine Behauptung medizinisch belegter Augenfreundlichkeit oder achtstündiger Nutzungsvalidierung. Neu prüfen nach persönlicher Sichtabnahme, längeren Bürotests oder einer realen größeren Datenmenge. Dunkelmodus ist noch kein Teil dieses Vertrags.
+Rechnungsstand, Bestätigung einer Zahlung, Fälligkeit, Importprüfung und spätere Dokumentenbearbeitung sind getrennte Dimensionen. Geldwerte und finanzielle Zustände kommen ausschließlich aus dem Backend. Keine Geldtextkonvertierung, Prozentberechnung, Währungsumrechnung oder zusätzlichen Fälligkeitsdaten im Frontend. Region DE/AT/CH vorbereitet, aktiv de-DE/EUR; kein nationaler Steuer-/Rechtsregelcode.
 
 ## Tokens und Typografie
 
-Die CSS-Variablen in `src/style.css` setzen diese Werte um. Neue Komponenten verwenden dieselben semantischen Tokens.
+Einzige aktive Palette in `src/design-tokens.css` unter `.studio`; keine freien Einzelfarben in Komponenten ergänzen. `src/style.css` enthält Grundregeln und lädt Tokens sowie `Arbeitsraum.css`. Letztere definiert die Arbeitsoberfläche/Breakpoints, nicht neue konkurrierende Themes.
 
-| Zweck | Text / Farbe | Fläche |
+| Rolle | Tokens / Werte |
+| --- | --- |
+| Haupt-/Sekundärtext | `--text: #242631`, `--leise: #5d626f` |
+| Seite / Register / neutral | `--grund: #f6f6f3`, `--flaeche: #ffffff`, `--weich: #f0f0f5` |
+| Aktion / Hover / aktive Fläche | `--akzent: #5745c5`, `--akzent-dunkel: #423292`, `--akzent-hell: #efedfb` |
+| Rahmen / Eingabe / Fokus | `--rand: #dedee5`, `--eingaberand: #858594`, `--fokus: #5745c5` |
+| Navigation | `--rail: #252730`, `--rail-text: #f8f8fb`, `--rail-leise: #bfc1cd`, aktive/hovernde/fokussierte Zustände über eigene Rail-Tokens |
+| Tabelle / Detail / Nachweise | `--tabellenkopf: #f7f7fa`, `--tabellentext: #555a69`, `--detail: #f4f3fa`, `--nachweis-bg: #eeedf3` |
+| Bezahlt / Bestätigt | `--erfolg-text: #17633f`, `--erfolg-bg: #e8f4ed` |
+| Teilzahlung | `--arbeit-text: #8c4a12`, `--arbeit-bg: #fff1de` |
+| Offen / neutral | `--neutral-text: #465368`, `--neutral-bg: #eaf0f5` |
+| Zur Prüfung | `--warnung-text: #78590b`, `--warnung-bg: #fff6d9` |
+| Fehler | `--fehler-text: #b42338`, `--fehler-bg: #fcecef` |
+
+Systemschrift Segoe UI Variable Text / Segoe UI / System, keine externen Fonts. Basis 16 px; Tabellen/Felder 15 px; ergänzende Rollen-, Status- und Kontexttexte mindestens 13 px; Detailtexte 15 px. Zeilenhöhe 1,55, Titel 30–42 px/Gewicht 650, Hauptkennzahl 44 px und Nebenwerte 28 px. Geldspalten rechtsbündig mit tabellarischen Ziffern. Keine festen Texthöhen/abgeschnittenen Fachwerte. Abstände überwiegend 8/12/16/20/24/28/36 px, kleine Radien 5–12 px.
+
+## Shell, Navigation und Arbeitsansichten
+
+- Durchgehende Graphit-Sidebar, 232 px Desktop/80 px kompakt, zugängliche Namen auch ohne sichtbaren Linktext. Nur Rechnungen und Importvorschau sind verfügbar. Spätere Module erst mit echter Funktion ergänzen. Kontextkopf und Arbeitstitel sind keine vorgetäuschte Unternehmens-/Benutzerauswahl.
+- Hauptinhalt ohne schmale Maximalkappung. Bei ≤1050 px kompakte Navigation, bei ≤680 px horizontale Textnavigation; native Felder bleiben mindestens 44 px hoch. Breite Tabellen haben eigene benannte, fokussierbare Scrollbereiche, Links-/Rechts-Tasten bewegen ausschließlich den fokussierten Bereich.
+- Rechnungsbestand mit zusammenhängender Kennzahlenzeile, integrierter Suche, echten Zahlungsstatusfiltern und Nummern-/Datums-/Rollensortierung. Gesamtkennzahlen beziehen sich ausdrücklich auf alle Rechnungen. „Rechnungsbestand“ statt „Alle Vorgänge“, Spalte „Aussteller / Empfänger“ statt unspezifischem „Geschäftspartner“.
+- Eigene Detailarbeitsfläche: Beträge und bestätigte Zuordnung zusammen, Beteiligte und Zahlungsfolge links, Nachweise rechts; mobil untereinander. Deutlich sichtbarer umrandeter Button **„Zurück zur Rechnungsübersicht“** und Breadcrumb **Rechnungen / Rechnungsnummer** verwenden denselben Rückweg. Suche, Statusfilter und Sortierung bleiben erhalten; Fokus zurück auf den ursprünglichen Rechnungsknopf. Detailtitel erhält beim Öffnen Fokus. Detailauswahl ist derzeit flüchtig, kein Detail-Deep-Link.
+- Import: synthetische Beispielauswahl, Prüfresümee und Datensatzregister, Originalzellinspektor an der geöffneten Zeile. Originalwert, aufgelöster Text, Datentyp, Formatindex, nicht ausgeführte Formel, Blatt/Zeile/Zelle bleiben erhalten. Datei-Hash und Vollbericht separat einklappbar. Hash belegt Dateibytes, keine Echtheit. Schritte sind Textorientierung, keine Importfreigabe.
+- Dokumentenbereich zeigt derzeit ausschließlich den ehrlichen Leer-/Vorbereitungszustand. Keine klickbaren Scheinanhänge, kein Upload-, Notiz-, Stempel- oder Bezahlknopf. Fachkonzeption und späterer Lesepfad stehen in der Architektur.
+
+## Komponenten und Status
+
+`App.tsx`: eine reguläre Shell und Hashnavigation. `Rechnungen.tsx`, `Rechnungsdetails.tsx`, `Importvorschau.tsx`: fachliche Anzeigeansichten. `ui.tsx`: gemeinsamer Datenhook, Lade-/Fehlerzustand mit Wiederholung, Status, Meldungen, Titel, Kennzahlen und Tastaturscrollen. `Icon.tsx`: eigene SVG-Geometrien, 24-px-Raster/Strichstärke 1,8/abgerundete Enden. Keine zweite Fachberechnung oder zusätzliche Bibliothek.
+
+| Zustand | Darstellung | Bedeutung |
 | --- | --- | --- |
-| Haupttext | `--text: #19343b` | `--flaeche: #ffffff` |
-| Nebentext | `--leise: #435d65` | `--grund: #e7edef`, `--weich: #dce7ea` |
-| Primäre Aktion | `--akzent: #125c64`, weißer Text | Hover `--akzent-dunkel: #0a434b` |
-| Hervorhebung | `--akzent` | `--akzent-hell: #d5e8e8` |
-| Offen / neutral | `--neutral-text: #344e59` | `--neutral-bg: #e3eaed` |
-| Erledigt / bestätigt | `--erfolg-text: #175838` | `--erfolg-bg: #d5eadf` |
-| Teilzahlung / Bearbeitung | `--arbeit-text: #174f73` | `--arbeit-bg: #d8e9f5` |
-| Prüfbedarf / Warnung | `--warnung-text: #6a4700` | `--warnung-bg: #f8e9c8` |
-| Nachgewiesener Fehler | `--fehler-text: #94282e` | `--fehler-bg: #f7dedf` |
-| Fokus | `--fokus: #176bb0` | 3 px Umriss, 3 px Abstand |
-| Struktur / Eingabegrenze | `--rand: #bdcdd2` / `--eingaberand: #627b85` | Helle Fläche |
+| Bezahlt | Grün, Check, Text | Backend meldet vollständig bestätigte Zuordnung |
+| Bestätigt (synthetisch) | Grün, Check, eigener Text | Einzelne erfundene Zahlungsbestätigung, kein realer Banknachweis |
+| Teilweise bezahlt | Amber/Orange, Teilkreis, Text | Bestätigte Teilzuordnung; tatsächliche Beträge in Tabelle und Detailübersicht |
+| Offen | Slate, offener Kreis, Text | Regulär offen, weder Fehler noch Überfälligkeit |
+| Zur Prüfung | Gold, Dreieck, Text | Unbestätigte Zahlung oder Prüfbedarf, keine Saldenwirkung suggerieren |
+| Fehler | Rot, Kreuz, konkrete Meldung | Nachgewiesener Fehler |
 
-Systemschrift Segoe UI/system-ui ohne externe Requests. Basis 16 px mit Zeilenhöhe 1,5; Felder und Buttons erben die Basis. Tabellen 14 px, Metadaten 14 px, Tabellenköpfe 14 px fett / Status 13 px, kleine Rollenlabels 12 px. Haupttitel 30–38 px, Abschnitt 17,6 px, Details 16 px. Geld rechtsbündig und mit tabellarischen Ziffern. Browsertextvergrößerung zulassen, keine festen Texthöhen oder abgeschnittenen Werte. 12 px nur für ergänzende Rollenlabels, nie alleinige Fachinformation.
+„Keine Zeilenfehler“ bleibt neutral und bedeutet keine Importfreigabe. Ohne Fälligkeitsdaten kein Überfälligkeitsstatus. Farben nie alleinige Bedeutungsträger; SVGs dekorativ und nicht separat fokussierbar. Native Buttons, Selects und Disclosure, keine funktionslosen Demoaktionen. Originalwerte ausschließlich React-Text, nie HTML.
 
-## Layout und Navigation
+## Zustände, Accessibility und Abnahme
 
-Inhalt maximal 1360 px einschließlich 32 px Seitenabstand; bei ≤1000 px 20 px, bei ≤680 px 16 px. Abstandsleiter 4/8/12/16/24/32 px, Radius 10 px für Bereiche, 6 px für Bedienelemente. Keine dekorativen Schatten, Verläufe oder Animationen. Weiß ist für eigentliche Arbeitsbereiche reserviert; Seitenhintergrund neutral.
+Laden als Statusmeldung, erneute Prüfung bis Antwort gesperrt. Verständliche Fehler mit erneutem Versuch, kein technischer Fehlertext nach außen. Leeren Bestand von leeren Filterergebnissen unterscheiden. 3-px-Fokus, Sprunglink zur aktuellen Ansicht, sichtbare aktive Navigation und Filter. Mobile Datensätze beschriftet untereinander; verschachtelte Originaltabellen behalten ihr eigenes zweidimensionales Layout.
 
-Ein Markenkopf, eine Hauptnavigation, ein Hauptinhalt und ein Footer. Aktive Seite mit weißem Text auf Petrol, dunkler Unterkante und `aria-current`. Markenkopf dunkelpetrol, Hauptnavigation weiß; Kennzahlen mit dezenter oberer Akzentkante, offener Gesamtbetrag zusätzlich hervorgehoben. Sprunglink „Zum Inhalt“, sichtbar bei Fokus. Navigation enthält ausschließlich implementierte Ziele: Rechnungen und Importvorschau. Seitentitel „Excel-Importvorschau“ präzisiert das Dateiformat; „Datensätze prüfen“ bezeichnet die Tätigkeit innerhalb dieser Ansicht. Keine leeren Menüs oder Demo-Aktionsbuttons. Kein fixer Kopf, der Fokus oder Inhalte verdeckt.
+Nach Änderungen relevante Fach-/API-/Frontend-/Repositorytests und Builds tatsächlich ausführen. Desktop zuerst: drei Szenarien bei 1440/1760 px. Kleinere Bildschirme nur auf offensichtliche Regressionen prüfen; keine eigenständige mobile Oberfläche in DOK-01. Kein horizontaler Seitenüberlauf, Rechnungsnummer nicht in schmale Spalten gedrängt. Rückkehr über Button und Breadcrumb mit Suche/Filter/Sortierung/Fokus, vollständige Zahlungs- und Importnachweise prüfen. Kontrastprüfung 30 Tokenpaare: 27 Textpaare ≥4,5:1, drei Fokus-/Eingabepaare ≥3:1. Bezug WCAG 2.2: `https://www.w3.org/TR/WCAG22/`; kein vollständiger Konformitätsnachweis daraus.
 
-## Listen, Formulare und Details
+200%-Zoom, Screenreader, weitere Browser/echte Geräte, größere Bestände und längere Nutzung getrennt nachweisen oder offen kennzeichnen. Ergebnisse nur im bestehenden Entwicklungsnachweis und privaten operativen Plan; keine automatische Library-Synchronisierung. Vorläufige Designannahme ersetzt weder Funktionsabnahme noch spätere Marken-/Produktionsfreigabe.
 
-Desktop: semantische Tabellen mit Kopfzellen, Zeilenköpfen und Beschriftung; keine großen Rechnungskarten. Zeilen zeigen beide Partnerrollen, Datum, Rechnungsbetrag, bestätigte Zuordnung, offenen Betrag und Zahlungsstatus. Keine geratene allgemeine Kunden-/Lieferantenrolle. Suche durchsucht Nummer, beide Partner, Beleg und Quelle; Statusfilter und deklarierte Text-/Datumsortierung funktionieren lokal. Keine Geldsortierung durch Parsen formatierter Geldtexte. Gesamtkennzahlen bleiben über alle Rechnungen, unabhängig von Filtern, ausdrücklich beschriftet.
+## Kompakte Büroaktionen und Dokumente – DOK-01, 18.10.2026
 
-Details direkt nach der zugehörigen Zeile über einen mindestens 44 px hohen Textbutton mit `aria-expanded`/`aria-controls`. Button bleibt fokussiert; Enter/Leertaste öffnen und schließen. Zugeordnete Zahlungen, Zahler, Empfänger, Datum, Beleg und Quelle bleiben sichtbar erreichbar. Keine angeblichen Dokumentlinks ohne Datei. Fälligkeit fehlt im aktuellen Datenvertrag; kein überfälliger Status wird erfunden.
+Kontaktkarte.tsx bleibt die einzige Darstellung beider Parteien. Im UI „Firma & Kontakt“, „Rechnung von“ und „Rechnung an“. Firma und vorhandener Ansprechpartner sichtbar; Mail-/Telefon-/Detailsicons in einer kompakten Leiste statt großer Karten. Native Links/Details, 36-px-Ziele mit 6 px Abstand für Desktop, gleicher SVG-Stil, zugänglicher Name einschließlich Firma. Texttooltips bei Hover und Tastaturfokus; ausführliche Kontaktdaten/Herkunft nur in Kontaktdetails. Bestehende sichere URI-Helfer unverändert. Fehlende/ungültige Werte ohne Mail-/Telefonaktion; Kontaktdetails zeigen den tatsächlichen Fehlbestand. Kein Notiz-/Schreiben-Scheinbutton.
 
-Formulare: sichtbare Labels, native Suche und Selects, 44 px Mindesthöhe. Primärbutton Petrol, sekundäre Aktion weiß mit klarer Beschriftung. Fokus nie nur durch Farbe. Kein Iconbutton ohne zugänglichen Namen. Eingabegrenzen ausreichend kontrastreich. Keine automatisch ausgelösten finanziellen Aktionen.
+Rechnungsnummer/Datum/Status, Betragszeile „Rechnungsbetrag“, „Bestätigt bezahlt“, kontextabhängig „Noch zu bezahlen/erhalten“ oder neutral „Noch offen“. Richtung nur aus expliziter konsistenter Unternehmensperspektive. Keine neue Geldberechnung. Danach kompakte Kontakte und Hauptbereich mit Zahlungen links, Dokumenten rechts. „Zahlungsdatum“ ist kein Bankbuchungstag. Bearbeitungsverlauf bleibt als nicht erfasst gekennzeichnet; keine erfundenen Ereignisse.
 
-Import: Beispiel auswählen → Datensätze prüfen → Prüfbericht ansehen. Die nummerierte Liste ist eine Orientierung, kein interaktiver Buchungsassistent oder Hinweis auf verfügbare Importfreigabe. Zusammenfassung ohne Buchungs-/Freigabeversprechen; kompakte Tabelle mit Fehler-/Warnfilter. Meldungen zur Datei sind eigenständig erreichbar, bei leerer Fehlerantwort aufgeklappt. Zeilendetails zeigen Meldungen, Blatt/Zeile/Zelle, Datentyp, Originalwert, aufgelösten Text, Formatindex und nicht ausgeführte Formel. Datei-Hash und Vollbericht in benanntem Disclosure. Fehler haben Vorrang vor Warnungen, Warnungen vor neutraler Anzeige. Keine grüne „Import erfolgreich“-Anzeige für bloße Vorschau.
+Dokumente.tsx stellt die Originalrechnung zentral rechts dar, einen Zahlungsbeleg ausschließlich bei der zugehörigen Zahlung. Eine Dokumentkarte und ein Abrufweg, keine doppelten Dateien/Linklisten. Dateiname/Art sichtbar, Quelle/Version/Datum/Größe/Hash aufklappbar. Native PDF-Anzeige im neuen Tab ist die bewusst gewählte erste Lesefunktion; keine Einbettung/CSP-Lockerung. Tab schließen kehrt zur unveränderten Rechnung zurück. „Öffnen“ verspricht keine PDF-Bearbeitung oder Uploadfunktion. Metadaten mit Lade-/Fehler-/Leerzustand und erneutem Versuch; fehlende PDF mit verständlicher 404-Seite. Alle Dateien ausdrücklich synthetisch.
 
-## Status und Sprache
-
-Farbe immer mit Text und zusätzlichem Symbol: ✓ grün erledigt/bezahlt, ◐ blau teilweise bezahlt, ○ grau offen, △ bernstein zur Prüfung, × rot Fehler. Symbole dekorativ `aria-hidden`, Text bleibt zugänglich. „Bestätigt (synthetisch)“ ist ausdrücklich keine reale Bankbestätigung. Rechnungszahlungsstatus, Zahlungsbestätigung, Fälligkeit und Importprüfung bleiben fachlich getrennt. „Keine Zeilenfehler“ heißt weder importiert noch freigegeben.
-
-Einfache deutsche Begriffe: Rechnungen, Zahlungen, Teilweise bezahlt, Offener Betrag, Daten prüfen, Originalwerte, Quelle, Zur Prüfung. ISD ist vorläufig Geschäftspartner ohne bestätigten vollständigen Namen; Rolle jeweils aus dem Vorgang. Originalbezeichnungen bleiben unverändert.
-
-`src/darstellung.ts` bündelt regionale Metadaten `DE/de-DE/EUR`, `AT/de-AT/EUR`, `CH/de-CH/CHF`, Datumdarstellung und wiederverwendbare UI-Texte/Status. Das ist ein Erweiterungspunkt, keine vollständige Übersetzung. Aktuell aktiv: Deutsch/Deutschland, serverseitig formatierte EUR-Texte. Regionale Geldformate müssen später vom Backend mit exakten Werten geliefert werden; kein Geldparsing oder Umrechnung im Browser. CHF ist als regionale Metadaten vorbereitet, im Rechnungskern und Import weiterhin nicht freigegeben. Keine nationalen Steuer-/Rechtsregeln implementiert.
-
-## Zustände und wiederverwendbare Bausteine
-
-Wiederverwendbar: Status, Fehlerkasten mit erneutem Versuch, Datenlade-Hook, Metadatenraster, Listenbereich mit Werkzeugleiste, Disclosure, Quelltabellenbereich und Darstellungshilfen. Bestehendes React/CSS genügt; keine neue Komponentenbibliothek.
-
-Laden: ruhige Textmeldung mit `role=status`, keine blinkenden Platzhalter. Leer: Ursache unterscheiden (kein Bestand / kein Filtertreffer / keine Vorschau), konkrete Hilfestellung und wo sinnvoll Filter zurücksetzen. Fehler: verständlicher Text, `role=alert`, funktionierender erneuter Versuch, keine internen Ausnahmen. Erfolg nur bei nachgewiesenem Zustand; keine Buchungswirkung einer Vorschau suggerieren. Requests werden abgebrochen und zeitlich begrenzt.
-
-## Responsive und Accessibility-Abnahme
-
-Bei 1440 px kompakte Vergleichstabelle; bei 768 px Tabelle in einem benannten, fokussierbaren seitlichen Scrollbereich mit mindestens 1020 px Tabellenbreite statt zerstückelter Überschriften; ≤680 px dieselben Datensätze als beschriftete gestapelte Zeilen, ohne Fachfelder auszublenden. Quelltabellen behalten ihre zwei Dimensionen und scrollen in einem benannten, fokussierbaren Bereich. Kein horizontales Scrollen der gesamten Seite. Details und lange Rohwerte dürfen nicht überlaufen.
-
-Messbare Gates, ausgerichtet an WCAG 2.2: normaler Text ≥4,5:1, großer Text ≥3:1, relevante Bedienelementgrenzen/Fokus ≥3:1. Ziele projektseitig möglichst ≥44 px hoch (strenger als die 24-px-Mindestgröße mit Ausnahmen in WCAG 2.2). Tastatur ohne Falle, sichtbarer Fokus, logische Reihenfolge, eindeutig benannte Controls, Information nicht allein durch Farbe. Bei 200 % Vergrößerung keine verlorenen Funktionen oder abgeschnittenen Texte; Reflow bei schmalen Ansichten, für echte Datentabellen begrenzte zweidimensionale Ausnahme. Kein vollständiges Konformitätsversprechen ohne Screenreader-, Browser- und umfassendes Audit.
-
-Vor UI-Abnahme tatsächlich ausführen und im bestehenden Entwicklungsnachweis festhalten:
-
-- Backend-/Frontend-/Repositorytests und Release-/Frontend-Build.
-- Suche, Statusfilter, Sortierung, auf-/zuklappbare Rechnungs-/Quelldetails und Navigation.
-- Vollzahlung, Teilzahlungen, unbestätigte Zahlung ohne Saldenwirkung und Dublettenprüfung.
-- Screenshots beider Ansichten bei 1440/768/375 px; keine horizontale Seitenüberbreite, alle Controls bedienbar.
-- Tastatur-Sprunglink, Navigation, Formulare, Details, sichtbarer Fokus; 200 % Text-/Browservergrößerung soweit Werkzeuge es unterstützen.
-- Kontrastmessung der tatsächlichen Tokenpaare sowie Lade-/Leer-/Fehler-/Wiederholungsfälle.
-- Sicherheits-/Datenschutzgrenzen, neue Abhängigkeiten und öffentliche Dateiliste prüfen.
-
-Normative Referenz: W3C WCAG 2.2, `https://www.w3.org/TR/WCAG22/`. Quellenprüfung ersetzt keine Prüfung der implementierten Oberfläche.
-
-## Visueller Feinschliff nach Screenshot-Feedback
-
-Bestehende Tabellen-/Detailstruktur beibehalten. Stärker abgestufte neutrale Flächen statt zusätzlicher Dekoration: Seitenhintergrund #e7edef, weiße Arbeitsbereiche, Tabellenkopf `--tabellenkopf: #dae6e8` mit `--tabellentext: #294852`, Details `--detail: #eaf2f3` und wechselnde Zeilen `--zeile-alternativ: #f3f7f8`. Erkennbare Trennlinien, fett gesetzte Tabellenüberschriften und Status mit Kontur sowie kräftigerem dekorativem Symbol. Keine Animation, kein fremdes Asset, keine zusätzliche Bibliothek.
-
-Kopftokens: `--kopf-bg: #123c43`, `--kopf-text: #ffffff`, `--kopf-leise: #c9dcdf`, `--kopf-badge: #254e54`. Der dunkle Bereich bleibt auf den kompakten Markenkopf beschränkt. Bei Fokus auf der weißen Navigation bleibt der blaue Umriss mit Abstand sichtbar. Header-/Tabellen-/Detail-Kontrastpaare zusätzlich automatisiert prüfen. Die Verbesserung ist eine gestalterische Entscheidung; langfristige Büroverträglichkeit muss mit tatsächlicher Nutzung bewertet werden.
+Dokumenten-Demo und aktive Schnittstellen/Sicherheitsgrenzen im Architekturort, ausgeführte Prüfungen im Entwicklungsnachweis. Unternehmens-/Vorgangs-/Dokumentkennungen bleiben technische Angaben außerhalb der primären UI. Desktop 1440/1760 px hat Vorrang; Tablet/Smartphone nur Regression. Vollständige mobile Fachoberfläche und produktive Rollenrechte bleiben spätere Pakete.

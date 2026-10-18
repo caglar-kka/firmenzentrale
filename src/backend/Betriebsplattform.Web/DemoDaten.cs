@@ -14,6 +14,15 @@ public static class DemoDaten
     };
     private static string Geld(decimal wert) => wert.ToString("N2", CultureInfo.GetCultureInfo("de-DE")) + " €";
 
+    // Ausschließlich erfundene Kontakte. Maildomain .invalid; Telefon aus dem
+    // BNetzA-Filmrufnummernbereich Berlin (030) 23125 000–999. Nicht erreichbar.
+    private static Kontaktansicht? Kontakt(string unternehmen) => unternehmen switch
+    {
+        "DEMO-NORD" => new("Alex Beispiel (synthetisch)", "buero.nord@example.invalid", "+49 30 23125 001", "synthetisch/Kontakt-DEMO-NORD"),
+        "DEMO-ISD" => new(null, "kontakt.isd@example.invalid", null, "synthetisch/Kontakt-DEMO-ISD"),
+        _ => null
+    };
+
     public static Uebersicht UebersichtErstellen()
     {
         // Den nicht nebenläufigen Kern nur lokal aufbauen. Danach ausschließlich unveränderliche Ansichten teilen.
@@ -38,7 +47,8 @@ public static class DemoDaten
             }
             if (!zahlungen.TryGetValue(rechnung.Id, out var liste)) zahlungen[rechnung.Id] = liste = [];
             liste.Add(new(Datum.ToString("yyyy-MM-dd"), Namen[zahlung.Zahler], Namen[zahlung.Empfaenger], Geld(zahlung.Betrag),
-                Geld(bestaetigt ? betrag : 0m), bestaetigt ? "Bestätigt (synthetisch)" : "Zur Prüfung", zahlung.Nachweis.Beleg, zahlung.Nachweis.Quellenort));
+                Geld(bestaetigt ? betrag : 0m), bestaetigt ? "Bestätigt (synthetisch)" : "Zur Prüfung", zahlung.Nachweis.Beleg, zahlung.Nachweis.Quellenort,
+                beleg switch { "SYNTH-ZA-001" => "demo-zahlung-001", "SYNTH-ZA-002" => "demo-zahlung-002", "SYNTH-ZA-003" => "demo-zahlung-003", "SYNTH-ZA-004" => "demo-zahlung-004", _ => null }));
         }
         ZahlungAnzeigen(rechnungen[0], 1280m, true, "SYNTH-ZA-001");
         ZahlungAnzeigen(rechnungen[1], 300m, true, "SYNTH-ZA-002");
@@ -49,7 +59,9 @@ public static class DemoDaten
             var offen = kern.OffenerBetrag(r.Id);
             return new Rechnungsansicht(r.Nummer, r.Datum.ToString("yyyy-MM-dd"), Namen[r.Aussteller], Namen[r.Empfaenger],
                 Geld(r.Betrag), Geld(offen), Geld(r.Betrag - offen), offen == 0m ? "Bezahlt" : offen == r.Betrag ? "Offen" : "Teilzahlung",
-                r.Nachweis.Beleg, r.Nachweis.Quellenort, zahlungen[r.Id].AsReadOnly());
+                r.Nachweis.Beleg, r.Nachweis.Quellenort, zahlungen[r.Id].AsReadOnly(), Kontakt(r.Aussteller), Kontakt(r.Empfaenger),
+                r.Nummer switch { "SYNTH-2026-001" => "demo-nord-rechnung-001", "SYNTH-2026-002" => "demo-nord-rechnung-002", "SYNTH-2026-003" => "demo-nord-rechnung-003", _ => null },
+                r.Aussteller == "DEMO-NORD" ? new(Namen["DEMO-NORD"], "Aussteller") : r.Empfaenger == "DEMO-NORD" ? new(Namen["DEMO-NORD"], "Empfänger") : null);
         }).ToArray();
         return new(true, Geld(rechnungen.Sum(r => r.Betrag)), Geld(rechnungen.Sum(r => kern.OffenerBetrag(r.Id))), Array.AsReadOnly(ansichten));
     }

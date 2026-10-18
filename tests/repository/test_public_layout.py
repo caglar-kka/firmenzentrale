@@ -9,6 +9,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 PUBLIC_FILES = {
+    'src/backend/Betriebsplattform.Web/DemoDokumente.cs', 'src/frontend/src/Dokumente.tsx',
+    'src/frontend/src/Kontaktkarte.tsx', 'src/frontend/src/kontaktaktionen.ts',
     '.gitignore', '.gitattributes', 'README.md', 'CONTRIBUTING.md', 'AGENTS.md',
     'docs/public/ARCHITEKTUR.md', 'tests/repository/test_public_layout.py',
     'docs/public/adr/0001-rechnungs-und-zahlungskern.md',
@@ -43,7 +45,10 @@ PUBLIC_FILES = {
     'src/frontend/package.json', 'src/frontend/package-lock.json',
     'src/frontend/tsconfig.json', 'src/frontend/tsconfig.test.json',
     'src/frontend/vite.config.mjs', 'src/frontend/src/App.tsx',
-    'src/frontend/src/api.ts', 'src/frontend/src/darstellung.ts', 'src/frontend/src/main.tsx',
+    'src/frontend/src/ui.tsx', 'src/frontend/src/Rechnungen.tsx', 'src/frontend/src/Rechnungsdetails.tsx',
+    'src/frontend/src/Importvorschau.tsx', 'src/frontend/src/design-tokens.css', 'src/frontend/src/Arbeitsraum.css',
+    'src/frontend/src/Designprototyp.tsx', 'src/frontend/src/prototyp.css',
+    'src/frontend/src/Icon.tsx', 'src/frontend/src/api.ts', 'src/frontend/src/darstellung.ts', 'src/frontend/src/main.tsx',
     'src/frontend/src/react-dom.d.ts', 'src/frontend/src/style.css',
     'src/frontend/tests/app.test.mjs',
 }

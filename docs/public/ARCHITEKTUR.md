@@ -87,12 +87,144 @@ Diese Trennung folgt dem Auftrag zur öffentlichen Vorbereitung. Sie benötigt e
 
 Benutzer- und Rollenrechte, Audit, sichere Updates, Monitoring, Backups mit nachgewiesenem Restore-Test sowie Betriebs- und Krisenabläufe sind erforderlich. Diese Fähigkeiten sind bisher nicht nachgewiesen.
 
-## Design-/UX-Sprint – bestehende Ansichten
+## Arbeitsraum – kontrollierte UI-Integration
 
-Die verbindliche UI-Quelle ist das [Designsystem](../../src/frontend/DESIGN.md), verknüpft mit den öffentlichen Entwicklungsregeln. Entscheidung: Petrol/kühle neutrale Flächen statt Graphit/warmer Sand; rationale Alternativen und Neuprüfungs-Trigger stehen dort. Die Modulgrenzen und Geldregeln bleiben unverändert.
+**Entscheidung 18.10.2026, vorläufig angenommen:** Die vom Nutzer akzeptierte Arbeitsraumrichtung ist der normale React-Einstieg. Alternative dauerhaft separater Design-App verworfen: gemeinsame Daten-/Anzeigewege sind wartbarer und leichter zu prüfen. App.tsx enthält Shell und Navigation; Rechnungen.tsx, Rechnungsdetails.tsx und Importvorschau.tsx die Ansichten. ui.tsx bündelt wiederverwendbare Daten-/Status-/Meldungs-/Titel-/Kennzahlen-/Tastaturbausteine. design-tokens.css ist die einzige aktive Palette, Arbeitsraum.css die Komponenten-/Layoutregeln, style.css die Grundregeln. Historische Vorschaupfade exportieren nur dieselbe App beziehungsweise enthalten einen Hinweis; sie erzeugen keine zweite Runtime. Frühere Arbeit ist privat als verifizierte Rückfallsicherung erhalten.
 
-Der Rechnungsanzeigevertrag enthält zusätzlich `BestaetigtZugeordnet`: exakter serverseitiger Dezimalbetrag aus Rechnungsbetrag minus dem im Kern berechneten offenen Betrag, formatiert wie die übrigen Geldwerte. UI-Filter und Text-/Datumsortierung verändern ausschließlich die angezeigte Liste, niemals Salden. Beide Partnerrollen bleiben ausdrücklich benannt; keine feste ISD-Rolle. Ohne Fälligkeitsdaten kein Überfälligkeitsstatus.
+Rückkehr aus Details über sichtbaren Button oder Breadcrumb erhält Suche, Zahlungsfilter, Sortierung und Fokus auf dem Rechnungsknopf. Tabelle nennt Rechnungsbestand und Aussteller/Empfänger; keine unbelegte Einordnung als Kunde, Lieferant, Ausgangs-/Eingangsrechnung oder andere Verpflichtung. Getrennte zukünftige Vorgangstypen sind möglich, aber noch nicht modelliert oder als Navigation angeboten.
 
-Rechnungsdetails und adressierte Importquellen werden nach der zugehörigen Tabellenzeile zugänglich aufgeklappt. Importfehler, Warnungen und neutrale Zeilenanzeige sind von Zahlungsstatus/Bestätigung getrennt. Technische Herkunft bleibt vollständig erreichbar, ohne die Hauptansicht zu dominieren. Auf Tabletbreite eigener seitlicher Tabellenbereich mit Links-/Rechts-Tasten; bei ≤680 px gestapelte beschriftete Datensätze. Verschachtelte Quelltabellen behalten ihr zweidimensionales Layout.
+API-/Import-/Finanzverträge bleiben unverändert. Der Rechnungsanzeigevertrag enthält BestaetigtZugeordnet als formatierten serverseitigen Dezimalbetrag; das Frontend filtert/sortiert nur. Originalwerte bleiben React-Text, Quellen und Prüfbericht erreichbar. Kein neuer Endpunkt, keine Persistenz, keine Dokumentenaktion. Entscheidung bei tatsächlichen neuen Modulen, Auth/Mandanten, Detail-Deep-Links oder nach Funktionsabnahme erneut prüfen. Gestaltungsdetails ausschließlich im [Designsystem](../../src/frontend/DESIGN.md).
 
-`darstellung.ts` enthält reine Suche-/Sortier-/Status-/Datumsdarstellung und regionale Metadaten für Deutschland, Österreich und Schweiz. Aktive Oberfläche de-DE/EUR; keine CHF-Verarbeitung, keine Umrechnung, keine Steuerregeln. Regionale Geldformatierung benötigt später einen erweiterten serverseitigen Darstellungsvertrag. Keine zusätzlichen Pakete, Endpunkte, Datenbankobjekte oder externen Ressourcen.
+## Geplante Dokumenten- und Belegakte – kompakter Fachentwurf
+
+**Status: Zielkonzept; nur der nachfolgend beschriebene synthetische DOK-01-Lesepfad ist implementiert.** Ziel ist eine vorgangsbezogene Akte für geeignete Rechnungen, Forderungen/Verpflichtungen und weitere Geschäftsvorgänge. Heute ist nur die synthetische Rechnungs-/Zahlungs-/Importstrecke vorhanden. Kein generisches Finanzmodell, Upload, Viewer, OCR oder PDF-Editor in diesem Sprint. Die aktuelle Detailansicht zeigt nur den ehrlich beschrifteten fehlenden Dateibestand.
+
+### Fachliche Bausteine und Invarianten
+
+| Baustein (Vorschlag, noch kein Code) | Kleinster Inhalt / Regel |
+| --- | --- |
+| Vorgangsreferenz | UnternehmenId, stabiler Vorgangstyp und VorgangId. Der heutige Frontendvertrag liefert keine solche allgemeine Identität; im Folgepaket explizit definieren. Keine Zuordnung allein über Dateiname oder Rechnungsnummer ohne Unternehmen. |
+| Dokument | DokumentId, UnternehmenId, Dokumentart, ursprünglicher Dateiname, Herkunft/Quellenreferenz, erfasstes Dokumentdatum soweit belegt und Erfassungsdatum. Mehrere Anhänge pro Vorgang über explizite Zuordnung. |
+| Unveränderliche Dateiversion | VersionId, DokumentId, Version, MIME/Format, Bytezahl, SHA-256, ursprüngliche Bytes, Eingangsquelle, Erfassungsautor/-zeit. Neue Version ersetzt keine Originalbytes. Hash identifiziert Bytes, bestätigt keine Echtheit oder Zahlung. |
+| Vorgang–Dokument-Zuordnung | Unternehmen, Vorgangsreferenz, DokumentId, Zuordnungsautor/-zeit. Mehrfachverwendung eines Dokuments nur ausdrücklich und mit passenden Rechten; kein unternehmensübergreifendes Deduplizieren mit Datenoffenlegung. |
+| Notiz / Kommentar | Text, Bezug auf Vorgang oder konkrete Dokumentversion, authentifizierter Autor und serverseitiger UTC-Zeitstempel. Änderungen mit Revision/Vorgänger nachvollziehen, keine heimliche Originaländerung. |
+| Bearbeitung / Prüfung | Eigener Dokumentenstatus und Ereignisse wie Geprüft/Bearbeitet mit Autor/Zeit/Begründung. Keine Änderung von Zahlungsbestätigung, Zahlungszuordnung oder Rechnungssaldo. |
+| Anmerkung / Stempel | Separate Annotation mit Position/Seite/Version/Autor/Zeit; optional abgeleiteter Export mit eigener Version/Hash und Bezug zum Original. „Bezahlt“ ist ein Bearbeitungsvermerk, keine Zahlung oder Bankbestätigung. |
+| Audit / Export | Ereignisse für Zuordnung, Öffnung soweit erforderlich, Notizrevision, Prüfung und Export; referenzierte Version/Hashes, autorisierter Akteur, Zeit und Zweck. Exportmanifest und Herkunft erhalten; keine sensiblen Vollinhalte in technischen Logs. |
+
+**Finanzielle Sperre:** Dokumentenvermerke, einschließlich „Bezahlt“, dürfen keinen Zahlungsvorgang, keine Bestätigung, Zuordnung, Buchung oder Saldenänderung auslösen. Die Finanzmodule bleiben alleinige Quelle dieser Zustände. Dokumentenprüfung und Zahlungsnachweis werden nebeneinander mit eigener Bedeutung angezeigt; keine Gleichsetzung. Bestehende Originaldateien werden niemals mit Stempeln oder Notizen überschrieben.
+
+### Original, Scan und E-Rechnung
+
+Ein digital eingegangenes Original wird mit seinen ursprünglichen Bytes/Herkunft aufbewahrt. Ein PDF-Scan bildet Papier ab und wird als Scan gekennzeichnet; Textsuche kann fehlen. Eine strukturierte E-Rechnung ist nicht auf eine PDF-Ansicht reduzierbar: beispielsweise definiert XRechnung Rechnungsinformationen als XML-Datensatz. Strukturierte Quelldaten und gegebenenfalls weitere Bestandteile bleiben erhalten; gerenderte PDF ist eine abgeleitete Darstellung, keine Ersetzung der Quelle. Format-/Schema-/Fachvalidierung ist ein späterer eigener Schritt, keine heutige Konformitätszusage. Technische Primärquelle, gelesen 18.10.2026: `https://xeinkauf.de/xrechnung/`.
+
+OCR ist optional und nachgelagert: Original unverändert, extrahierter Text/Wert mit Quellseite/Position, Werkzeugversion und Unsicherheit, Korrekturfreigabe durch Menschen. Keine automatische Übernahme in Zahlung, Buchung, Frist oder andere finanziell wirksame Aktion. Ein OCR-Text oder sichtbarer Stempel belegt keine Echtheit.
+
+### Rechte, Datenschutz und Dateisicherheit
+
+- Unternehmenskontext serverseitig aus vertrauenswürdiger Sitzung bestimmen; Rechte für Liste, Dateiöffnung, Notiz, Prüfung und Export jeweils am Vorgang und Dokument prüfen. Dateikennung oder vom Browser gelieferte UnternehmenId reicht nicht. Rollen/Minimalrechte, Widerruf und Negativfälle über verschiedene Unternehmen vor realen Dateien nachweisen. Der heutige Loopback-Prototyp ohne Anmeldung erfüllt diese Produktionsvoraussetzungen nicht.
+- Originale außerhalb öffentlich erreichbarer Webpfade, Speicherung/Dateinamen nicht aus beliebigen Browserpfaden; nur IDs über autorisierten Handler. Format-/Größen-/Signaturprüfung, keine alleinige MIME-/Endungsannahme. Spätere Quarantäne und geeignete Schadsoftwareprüfung vor Freigabe, keine Ausführung aktiver PDF-Inhalte oder externer Verknüpfungen. Grenzen, Ressourcenverbrauch, verschlüsselte/beschädigte Dateien und Parserfehler testen. Primärquelle: `https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html` (18.10.2026); daraus keine Sicherheitsgarantie ableiten.
+- PDF-Betrachter getrennt vom Finanzkern, kontrollierter Dateiabruf, keine externen Viewer-/OCR-Dienste ohne Datenfreigabe. Suche/Zoom nur als verfügbar ausweisen, wenn der konkrete Betrachter sie nachweislich bietet. Bestehende CSP enthält object-src 'none'; sie wird hier nicht verändert. Eingebetteter Viewer oder zusätzliche Bibliothek benötigt gesonderte Sicherheits-/Abhängigkeitsprüfung. Alternative erster Lesepfad: nativer Browserbetrachter in separatem Tab ohne Einbettung, nur für feste synthetische Dateien und nach tatsächlichem Browsertest.
+- Datenschutz-/Aufbewahrungstrigger sind offen: je Unternehmen/Land DE/AT/CH, Dokumentart, Inhalt, Zweck, Verantwortlichem und rechtlichem Kontext klären. Versicherungs-/Krankenkassen-/Personalunterlagen können besonders schutzbedürftig sein. Aktuell keine realen Daten, keine nationale Frist oder Steuerregel erfinden. Fachstelle/Datenschutz-/Steuerberatung bestätigt Anwendbarkeit, Aufbewahrung, Sperre, Löschregeln und Exportanforderungen vor realem Einsatz; technische Abdeckung derzeit nicht implementiert. Keine unbegrenzte Speicherung personenbezogener Notiztexte als pauschale Auditregel.
+- Vor realer Nutzung: Auth/Mandantentrennung, Backups mit Restore-Test, Integritäts-/Versionsprüfung, Zugriffsaudit, Export-/Löschkonzept und abgesicherter Betrieb. Keine revisionssichere/GoBD-/DSGVO-Konformität oder Echtheitsgarantie allein aus Hash/Historie behaupten.
+
+### Kleinster nächster vertikaler Schnitt – DOK-01 (nur Vorschlag)
+
+**Synthetische Dokumentenliste und lesender Originalaufruf für genau einen Demo-Rechnungsvorgang**, zwei selbst erzeugte Test-PDFs mit klarer Kennzeichnung. Kein Upload, Notizschreiben, Stempeln, OCR, PDF-Verändern oder Finanzschreiben. Fixtures bei Tests lokal erzeugen statt pauschale PDF-Ausnahme in .gitignore. Fachlich stabile Demo-Vorgangs-/Dokument-/Versionskennung und Zuordnung zuerst in Tests festlegen; bestehende Finanzverträge nicht ungeprüft erweitern.
+
+1. Kleiner read-only Dokumentendienst mit festem synthetischem Unternehmenskontext, unveränderlichen Bytes und Metadatenliste; keine beliebigen Pfade/URLs. Demo-IDs und zulässige Zuordnungen explizit. Das ist kein Ersatz produktiver Anmeldung.
+2. Detailansicht listet zwei erkennbare Anhänge mit Art, Name, Größe, Datum/Quelle und Version. Öffnen lädt genau die zugeordnete Testdatei über lokalen Handler in einen nachweislich nutzbaren Browserbetrachter. Fehlender Betrachter/Datei klar melden, keine Schein-Buttons. MIME, Disposition, Ressourcenlimits und bestehende CSP gezielt prüfen; keine pauschale Lockerung.
+3. Akzeptanztests: richtige Anhänge pro Vorgang/Unternehmen; fremde Unternehmens-ID/Zuordnung, unbekannte ID und Pfad-/Formatangriffe abweisen; unveränderte Byte-/Hashwerte nach Öffnen; keine zusätzlichen Zahlungs-/Zuordnungsereignisse; Tastatur, Fehlermeldung, Suche/Zoom soweit tatsächlich vorhanden und Smartphone. Geprüft-/Notiz-/Stempelfunktionen bleiben ausdrücklich später.
+
+Nach erfolgreicher menschlicher Abnahme dieses Lesepfads erst ein getrennt freizugebendes Paket für Notizen/Bearbeitungshistorie planen. Speicherung/Viewerwahl und verbleibende Rechte-/Sicherheitsfragen vor dessen Implementierung konkretisieren. Dieser Entwurf erteilt keine automatische Freigabe des Folgepakets.
+
+## Kontakt-Sofortaktionen und zweiseitige Vorgänge – 18.10.2026
+
+### Implementierter kleiner Schnitt
+
+Der reguläre Arbeitsraum bleibt unverändert die einzige App. Rechnungsansicht besitzt jetzt **optionale** AusstellerKontakt/EmpfaengerKontakt-Felder mit Ansprechpartner, E-Mail, Telefon und Quelle. Alte Antworten ohne diese Felder bleiben im Frontend gültig, alte C#-Konstruktoraufrufe durch Default null möglich; alte Felder/Importverträge bleiben unverändert. Ein alter Client kann zusätzliche JSON-Felder ignorieren. Es ist eine additive Demo-Erweiterung, keine versionierte produktive CRM-API oder persistente Kontaktidentität.
+
+DemoDaten ordnet Kontakte über DEMO-NORD/DEMO-ISD zu, bevor Kennungen in Anzeigenamen umgesetzt werden; keine Namensähnlichkeit als Zuordnungsregel. Musterbetrieb West besitzt keine Kontaktangaben. Rollen kommen aus dem konkreten Rechnungsvorgang (Rechnungsaussteller/Rechnungsempfänger), nicht aus dem Kontakt. Dieselbe Organisation wechselt ihre Rolle zwischen Rechnung 001 und 002. Keine allgemeine Einstufung als Kunde/Lieferant und keine Ableitung eines Zahlungsempfängers aus einer E-Mail-Adresse.
+
+Entscheidung: gemeinsame Kontaktkarte und kleine URI-Helfer statt CRM/zusätzlichem Endpoint oder im Frontend erfundener Kontaktdaten. Zwei explizite Kontakte am vorhandenen Anzeigeobjekt sind der kleinste rückwärtskompatible Lesepfad. Konsequenz: diese Projektion ist keine Kontaktverwaltung; Organisations-/Personenidentität, Zuständigkeit und verifizierte Gültigkeit fehlen noch. Bei produktiver Kontaktpflege, weiteren Vorgangsarten oder Versionierung der API diese Übergangsentscheidung neu prüfen.
+
+Kontaktkarte zeigt Organisation/Rolle, vorhandenen Ansprechpartner, benannte Brief-/Telefonaktionen und fehlende/ungeeignete Werte als Text. Kontaktquelle ist separat aufklappbar. mailto enthält genau eine validierte ASCII-Adresse und optional den kodierten Betreff „Rechnung <Nummer>“. Keine Anhänge, Nachrichtentexte, cc/bcc oder frei eingebrachten Header. Ungeeignete Referenz unterdrückt nur den Betreff. tel akzeptiert globale Nummer mit + und 7–15 Ziffern, entfernt nur zulässige Leerzeichen/Bindestriche; keine lokalen Rufnummern ohne Länderkontext, Durchwahlen oder URI-Parameter. Konservative Formatsyntax, **keine Erreichbarkeits- oder Eigentumsbestätigung**. Internationalisierte/komplexe Mailadressen und weitere Telefonformate sind noch nicht unterstützt.
+
+Links werden ausschließlich vom Benutzer aktiviert und an dessen konfigurierte E-Mail-/Telefonie-Anwendung übergeben. Kein Versand/Telefonat durch den Server und keine Erfolgsbehauptung. Empfänger und optionaler Rechnungsbetreff werden dabei an die konfigurierte Anwendung übergeben; vor echten Daten ist dieser lokale Übergabepfad samt Datenminimierung/Providerkontext zu bewerten. Nicht erreichbare synthetische Kontakte sind ausdrücklich gekennzeichnet: .invalid-Mailadressen, Telefonnummer +49 30 23125 001 aus dem Filmrufnummernbereich Berlin. Amtliche Quelle gelesen 18.10.2026: `https://www.bundesnetzagentur.de/DE/Fachthemen/Telekommunikation/Nummerierung/DramaNumbers/artikel.html`. Es wurden keine Nachrichten gesendet oder Anrufe ausgelöst.
+
+### Primäre Darstellungsorte in Details
+
+- **Rechnungsgrundlage**: Belegreferenz und Eingangs-/Quellenort der Rechnung einmal im Nachweisbereich. Aktuell nur Referenzen, keine Originaldatei.
+- **Dokumente zum Vorgang**: genau ein Hinweis auf fehlende Originaldateien und noch nicht verfügbare Dokumentenaktionen. Der frühere zusätzliche Satz zum selben fehlenden Dateibestand ist entfernt.
+- **Zahlungsnachweis anzeigen**: eigene aufklappbare Referenz/Quelle je einzelner Zahlung. Nicht mit Rechnungsgrundlage zusammengeführt. Die Darstellung bleibt derzeit die Quelle der Zahlung; separate Bankbestätigungs-/Zuordnungsnachweise besitzt der Kern, der heutige Anzeigevertrag liefert diese noch nicht vollständig aus.
+- **Kontaktquelle**: Herkunft der Kontaktangaben am Kontakt. Kein Dokumenten- oder Zahlungsbeleg.
+
+Rechnungsnummer, Orientierung und Beträge können im passenden Tabellen-/Detailkontext wieder erscheinen; keine zentrale Quelle wird dafür doppelt gespeichert. Dokumentenstatus, Zahlung, Bestätigung und Zuordnung bleiben fachlich getrennt.
+
+### Fachliche Matrix: zwei Zahlungsrichtungen
+
+**Nur synthetische Beispiele; Perspektive für diese Analyse ausdrücklich Beispielbetrieb Nord.** Der heutige API-Vertrag legt noch kein „eigenes Unternehmen“ fest. Seine Gesamtsumme ist deshalb keine Forderungs-/Verbindlichkeitssumme und kein saldierter Unternehmenszahlungsstand. UI weist auf die fehlende Unterscheidung hin; keine Umdeutung der bisherigen 910,00 EUR.
+
+| Vorgang / Perspektive Nord | Betrag und bestätigte Zuordnungen | Rest | Heutiger Nachweis / fehlende Funktion |
+| --- | --- | --- | --- |
+| Ausgangsrechnung 001: Nord stellt ISD Rechnung; erwarteter Zahlungseingang | 1.280,00 EUR; 1.280,00 EUR | 0,00 EUR Forderung | Bestehender synthetischer Demofall, bezahlt. Explizite Richtung im Modell fehlt. |
+| Eingangsrechnung 002: ISD stellt Nord Rechnung; eigener Zahlungsausgang | 960,00 EUR; 300,00 + 200,00 EUR | 460,00 EUR Verpflichtung | Bestehender Demofall: Nord Zahler, ISD Zahlungsempfänger. Zwei bestätigte Teilzahlungen sind abbildbar. Keine ausführbare Überweisung. |
+| Ausgangsrechnung 003: Nord an West; Zahlung noch unbestätigt | 450,00 EUR; 0,00 EUR bestätigt (450,00 EUR zur Prüfung) | 450,00 EUR Forderung | Bestehender Demofall: Prüfung reduziert nichts. |
+| Ausgangs-/Eingangsrechnung, spiegelbildlicher neuer Test | Je 240,00 EUR; 60,00 + 40,00 EUR, später weitere bestätigte 140,00 EUR | Erst 140,00 EUR, nach letzter Zuordnung 0,00 EUR | Zwei neue Kern-Testfälle prüfen beide Rollen des eigenen Unternehmens, zusätzlich abgewiesene unbestätigte Teilzahlung. Keine neuen UI-Fachdaten. |
+| Ratenvereinbarung in beide Richtungen: je 600,00 EUR in drei vereinbarten Raten | Beispiel nur geplant: drei Raten à 200,00 EUR | Abhängig von bestätigter Zuordnung | Einzelne Teilzahlungen möglich, **Vereinbarung/Ratenplan/Fälligkeit/Abweichung nicht modelliert**. Teilzahlung ist kein Nachweis einer Ratenvereinbarung. |
+| Versicherungsbeitrag, Behördenforderung, Sozialbeitrag, wiederkehrende Verpflichtung | Beispiel geplant: Beitrag 120,00 EUR, bestätigt 40,00 EUR | 80,00 EUR Verpflichtung | Keine eigenen Vorgangstypen, Perioden oder Pläne. Nicht als Rechnung vortäuschen. Künftige Forderungen in Gegenrichtung ebenfalls eigenständig einordnen. |
+
+**Aus tatsächlichem Kern:** Rechnung besitzt Aussteller/Empfänger; Zahlung Zahler/Empfänger, exakte positive Dezimalbeträge, Datum und Nachweis. Zuordnung fordert bestätigte Zahlung und Zahlungsempfänger = Rechnungsaussteller; sie verhindert doppelte Rechnung–Zahlung-Paare und Überzuordnung. Deshalb funktionieren beide Richtungen, wenn Parteien passend gesetzt werden. Zahler muss derzeit nicht dem Rechnungsempfänger entsprechen (Drittzahlungen möglich); daraus keine automatische Schuldnerregel ableiten. Mehrere Zahlungen/Sammelzuordnung und unzugeordnete Überzahlung sind begrenzt vorhanden, keine produktive Finanzbuchhaltung.
+
+**Noch nicht vorhanden:** eigene Unternehmensperspektive und Mandantenautorisierung, generische Vorgangsart, Forderung/Verbindlichkeit als explizite Dimension, Fälligkeits-/Raten-/Wiederholungsmodell, Konten-/Bankbewegungsabgleich, produktive Buchung, dauerhafte Identitäten im Anzeigevertrag oder Persistenz. Kern kennt keine mehrwährungsfähigen Geldobjekte; bisherige Anzeige/Importstrecke ist EUR-begrenzt. Unternehmensnamen im DTO ersetzen keine unternehmenssicheren IDs. Keine umfangreiche Finanzarchitektur in diesem Sprint geändert; Matrix muss vor einem solchen Folgepaket fachlich abgenommen werden.
+
+### Gemeinsame Vorgangs-, Dokumenten- und Kommunikationsakte (Ziel, nicht implementiert)
+
+Auf dem bestehenden Dokumentenentwurf aufbauen: Ein stabiler unternehmensgebundener Vorgangsbezug verknüpft Rollen/Zuständigkeiten, zentrale Dokumente und Versionen, Kommunikation, Notizen, Aufgaben und die **Referenzen** auf Finanzereignisse. Dateien einschließlich PDF/Scan, Word, Excel, strukturierter E-Rechnung, E-Mail und Anhängen zentral einmal verwalten; selbst erzeugte Schreiben als eigene abgeleitete/versionierte Dokumente mit Vorlage/Version und Quellenbezug. Kein DMS oder Vorlagenbestand pro Fachmodul. Rollen sind Beziehungen je Vorgang, kein unveränderliches Attribut „Kunde“ an jeder Organisation. Finanzkern bleibt Eigentümer von Bestätigung/Zuordnung/Saldo; Kontakt- oder Bearbeitungsereignisse dürfen ihn nicht verändern.
+
+Priorität im aktuellen Detailkontext: E-Mail und Anrufen unmittelbar am passenden Beteiligten. Weitere Kontaktdetails erst mit echter Kontaktstrecke; später Telefonnotiz und Aufgabe/Wiedervorlage in ein kleines kontextbezogenes Menü, Dokument hinzufügen/Original öffnen in den Dokumentenbereich. Schreiben aus Vorlage erst mit zentraler Vorlagen-/Dokumentenfunktion. Rechte, Quelle, tatsächliche Daten und Berechtigung entscheiden, ob eine Aktion angeboten wird. Heute keine solchen Menüeinträge/Scheinbuttons. Ein Klick auf mailto/tel erzeugt auch keinen bestätigten Kommunikationshistorieneintrag; Telefonnotiz benötigt später bewusste Erfassung durch den Menschen.
+
+**Ein gemeinsamer Eingangsbearbeitungsmechanismus**, kein gesonderter Automat pro Vorgangsart: E-Mail/Scanner/Upload → kontrollierter Eingang und unverändertes Original → sichere Formatprüfung → Extraktionskandidat mit Herkunft/Unsicherheit → Organisations-/Dokumentartvorschlag → Duplikatprüfung → vorhandener Aktenbezug oder Entwurf → menschliche Prüfung/Freigabe → zentrale Version/Ablage/geeignete Benennung → gegebenenfalls Aufgaben-/Fristenvorschlag → weitere Bearbeitung in derselben Akte. Import-/Workflowlauf mit Status, Quellhash, Idempotenz, Fehler/Wiederholung und Audit vorsehen. OCR/KI liefern überprüfbare Vorschläge, niemals feststehende Tatsachen; Originalbezeichnungen erhalten. Mandanten-/Rechteprüfung und kein Datenabfluss ohne Freigabe gelten über jeden Schritt.
+
+Keine automatische Zahlung, ungeprüfte Buchung/Mahnung/Kontodatenänderung, rechtsverbindliche Erklärung oder E-Mail-Versendung. Jede spätere Integration benötigt eigenen Datenfluss-/Berechtigungs-/Sicherheitsnachweis. Dateiablage und Versionierung aus dem vorhandenen Dokumentenkonzept wiederverwenden; „Bezahlt“-Stempel bestätigt weiterhin weder Eingang noch Ausgang.
+
+**Nächster kleiner Vorschlag nach Funktionsabnahme:** DOK-01 aus dem bestehenden Entwurf: ein stabil referenzierter synthetischer Rechnungsvorgang, zwei echte synthetische PDF-Testbelege, lesende Metadaten-/Versionszuordnung und kontrolliertes Dateiöffnen. Vorgangs-/Unternehmenskennung zuerst festlegen; keine Namen als Zugriffsschlüssel. Kontaktprojektion weiterverwenden. Kein Upload, keine Telefonnotiz-, Aufgaben-, Vorlagen-, OCR- oder Finanzschreibstrecke automatisch beginnen.
+
+
+## DOK-01 – implementierter synthetischer PDF-Lesepfad (18.10.2026)
+
+**Entscheidung und Status:** DOK-01 wurde als begrenzter lokaler Desktop-Demoauftrag freigegeben und umgesetzt; menschliche Funktionsabnahme steht aus. Die früheren „nächster Vorschlag“-Abschnitte dokumentieren die Planung davor. Kein produktives Archiv oder vollständiges Vorgangs-/Berechtigungsmodell.
+
+### Kontext, Alternative und Konsequenz
+
+Rechnung und einzelne Zahlung benötigen tatsächlich lesbare, getrennte Belege. DemoDokumente.cs erzeugt beim Initialisieren zwei feste einseitige PDF-1.4-Testdokumente mit Standardschrift, korrekter Objekttabelle und Byteoffsets. Nur konstante ASCII-Testtexte, keine fremden Dateien oder allgemeine PDF-Engine. Keine neuen Pakete, gespeicherten Binärfixtures oder .gitignore-Ausnahmen. Privater Katalog hält unveränderliche Metadaten und Bytes; Dateiabruf gibt eine Kopie zurück. SHA-256, Größe, Version, Datum und synthetische Quelle beschreiben die Dateiversion, bestätigen aber keine Echtheit oder Zahlung.
+
+Alternative Einbettung benötigt eine Lockerung der vorhandenen object-src-/Frame-Regeln oder eine zusätzliche Renderingbibliothek. Deshalb **nativer PDF-Betrachter im neuen Browser-Tab**, rel=noopener/noreferrer, bestehende CSP unverändert. Edge hat beide echten Dateien lesbar angezeigt; Tab schließen erhält die Rechnung. Kein eigener Editor, OCR, Upload oder automatisches Speichern. Zoom/Suche/Bearbeitungs-/KI-Angebote des Browserbetrachters sind Browserfunktionen; keine entsprechende Produktintegration oder Freigabe von Uploads an externe Dienste. Keine übergreifende Kontrolle über Browsererweiterungen behaupten.
+
+### Begrenzte Identitäten und Verträge
+
+Additive optionale Demo-Anzeigeattribute: Rechnung.VorgangId und Perspektive (Unternehmensname plus bekannte Rolle Aussteller/Empfänger), Zahlung.Id. Explizite feste Zuordnung in DemoDaten statt Namensheuristik; vorhandene Finanzobjekte und Geldbeträge bleiben unverändert. Nord ist im Demo ausdrücklich die Unternehmensperspektive: 001/003 eigene Rechnung, 002 erhaltene Rechnung. Frontend zeigt Richtungen nur bei konsistenter Perspektive und tatsächlich passendem Zahler/Empfänger. Ohne belastbaren Kontext bleiben Namen sichtbar, keine erfundene Richtung. Unbestätigter Eingang heißt „Zahlungseingang zur Prüfung“, nicht erhaltenes Geld.
+
+Stabile Kennung demo-nord-rechnung-002 verbindet zwei Dokumentversionen:
+
+| Dokument-ID | Datei / Art | Bezug |
+| --- | --- | --- |
+| original-002-v1 | SYNTH-2026-002-Originalrechnung.pdf / Originalrechnung | Rechnung 002, 960,00 EUR, von ISD an Nord |
+| zahlung-002-v1 | SYNTH-ZA-002-Zahlungsbeleg.pdf / Zahlungsbeleg | Nur demo-zahlung-002, bestätigte synthetische eigene Zahlung 300,00 EUR |
+
+200,00-EUR-Zahlung besitzt weiterhin nur ihre ursprüngliche Belegreferenz/Quelle, keine vorgetäuschte PDF. Vorgänge 001/003 liefern eine leere Dokumentenliste. Ein Dokument wird einmal im zentralen Katalog gehalten; Original rechts, Zahlungsbeleg nur an der Zahlung. Beide verwenden dieselbe Dokumentkarte und denselben Abrufhandler. Rechnungs-/Zahlungsquellen und synthetische PDF-Erzeugungsquelle sind unterschiedliche Herkunftsnachweise, aufklappbar am jeweiligen Kontext.
+
+- GET /api/vorgaenge/{vorgangId}/dokumente: nur bekannte feste Demo-Vorgänge, synthetische Metadatenliste.
+- GET /api/vorgaenge/{vorgangId}/dokumente/{id}: nur exakt passende bekannte Kombination; PDF inline, application/pdf, bekannte feste Dateinamen. Kein Dateipfad wird aus Eingaben konstruiert und nichts vom Benutzer-Dateisystem gelesen.
+- Unbekannte/falsch zugeordnete Kennung oder Pfadversuch: 404. Fehlende PDF liefert eine statische deutschsprachige HTML-Fehlerseite mit Hinweis zum Tab-Schließen, keine Ausnahme-/Dateipfadangabe. Andere Methoden erzeugen keine Schreibwirkung.
+- Bestehende Loopback-/Host-/Origin-Grenzen sowie no-store, nosniff, no-referrer und CSP gelten auch für Dokumente. Feste PDF-Inhalte enthalten keine Skripte, Formulare, externen Ressourcen, Anhänge oder Makros. Das ist kein Sicherheitsversprechen für fremde PDFs.
+
+Dokumente.tsx lädt Metadaten einmal je Detailansicht, prüft synthetische Kennzeichnung, IDs/Unternehmen/Vorgangsbezug, Typ, Version, Größe, Hashformat und doppelte IDs. Fehler bleiben wiederholbar, leere Fälle ehrlich. Keine URL aus Dateinamen oder vom API gelieferte fremde Vieweradresse. Für die fest vorhandenen Bytefolgen ist der native Link zugleich die größere Ansicht; keine zweite Vorschauarchitektur.
+
+### Sicherheit, Desktop und spätere Erweiterung
+
+**Alle Demo-Dokumente sind ausdrücklich synthetisch und für jeden lokalen Benutzer des Prototyps abrufbar.** Es gibt keine produktive Anmeldung, Mandantenautorisierung, revisionssichere Ablage oder Zugriffshistorie. Unternehmens-ID DEMO-NORD ist ein fester Demokontext, keine nachgewiesene Rechteprüfung. IDs, Loopback und versteckte Menüpunkte ersetzen keine Autorisierung. Nicht mit echten Daten oder außerhalb des Loopbacks betreiben.
+
+Bei echten Dokumenten oder mehreren Unternehmen muss ein serverseitig autorisierter Vorgangs-/Dokumentdienst den Katalog ersetzen. Dokumentidentität/Version und Aktenzuordnung dann getrennt halten: mehrere berechtigte Akten verweisen auf dieselben unveränderten Bytes, Rechteprüfung je Verknüpfung. Rollen für Geschäftsführung, Büro und Mitarbeiter serverseitig am Zugriff durchsetzen. Notizen/Kommentare mit Autor/Zeit und Bearbeitungsereignisse können später an Vorgang oder Version anknüpfen; niemals Originalbytes überschreiben oder „Bezahlt“ als Finanzaktion behandeln. Aufbewahrung, Restore, Audit und Fremd-PDF-/Upload-Sicherheit bleiben offene Produktionsvoraussetzungen.
+
+Neuprüfungs-Trigger: echte Daten, beliebige Dateien, Upload, Einbettung/Viewerbibliothek, weitere Dokumentformate, Persistenz oder produktive Rechte. Dann neue Sicherheits-/Abhängigkeitsentscheidung statt Erweiterung des Test-PDF-Generators. Desktop ist gemäß Nutzerentscheidung Priorität; keine eigenständige mobile Anwendung. Der gemischte Gesamtbestand von 910,00 EUR bleibt ausdrücklich kein Forderungssaldo. Keine Finanzberechnung, Importlogik, Bankbuchungsdaten oder fachliche Vorgangsarten erweitert.
