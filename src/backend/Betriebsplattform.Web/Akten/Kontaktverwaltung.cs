@@ -13,7 +13,7 @@ internal sealed partial class Kontaktpflege
         if(alt is not null){Arbeitsregeln.Version(e.Version,alt.Version);if(alt.Archiviert)throw new Arbeitsfehler("Archivierter Kontakt bleibt schreibgeschützt.",409);if(alt.Art!=e.Art)throw new Arbeitsfehler("Firma und Person können nicht ineinander umgewandelt werden.");}
         var vorname=e.Art=="Person"?Arbeitsregeln.Text(e.Vorname??alt?.Vorname,"Vorname",80):"";
         var nachname=e.Art=="Person"?Arbeitsregeln.Text(e.Nachname??alt?.Nachname,"Nachname",80):"";
-        if(vorname.Any(char.IsControl)||nachname.Any(char.IsControl))throw new Arbeitsfehler("Bitte Vorname und Nachname ohne Zeilenumbrüche eingeben.");
+        if(vorname.Any(char.IsControl)||nachname.Any(char.IsControl)||e.Art=="Person"&&(!System.Text.RegularExpressions.Regex.IsMatch(vorname,@"\A[\p{L}\p{M}][\p{L}\p{M} \-’'.]*\z")||!System.Text.RegularExpressions.Regex.IsMatch(nachname,@"\A[\p{L}\p{M}][\p{L}\p{M} \-’'.]*\z")))throw new Arbeitsfehler("Bitte gültige Vor- und Nachnamen eingeben; Telefonnummern gehören ins Telefonfeld.");
         var name=e.Art=="Person"?vorname+" "+nachname:Arbeitsregeln.Text(e.Name,"Firmenname",160);
         if(e.FirmaId is not null&&(!kontakte.TryGetValue(e.FirmaId,out var firma)||firma.Art!="Firma"||firma.Archiviert||e.Art!="Person"))throw new Arbeitsfehler("Bitte eine aktive Firma für den Ansprechpartner wählen.");
         if((e.Anschrift?.Length??0)>500||(e.Abteilung?.Length??0)>100||(e.Rolle?.Length??0)>100||e.Werte is null||e.Werte.Count>30)throw new Arbeitsfehler("Kontaktfelder oder Kontaktwerte sind zu lang.");

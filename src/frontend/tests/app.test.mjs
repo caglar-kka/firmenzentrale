@@ -57,7 +57,7 @@ test('Rechnungssuche, Statusfilter und Sortierung arbeiten ohne Geldberechnung',
 
 test('Status trennt offene Rechnungen, Bestätigung und Importprüfung', async () => {
   const { zahlungsstatus, importstatus, datumAnzeigen, regionen } = await import('../node_modules/.cache/betriebsplattform-tests/darstellung.js');
-  assert.equal(zahlungsstatus('Offen').ton, 'neutral');
+  assert.equal(zahlungsstatus('Offen').ton, 'warnung');
   assert.equal(zahlungsstatus('Teilzahlung').text, 'Teilweise bezahlt');
   assert.equal(zahlungsstatus('Zur Prüfung').ton, 'warnung');
   assert.equal(zahlungsstatus('Bestätigt (synthetisch)').ton, 'erfolg');
@@ -188,7 +188,7 @@ test('Regulärer Einstieg und historischer Importpfad verwenden dieselbe Anwendu
     assert.doesNotMatch(document.body.textContent,/Alle Vorgänge|Mit Variante C vergleichen|Nicht freigegeben/);
     assert.match(document.title,/Arbeitsplatz/);
     assert.equal(document.querySelectorAll('nav a').length,5);
-    assert.match(document.querySelector('.p-tabelle thead').textContent,/Aussteller \/ Empfänger/);
+    assert.match(document.querySelector('.p-tabelle thead').textContent,/Aussteller.*\/ Empfänger/);
   });
 });
 

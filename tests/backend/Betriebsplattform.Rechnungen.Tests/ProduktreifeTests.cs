@@ -53,8 +53,8 @@ public sealed class ProduktreifeTests
  [Theory][InlineData("Brief")][InlineData("E-Mail")][InlineData("Antwortschreiben")][InlineData("Anfrage")][InlineData("Erinnerung")][InlineData("Gesprächsvermerk")][InlineData("Sonstige Korrespondenz")]
  public void KorrespondenzVerweistAufBeliebigNeueDokumenteOhneKopie(string art){
   var b=new Aktenbestand();var d=b.Hinzufuegen(Encoding.UTF8.GetBytes("Anlage A"),"Anlage-A.txt","text/plain","versicherung-2026");var z=b.Hinzufuegen(Encoding.UTF8.GetBytes("Anlage B"),"Anlage-B.txt","text/plain","versicherung-2026");
-  Assert.Empty(b.KorrespondenzSpeichern("versicherung-2026",new("Ohne Anhang","Inhalt",art)).DokumentIds!);
-  var p=b.KorrespondenzSpeichern("versicherung-2026",new("Mehrere Anlagen","Inhalt",art,DokumentIds:[d.Id,z.Id,d.Id]));Assert.Equal(2,p.DokumentIds!.Count);Assert.Equal(2,b.Lesen("versicherung-2026").Dokumente.Count);
+  Assert.Empty(b.KorrespondenzSpeichern("versicherung-2026",new("Ohne Anhang","Inhalt",art,Richtung:"Empfangen",KontaktId:"DEMO-VERS",KommuniziertAm:DateTimeOffset.UtcNow)).DokumentIds!);
+  var p=b.KorrespondenzSpeichern("versicherung-2026",new("Mehrere Anlagen","Inhalt",art,DokumentIds:[d.Id,z.Id,d.Id],Richtung:"Empfangen",KontaktId:"DEMO-VERS",KommuniziertAm:DateTimeOffset.UtcNow));Assert.Equal(2,p.DokumentIds!.Count);Assert.Equal(2,b.Lesen("versicherung-2026").Dokumente.Count);
   Assert.Throws<Arbeitsfehler>(()=>b.KorrespondenzSpeichern("demo-nord-rechnung-002",new("Fremde Akte","Inhalt",art,DokumentIds:[d.Id])));
  }
  [Fact] public void KategorieUmbenennungErhaeltVorgangsbezugUndArchivierteKategorieBleibtLesbar(){
@@ -83,7 +83,7 @@ public sealed class ProduktreifeTests
  }
 
  [Fact] public void UxDeltaVorgangsstatusIstUnabhaengigVonZahlungUndEingang(){
-  var b=new Aktenbestand();var v=b.VorgangAnlegen(new("Vertragsrückfrage","vertrag","DEMO-NORD"));Assert.Equal("Neu",v.Status);Assert.Empty(b.Lesen(v.Id).Dokumente);Assert.NotNull(v.LetztesEreignis);
+  var b=new Aktenbestand();var v=b.VorgangAnlegen(new("Vertragsrückfrage","vertrag","DEMO-NORD"));Assert.Equal("Offen",v.Status);Assert.Empty(b.Lesen(v.Id).Dokumente);Assert.NotNull(v.LetztesEreignis);
   foreach(var status in Vorgangsbearbeitung.Werte){v=b.BearbeitungsstatusSetzen(v.Id,new(status,v.Version));Assert.Equal(status,b.Lesen(v.Id).Vorgang.Status);}
   Assert.Throws<Arbeitsfehler>(()=>b.BearbeitungsstatusSetzen(v.Id,new("Bezahlt",v.Version)));Assert.Throws<Arbeitsfehler>(()=>b.BearbeitungsstatusSetzen(v.Id,new("Zur Prüfung",v.Version)));Assert.Throws<Arbeitsfehler>(()=>b.BearbeitungsstatusSetzen(v.Id,new("Neu",1)));
   Assert.Throws<Arbeitsfehler>(()=>b.VorgangAnlegen(new("","vertrag","DEMO-NORD")));Assert.Throws<Arbeitsfehler>(()=>b.VorgangAnlegen(new("Titel","unbekannt","DEMO-NORD")));Assert.Throws<Arbeitsfehler>(()=>b.VorgangAnlegen(new("Titel","vertrag","unbekannt")));
@@ -104,7 +104,7 @@ public sealed class ProduktreifeTests
   await using var app=ApiAnwendung.Erstellen([],0,Path.GetTempPath());await app.StartAsync();try{using var c=new HttpClient{BaseAddress=new Uri(app.Urls.Single())};
    Assert.Equal(HttpStatusCode.Forbidden,(await c.PostAsJsonAsync("/api/akten",new Vorgangseingabe("Titel","vertrag","DEMO-NORD"))).StatusCode);
    c.DefaultRequestHeaders.Add("Origin",c.BaseAddress.GetLeftPart(UriPartial.Authority));c.DefaultRequestHeaders.Add("X-Arbeitsaktion","1");
-   var response=await c.PostAsJsonAsync("/api/akten",new Vorgangseingabe("Neue Vertragsakte","vertrag","DEMO-NORD"));response.EnsureSuccessStatusCode();var v=(await response.Content.ReadFromJsonAsync<Vorgang>())!;Assert.Equal("Neu",v.Status);
+   var response=await c.PostAsJsonAsync("/api/akten",new Vorgangseingabe("Neue Vertragsakte","vertrag","DEMO-NORD"));response.EnsureSuccessStatusCode();var v=(await response.Content.ReadFromJsonAsync<Vorgang>())!;Assert.Equal("Offen",v.Status);
    (await c.PostAsJsonAsync($"/api/akten/{v.Id}/bearbeitungsstatus",new Bearbeitungsentscheidung("Erledigt",v.Version))).EnsureSuccessStatusCode();Assert.Equal("Erledigt",(await c.GetFromJsonAsync<Aktenansicht>($"/api/akten/{v.Id}"))!.Vorgang.Status);
    Assert.Equal(HttpStatusCode.BadRequest,(await c.PostAsJsonAsync($"/api/akten/{v.Id}/bearbeitungsstatus",new Bearbeitungsentscheidung("Bezahlt",2))).StatusCode);
    (await c.PostAsJsonAsync("/api/kategorien/versicherung/verschieben",new Kategorieverschiebung("hoch",1))).EnsureSuccessStatusCode();Assert.Equal("versicherung",(await c.GetFromJsonAsync<Kategorie[]>("/api/kategorien"))![0].Id);
@@ -214,4 +214,104 @@ public sealed class ProduktreifeTests
   Assert.Equal(a.Neu,neu.Anschrift);Assert.Equal("",neu.Strasse);Assert.Equal("",neu.Hausnummer);Assert.Equal("",neu.Plz);
   Assert.Contains(neu.Historie,h=>h.Vorher.Contains("Fiktivring 7"));
  }
+
+ [Theory]
+ [InlineData("Rechnung Maya","Maya Maier Rechnung",true)]
+ [InlineData("Maya Rechnung","Rechnung Maya Maier",true)]
+ [InlineData("Maya Mai","Maya Maier",true)]
+ [InlineData("Muller","Müller",true)]
+ [InlineData("Meirr","Meier",true)]
+ [InlineData("xyz","Maya Maier",false)]
+ [InlineData("  ","Maya",true)]
+ public void MVP015ToleranteWortsuche(string q,string text,bool trifft)=>Assert.Equal(trifft,Suchvergleich.Passt(q,text));
+ [Fact] public void MVP015UmzuordnungIstVersioniertOhneKopieMitHistorie(){
+  var b=new Aktenbestand();var d=b.Hinzufuegen(Encoding.UTF8.GetBytes("Brief Sohn"),"Brief-Sohn.txt","text/plain",null);
+  var a=b.Zuordnen(d.Id,new("versicherung-2026",null,"versicherung",null,d.Version));
+  var neu=b.Umordnen(d.Id,new("versicherung-2026","demo-nord-rechnung-002",a.Version));
+  Assert.Equal(d.Id,neu.Id);Assert.Single(neu.Vorgaenge);Assert.Equal("demo-nord-rechnung-002",neu.Vorgaenge[0]);
+  Assert.Empty(b.Lesen("versicherung-2026").Dokumente);Assert.Contains(neu.Aktivitaeten!,e=>e.VorherigerVorgangId=="versicherung-2026"&&e.VorgangId=="demo-nord-rechnung-002");
+  Assert.Throws<Arbeitsfehler>(()=>b.Umordnen(d.Id,new("versicherung-2026","demo-nord-rechnung-002",a.Version)));
+  Assert.Throws<Arbeitsfehler>(()=>b.Umordnen(d.Id,new("demo-nord-rechnung-002","unbekannt",neu.Version)));
+  Assert.Throws<Arbeitsfehler>(()=>b.Umordnen(d.Id,new("demo-nord-rechnung-002","demo-nord-rechnung-002",neu.Version)));
+  var zurueck=b.Umordnen(d.Id,new("demo-nord-rechnung-002","versicherung-2026",neu.Version));Assert.Equal("versicherung-2026",zurueck.Vorgaenge.Single());
+  var c=b.VorgangAnlegen(new("Weitere Vertragsakte","versicherung","DEMO-VERS",true));
+  var nochmal=b.Umordnen(d.Id,new("versicherung-2026","demo-nord-rechnung-002",zurueck.Version));
+  var dritte=b.Umordnen(d.Id,new("demo-nord-rechnung-002",c.Id,nochmal.Version));
+  Assert.Equal(c.Id,dritte.Vorgaenge.Single());Assert.Equal(d.Id,dritte.Id);
+  Assert.Single(b.Lesen(c.Id).Dokumente);Assert.DoesNotContain(b.Lesen("versicherung-2026").Dokumente,x=>x.Id==d.Id);Assert.DoesNotContain(b.Lesen("demo-nord-rechnung-002").Dokumente,x=>x.Id==d.Id);
+  var h=dritte.Aktivitaeten!.Where(x=>x.Text=="Zuordnung geändert").ToArray();Assert.Equal(4,h.Length);Assert.Equal("demo-nord-rechnung-002",h[^1].VorherigerVorgangId);Assert.Equal(c.Id,h[^1].VorgangId);
+
+ }
+ [Fact] public void AbnahmedeltaUmzuordnungKannAtomarNeueAkteAnlegen(){
+  var b=new Aktenbestand();var d=b.Hinzufuegen(Encoding.UTF8.GetBytes("Neues Thema"),"neu.txt","text/plain","versicherung-2026");
+  var anzahl=b.Vorgaenge().Count;
+  Assert.Throws<Arbeitsfehler>(()=>b.Umordnen(d.Id,new("versicherung-2026",null,d.Version-1,"Neue Vertragsakte","versicherung","DEMO-VERS")));
+  Assert.Throws<Arbeitsfehler>(()=>b.Umordnen(d.Id,new("versicherung-2026",null,d.Version,"  ","versicherung","DEMO-VERS")));
+  Assert.Throws<Arbeitsfehler>(()=>b.Umordnen(d.Id,new("versicherung-2026",null,d.Version,"Neue Vertragsakte","versicherung","unbekannt")));
+  Assert.Equal(anzahl,b.Vorgaenge().Count);Assert.Equal("versicherung-2026",b.Dokument(d.Id).Vorgaenge.Single());
+  var neu=b.Umordnen(d.Id,new("versicherung-2026",null,d.Version,"Neue Vertragsakte","versicherung","DEMO-VERS"));
+  Assert.Equal(anzahl+1,b.Vorgaenge().Count);Assert.Equal(d.Id,neu.Id);var ziel=neu.Vorgaenge.Single();Assert.NotEqual("versicherung-2026",ziel);
+  Assert.Equal("Neue Vertragsakte",b.Lesen(ziel).Vorgang.Titel);Assert.Single(b.Lesen(ziel).Dokumente);
+  Assert.Contains(neu.Aktivitaeten!,a=>a.VorherigerVorgangId=="versicherung-2026"&&a.VorgangId==ziel);
+  var alt=b.Umordnen(d.Id,new(ziel,"versicherung-2026",neu.Version));Assert.Equal("versicherung-2026",alt.Vorgaenge.Single());Assert.Empty(b.Lesen(ziel).Dokumente);
+ }
+ [Fact] public void MVP015AktensucheFindetVerknuepfteInhalteUndRechteBleibenWirksam(){
+  var b=new Aktenbestand();b.Hinzufuegen(Encoding.UTF8.GetBytes("Briefinhalt"),"Sohn-Vertrag.txt","text/plain","versicherung-2026");
+  var s=new AktenSuche(b,()=>DemoDaten.UebersichtErstellen(),new(),new LokalerDemozugriff());
+  Assert.Contains(s.FindeAkten("Sohn"),v=>v.Id=="versicherung-2026");Assert.Contains(s.Finden("Sohn Vertrag"),t=>t.Art=="Dokument");
+  Assert.Empty(s.Finden("!@#$"));Assert.Throws<Arbeitsfehler>(()=>s.Finden(new string('x',121)));
+ }
+
+ [Theory][InlineData(" ","Meier")][InlineData("Maya"," ")][InlineData("040 123456","Meier")][InlineData("<script>","Meier")]
+ public void MVP015PersonenNegativvalidierung(string vor,string nach){var b=new Aktenbestand();Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(null,new(null,"Person",null,"","","",[new("Telefon","+49 30 23125 099",true)],Vorname:vor,Nachname:nach)));}
+ [Theory][InlineData("Mäya-Luise","O’Fenn")][InlineData("Zoë","D'Fenn")]
+ public void MVP015ZulaessigeUnicodeNamen(string vor,string nach){var b=new Aktenbestand();var k=b.KontaktSpeichern(null,new(null,"Person",null,"","","",[new("Telefon","+49 30 23125 099",true)],Vorname:vor,Nachname:nach));Assert.Equal(vor,k.Vorname);}
+ [Fact] public void MVP015KommunikationVerlangtExterneSemantik(){var b=new Aktenbestand();var e=new Korrespondenzeingabe("Brief","Inhalt","Brief");Assert.Throws<Arbeitsfehler>(()=>b.KorrespondenzSpeichern("versicherung-2026",e));var k=b.KorrespondenzSpeichern("versicherung-2026",e with{Richtung="Empfangen",KontaktId="DEMO-VERS",KommuniziertAm=DateTimeOffset.UtcNow});Assert.Equal("Empfangen",k.Richtung);Assert.Throws<Arbeitsfehler>(()=>b.KorrespondenzSpeichern("versicherung-2026",e with{Richtung="Gesendet",KontaktId="falsch",KommuniziertAm=DateTimeOffset.UtcNow}));}
+ sealed class MVP015DokumentVerboten:ILesezugriff{public bool Erlaubt(string art,string id)=>art!="Dokument";}
+ [Fact] public void MVP015VerboteneDokumenteLeckenNichtInAktensuche(){var b=new Aktenbestand();b.Hinzufuegen(Encoding.UTF8.GetBytes("X"),"Geheimwort-Sohn.txt","text/plain","versicherung-2026");Assert.Empty(new AktenSuche(b,()=>DemoDaten.UebersichtErstellen(),new(),new MVP015DokumentVerboten()).FindeAkten("Geheimwort"));}
+ [Fact] public async Task MVP015HttpSicherheitsgrenzen(){
+  await using var app=ApiAnwendung.Erstellen([],0);await app.StartAsync();try{
+   using var c=new HttpClient{BaseAddress=new Uri(app.Urls.Single())};
+   var pfad="/api/akten/versicherung-2026/notizen";
+   Assert.Equal(HttpStatusCode.Forbidden,(await c.PostAsJsonAsync(pfad,new Notizeingabe("Titel","Inhalt"))).StatusCode);
+   c.DefaultRequestHeaders.Add("Origin","https://fremd.invalid");c.DefaultRequestHeaders.Add("X-Arbeitsaktion","1");Assert.Equal(HttpStatusCode.Forbidden,(await c.PostAsJsonAsync(pfad,new Notizeingabe("Titel","Inhalt"))).StatusCode);
+   c.DefaultRequestHeaders.Remove("Origin");c.DefaultRequestHeaders.Add("Origin",c.BaseAddress.GetLeftPart(UriPartial.Authority));
+   Assert.Equal(HttpStatusCode.BadRequest,(await c.PostAsJsonAsync(pfad,new{betreff="Titel",inhalt="Inhalt",autor="Fremder Actor"})).StatusCode);
+   Assert.Equal(HttpStatusCode.BadRequest,(await c.PostAsync(pfad,new StringContent("{",Encoding.UTF8,"application/json"))).StatusCode);
+   Assert.Equal(HttpStatusCode.UnsupportedMediaType,(await c.PostAsync(pfad,new StringContent("kein json",Encoding.UTF8,"text/plain"))).StatusCode);
+   var gross=await c.PostAsync(pfad,new StringContent(new string('x',140000),Encoding.UTF8,"application/json"));Assert.Equal(HttpStatusCode.RequestEntityTooLarge,gross.StatusCode);
+   var text=await gross.Content.ReadAsStringAsync();Assert.DoesNotContain("Exception",text);Assert.DoesNotContain("C:\\",text);
+   Assert.Equal(HttpStatusCode.NotFound,(await c.GetAsync("/api/dokumente/unbekannt/text")).StatusCode);
+   var seite=await c.GetFromJsonAsync<System.Text.Json.JsonElement>("/api/akten?seite=0&sort=titel");Assert.InRange(seite.GetProperty("eintraege").GetArrayLength(),1,20);
+  }finally{await app.StopAsync();}
+ }
+ [Fact] public async Task MVP015SchreibaktionenVerlangenVerwaltungsrecht(){await using var app=ApiAnwendung.Erstellen([],0,arbeitsrechte:new KeineVerwaltung());await app.StartAsync();try{using var c=new HttpClient{BaseAddress=new Uri(app.Urls.Single())};c.DefaultRequestHeaders.Add("Origin",c.BaseAddress.GetLeftPart(UriPartial.Authority));c.DefaultRequestHeaders.Add("X-Arbeitsaktion","1");Assert.Equal(HttpStatusCode.Forbidden,(await c.PostAsJsonAsync("/api/akten/versicherung-2026/notizen",new Notizeingabe("Titel","Inhalt"))).StatusCode);Assert.Equal(HttpStatusCode.Forbidden,(await c.PostAsJsonAsync("/api/dokumente/original-002-v1/umordnen",new Umzuordnung("demo-nord-rechnung-002","versicherung-2026",1))).StatusCode);}finally{await app.StopAsync();}}
+
+ [Fact] public void MVP015KategorienNegativeUndAktivitaetszeit(){var k=new Kategorienverwaltung();foreach(var n in new[]{""," ",new string('x',81)})Assert.Throws<Arbeitsfehler>(()=>k.Speichern(null,new(n,"",null,0,0)));var a=k.Speichern(null,new("Objektakte","",null,0,0));Assert.Throws<Arbeitsfehler>(()=>k.Speichern(a.Id,new(a.Name,"",a.Id,0,a.Version)));var sub=k.Speichern(null,new("Glasakte","",a.Id,0,0));Assert.Throws<Arbeitsfehler>(()=>k.Speichern(a.Id,new(a.Name,"",sub.Id,0,a.Version)));k.Archivieren(sub.Id,sub.Version);Assert.Throws<Arbeitsfehler>(()=>k.Finden(sub.Id));
+  var b=new Aktenbestand();var d=b.Hinzufuegen(Encoding.UTF8.GetBytes("Zeitprobe"),"Zeit.txt","text/plain",null);var vorher=DateTimeOffset.UtcNow;var z=b.Zuordnen(d.Id,new("versicherung-2026",null,"versicherung",null,d.Version));Assert.InRange(z.GeaendertAm!.Value,vorher,DateTimeOffset.UtcNow);Assert.Equal(TimeSpan.Zero,z.GeaendertAm.Value.Offset);Assert.Equal(d.ErfasstAm,z.ErfasstAm);
+ }
+ [Fact] public void AbnahmedeltaFirmenzahlenZaehlenMetadatenUndBeachtenRechte(){
+  var b=new Aktenbestand();var eins=b.Hinzufuegen(Encoding.UTF8.GetBytes("Erster Brief"),"eins.txt","text/plain","versicherung-2026");
+  var zwei=b.Hinzufuegen(Encoding.UTF8.GetBytes("Zweiter Brief"),"zwei.txt","text/plain","versicherung-2026");
+  var n=b.NotizSpeichern("versicherung-2026",null,new("Rückfrage","Intern"));
+  var z=b.Firmenzahlen("DEMO-VERS",_=>true,_=>true);Assert.Equal(1,z["akten"]);Assert.Equal(2,z["dokumente"]);Assert.Equal(1,z["notizen"]);Assert.Equal(0,z["korrespondenz"]);
+  Assert.Equal(1,b.Firmenzahlen("DEMO-VERS",_=>true,id=>id==eins.Id)["dokumente"]);
+  Assert.All(b.Firmenzahlen("DEMO-VERS",_=>false,_=>true).Values,v=>Assert.Equal(0,v));
+  b.NotizEntfernen("versicherung-2026",n.Id,n.Version);Assert.Equal(0,b.Firmenzahlen("DEMO-VERS",_=>true,_=>true)["notizen"]);
+ }
+ [Fact] public async Task AbnahmedeltaFirmenzahlenApiEnthaeltNurCountsUndIstKonsistent(){
+  await using var app=ApiAnwendung.Erstellen([],0);await app.StartAsync();try{using var c=new HttpClient{BaseAddress=new Uri(app.Urls.Single())};
+   var z=await c.GetFromJsonAsync<Dictionary<string,int>>("/api/kontakte/DEMO-VERS/arbeitszahlen");Assert.Equal(5,z!.Count);
+   foreach(var key in z.Keys){var liste=await c.GetFromJsonAsync<System.Text.Json.JsonElement>("/api/kontakte/DEMO-VERS/arbeit?bereich="+key+"&seite=0");Assert.Equal(liste.GetProperty("anzahl").GetInt32(),z[key]);}
+   Assert.Equal(HttpStatusCode.NotFound,(await c.GetAsync("/api/kontakte/unbekannt/arbeitszahlen")).StatusCode);
+  }finally{await app.StopAsync();}
+ }
+ [Fact] public async Task MVP015FirmenarbeitIstBegrenztUndZeigtZentraleReferenzen(){await using var app=ApiAnwendung.Erstellen([],0);await app.StartAsync();try{using var c=new HttpClient{BaseAddress=new Uri(app.Urls.Single())};var d=await c.GetFromJsonAsync<System.Text.Json.JsonElement>("/api/kontakte/DEMO-VERS/arbeit?bereich=dokumente&seite=0");Assert.InRange(d.GetProperty("eintraege").GetArrayLength(),1,20);Assert.Equal("dokument",d.GetProperty("eintraege")[0].GetProperty("ziel").GetString());Assert.Equal(HttpStatusCode.BadRequest,(await c.GetAsync("/api/kontakte/DEMO-VERS/arbeit?bereich=unbekannt&seite=0")).StatusCode);Assert.Equal(HttpStatusCode.BadRequest,(await c.GetAsync("/api/kontakte/DEMO-VERS/arbeit?bereich=akten&seite=-1")).StatusCode);}finally{await app.StopAsync();}}
+
+ [Fact] public void MVP015BeispielzeitenUndSuchintention(){var b=new Aktenbestand(beispielszenario:true);Assert.All(b.Kontakte(),k=>{Assert.Equal(k.ErstelltAm,k.GeaendertAm);Assert.Equal(2026,k.GeaendertAm.Year);});var s=new AktenSuche(b,()=>DemoDaten.UebersichtErstellen(),new(),new LokalerDemozugriff());Assert.Equal("Rechnung",s.Finden("Rechnung Joris").First().Art);Assert.Contains(s.FindeAkten("Fjordfalter 1048"),v=>v.Id=="demo-nord-rechnung-002");}
+
+ sealed class MVP015FirmaVerboten:ILesezugriff{public bool Erlaubt(string art,string id)=>art!="Firma"||id!="DEMO-VERS";}
+ [Fact] public async Task MVP015ZielakteBeachtetAuchFirmenrecht(){await using var app=ApiAnwendung.Erstellen([],0,leserechte:new MVP015FirmaVerboten());await app.StartAsync();try{using var c=new HttpClient{BaseAddress=new Uri(app.Urls.Single())};c.DefaultRequestHeaders.Add("Origin",c.BaseAddress.GetLeftPart(UriPartial.Authority));c.DefaultRequestHeaders.Add("X-Arbeitsaktion","1");Assert.Equal(HttpStatusCode.Forbidden,(await c.GetAsync("/api/akten/versicherung-2026")).StatusCode);Assert.Equal(HttpStatusCode.Forbidden,(await c.PostAsJsonAsync("/api/dokumente/original-002-v1/umordnen",new Umzuordnung("demo-nord-rechnung-002","versicherung-2026",1))).StatusCode);}finally{await app.StopAsync();}}
+
+ [Fact] public void MVP015DateienUndKontaktwerteBleibenKonservativ(){var p=new Dokumentpruefung();foreach(var name in new[]{"../Brief.txt","..\\Brief.txt","C:/Brief.txt","Brief.xlsm","Brief.docm","Brief.exe"})Assert.Throws<Arbeitsfehler>(()=>p.Pruefen(Encoding.UTF8.GetBytes("Inhalt"),name,"text/plain"));var b=new Aktenbestand();var e=new Kontakteingabe("Fennfalter Büro","Firma",null,"","","",[new("Telefon","+49 30 23125 099",true),new("E-Mail","buero@fennfalter.invalid",true)]);Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(null,e with{Name=" "}));Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(null,e with{Name=new string('x',161)}));Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(null,e with{Werte=[new("Telefon","keine Telefonnummer",true),new("E-Mail","buero@fennfalter.invalid",true)]}));Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(null,e with{Werte=[new("Telefon","+49 30 23125 099",true),new("E-Mail","ungueltig@",true)]}));}
 }

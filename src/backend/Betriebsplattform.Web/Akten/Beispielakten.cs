@@ -8,14 +8,14 @@ public sealed partial class Aktenbestand
     private Vorgang Anreichern(Vorgang v)
     {
         var docs=dateien.Values.Where(d=>d.Ansicht.Vorgaenge.Contains(v.Id)).Select(d=>d.Ansicht).ToArray();
-        var zeiten=docs.Select(d=>d.ErfasstAm).Concat(notizen.Liste(v.Id).Select(n=>n.GeaendertAm)).Concat(post.Values.Where(p=>p.VorgangId==v.Id).Select(p=>p.ErfasstAm)).Concat(v.LetztesEreignis is null?[]:new[]{v.LetztesEreignis.Value}).ToArray();
-        return v with {Kategorie=Kategorien.Finden(v.KategorieId??v.Kategorie,false).Name,Firma=Kontaktname(v.FirmaId,"Nicht zugeordnet"),Dokumentanzahl=docs.Length,LetztesEreignis=zeiten.Length>0?zeiten.Max():null,Kurzinfo=v.Rechnungsnummer is null?"Dokumente und Schriftverkehr":"Rechnungsakte · "+v.Rechnungsnummer};
+        var zeiten=docs.Select(d=>d.Aktivitaeten?.LastOrDefault()?.Zeitpunkt??d.ErfasstAm).Concat(notizen.Liste(v.Id).Select(n=>n.GeaendertAm)).Concat(post.Values.Where(p=>p.VorgangId==v.Id).Select(p=>p.ErfasstAm)).Concat(v.LetztesEreignis is null?[]:new[]{v.LetztesEreignis.Value}).ToArray();
+        return v with {Status=v.Status=="Neu"?"Offen":v.Status,Kategorie=Kategorien.Finden(v.KategorieId??v.Kategorie,false).Name,Firma=Kontaktname(v.FirmaId,"Nicht zugeordnet"),Dokumentanzahl=docs.Length,LetztesEreignis=zeiten.Length>0?zeiten.Max():null,Kurzinfo=v.Rechnungsnummer is null?"Dokumente und Schriftverkehr":"Rechnungsakte · "+v.Rechnungsnummer};
     }
     // Nur feste, selbst erzeugte Beispiele. Keine Nutzerdaten werden durch diesen Generator verarbeitet.
     private void BeispieleEinrichten()
     {
         foreach(var (id,titel,kategorie,firma) in new[]{("fahrzeug-versicherung","Kfz-Versicherung Transporter","kfz-versicherung","DEMO-VERS"),("beitraege-2026","Sozialversicherungsbeitrag Oktober 2026","sozialversicherung","DEMO-KASSE"),("auskunft-2026","Rückfrage zur Gewerbeauskunft","behoerde","DEMO-AMT"),("mobilfunk-2026","Vertragsänderung Mobilfunk","vertrag","DEMO-MOBIL"),("buero-mahnung","Mahnung Büromaterial September 2026","mahnung","DEMO-ISD")})
-            akten[id]=new(id,titel,Kategorien.Finden(kategorie).Name,firma,KategorieId:kategorie,Status:id=="auskunft-2026"?"Wartet auf Rückmeldung":id=="mobilfunk-2026"?"In Bearbeitung":"Neu");
+            akten[id]=new(id,titel,Kategorien.Finden(kategorie).Name,firma,KategorieId:kategorie,Status:id=="auskunft-2026"?"Wartet auf Rückmeldung":id=="mobilfunk-2026"?"In Bearbeitung":"Offen");
         Aktendokument Datei(string titel,string name,byte[] bytes,string mime,string? akte,string art,string firma,string kat,string? vorschlag=null,bool eigenesPdf=false)
         {
             var d=Hinzufuegen(bytes,name,mime,akte);var meta=d with {Titel=titel,Art=art,KategorieId=kat,Kategorie=Kategorien.Finden(kat).Name,AbsenderId=firma,Status=akte is null?"Neu":"Zugeordnet",Vorgangsvorschlag=vorschlag,Pruefbedarf=akte is null,Kurzfassung=art=="Beitragsmitteilung"?"Mitteilung zum Beitrag für den im Dokument genannten Zeitraum.":titel=="Rückfrage zur Gewerbeauskunft"?"Die Verwaltungsstelle bittet um Ergänzung der Tätigkeitsbeschreibung.":titel=="Neue Erreichbarkeit im Vertragsservice"?"Der Vertragsservice teilt neue Kontaktangaben mit.":"",
@@ -31,7 +31,7 @@ public sealed partial class Aktenbestand
         Datei("Vertragsänderung Mobilfunk","Vertragsaenderung_Mobilfunk.pdf",Pdf("TANNUFER KOMMUNIKATION GMBH","Vertragsaenderung Mobilfunk","Fjordfalter Objektpflege GmbH","Angebot zur Vertragspruefung","Keine automatische Zustimmung oder Buchung."),"application/pdf",null,"Vertrag","DEMO-MOBIL","vertrag","mobilfunk-2026",true);
         Datei("Briefpost zur Zuordnung","Briefpost_18-10-2026.txt",Encoding.UTF8.GetBytes("Eingegangene Briefpost\nAbsender noch nicht zugeordnet.\nBitte Inhalt und Vorgangsbezug prüfen."),"text/plain",null,"Briefpost","","ungeklaert");
         NotizSpeichern("versicherung-2026",null,new("Deckungsumfang prüfen","Beitragsmitteilung mit dem bisherigen Vertragsumfang vergleichen. Es wurde keine Vertragsänderung freigegeben."));
-        KorrespondenzSpeichern("versicherung-2026",new("Rückfrage zum Beitrag","Bitte die Veränderung des Deckungsumfangs erläutern.","Anfrage",DokumentIds:[vers.Id,kontakt.Id]));
+        KorrespondenzSpeichern("versicherung-2026",new("Rückfrage zum Beitrag","Bitte die Veränderung des Deckungsumfangs erläutern.","Anfrage",DokumentIds:[vers.Id,kontakt.Id],Richtung:"Gesendet",KontaktId:"DEMO-VERS",KommuniziertAm:DateTimeOffset.UtcNow));
     }
     private static byte[] Word(string titel,string text)
     {

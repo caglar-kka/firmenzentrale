@@ -1,4 +1,5 @@
 .studio {
+  --schrift-registertitel: 1.25rem; --schrift-liste: 1.0625rem; --schrift-listenkopf: 1rem; --schrift-listenneben: .9375rem; --zeilenhoehe-liste: 1.6;
   --text: #242631; --leise: #5d626f; --grund: #f6f6f3; --flaeche: #ffffff; --weich: #f0f0f5;
   --akzent: #5745c5; --akzent-dunkel: #423292; --akzent-hell: #efedfb; --fokus: #5745c5;
   --rand: #dedee5; --eingaberand: #858594; --rail: #252730; --rail-text: #f8f8fb; --rail-leise: #bfc1cd;

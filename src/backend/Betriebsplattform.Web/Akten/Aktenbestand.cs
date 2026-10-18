@@ -21,6 +21,15 @@ public sealed partial class Aktenbestand
     private readonly Notizablage notizen=new();
     private readonly Kontaktpflege kontakte=new();
     public Kategorienverwaltung Kategorien {get;}=new();
+    public IReadOnlyDictionary<string,int> Firmenzahlen(string firmaId,Func<Vorgang,bool> akteErlaubt,Func<string,bool> dokumentErlaubt)
+    {
+        lock(sperre){
+            var ids=akten.Values.Where(v=>v.FirmaId==firmaId&&akteErlaubt(v)).Select(v=>v.Id).ToHashSet();
+            return new Dictionary<string,int>{["akten"]=ids.Count,
+                ["dokumente"]=dateien.Values.Where(d=>dokumentErlaubt(d.Ansicht.Id)).Sum(d=>d.Ansicht.Vorgaenge.Count(ids.Contains)),
+                ["notizen"]=notizen.Anzahl(ids),["korrespondenz"]=post.Values.Count(k=>ids.Contains(k.VorgangId))};
+        }
+    }
     private readonly IDocumentTextExtractor pruefung;
     public Aktenbestand(IDocumentTextExtractor? pruefung=null,bool beispielszenario=false)
     {
@@ -42,7 +51,7 @@ public sealed partial class Aktenbestand
         }
     }
     private Vorgang Akte(string id)=>akten.TryGetValue(id,out var v)?Anreichern(v):throw new Arbeitsfehler("Vorgang nicht gefunden.",404);
-    private Aktendokument Kopie(Aktendokument d)=>d with {LetzterEingangAm=d.Aktivitaeten?.LastOrDefault(a=>a.Kanal is not null)?.Zeitpunkt,Kanal=d.Aktivitaeten?.LastOrDefault(a=>a.Kanal is not null)?.Kanal??(d.Kanal is "Dateiauswahl" or "Drag & Drop" or "Bestehender Beleg"?"Upload":d.Kanal),Kategorie=Kategorien.Finden(d.KategorieId??d.Kategorie,false).Name,Absender=kontakte.Finden(d.AbsenderId)?.Firma??d.Absender,Vorgaenge=Array.AsReadOnly(d.Vorgaenge.ToArray())};
+    private Aktendokument Kopie(Aktendokument d)=>d with {GeaendertAm=d.Aktivitaeten?.LastOrDefault()?.Zeitpunkt??d.ErfasstAm,LetzterEingangAm=d.Aktivitaeten?.LastOrDefault(a=>a.Kanal is not null)?.Zeitpunkt,Kanal=d.Aktivitaeten?.LastOrDefault(a=>a.Kanal is not null)?.Kanal??(d.Kanal is "Dateiauswahl" or "Drag & Drop" or "Bestehender Beleg"?"Upload":d.Kanal),Kategorie=Kategorien.Finden(d.KategorieId??d.Kategorie,false).Name,Absender=kontakte.Finden(d.AbsenderId)?.Firma??d.Absender,Vorgaenge=Array.AsReadOnly(d.Vorgaenge.ToArray())};
     public Vorgang VorgangAnlegen(Vorgangseingabe e)
     {
         lock(sperre){var titel=Arbeitsregeln.Text(e.Titel,"Vorgangstitel",160);var k=Kategorien.Finden(e.Kategorie);
@@ -70,9 +79,9 @@ public sealed partial class Aktenbestand
             var vorhanden=dateien.Values.SingleOrDefault(d=>d.Hash==hash);
             if(vorhanden is not null){
                 if((vorhanden.Ansicht.Aktivitaeten?.Count??0)>=200)throw new Arbeitsfehler("Die lokale Eingangshistorie ist voll. Es wurde nichts geändert.");
-                vorhanden.Ansicht=vorhanden.Ansicht with {Aktivitaeten=(vorhanden.Ansicht.Aktivitaeten??[]).Append(new Eingangsaktivitaet("Identische Datei erneut eingegangen · "+(kanal=="Scan-Ordner"?"Scan-Ordner":"Upload"),DateTimeOffset.UtcNow,Arbeitskontext.Benutzer,vorgang,kanal=="Scan-Ordner"?"Scan-Ordner":"Upload")).ToArray()};
+                vorhanden.Ansicht=vorhanden.Ansicht with {Version=vorhanden.Ansicht.Version+1,Aktivitaeten=(vorhanden.Ansicht.Aktivitaeten??[]).Append(new Eingangsaktivitaet("Identische Datei erneut eingegangen · "+(kanal=="Scan-Ordner"?"Scan-Ordner":"Upload"),DateTimeOffset.UtcNow,Arbeitskontext.Benutzer,vorgang,kanal=="Scan-Ordner"?"Scan-Ordner":"Upload")).ToArray()};
                 if(vorgang is not null&&!vorhanden.Ansicht.Vorgaenge.Contains(vorgang)){
-                    vorhanden.Ansicht=vorhanden.Ansicht with {Vorgaenge=vorhanden.Ansicht.Vorgaenge.Append(vorgang).ToArray(),Version=vorhanden.Ansicht.Version+1};Erkennen(vorhanden,vorgang);
+                    vorhanden.Ansicht=vorhanden.Ansicht with {Vorgaenge=vorhanden.Ansicht.Vorgaenge.Append(vorgang).ToArray()};Erkennen(vorhanden,vorgang);
                 }
                 return Kopie(vorhanden.Ansicht);
             }
@@ -98,16 +107,36 @@ public sealed partial class Aktenbestand
             d.Ansicht=d.Ansicht with {Kategorie=kategorie.Name,KategorieId=kategorie.Id,Status="Zugeordnet",Pruefbedarf=kategorie.Id=="ungeklaert",Aktivitaeten=(d.Ansicht.Aktivitaeten??[]).Append(new Eingangsaktivitaet("Zuordnung bestätigt",DateTimeOffset.UtcNow,Arbeitskontext.Benutzer,akte)).ToArray(),Vorgaenge=[akte],Version=d.Ansicht.Version+1};Erkennen(d,akte);return Kopie(d.Ansicht);
         }
     }
+    public Aktendokument Umordnen(string id,Umzuordnung e){
+        lock(sperre){var d=DateiFinden(id);Arbeitsregeln.Version(e.Version,d.Ansicht.Version);
+            if(e.BisherigerVorgangId is null||!d.Ansicht.Vorgaenge.Contains(e.BisherigerVorgangId))throw new Arbeitsfehler("Die bisherige Zuordnung besteht nicht mehr. Bitte neu laden.",409);
+            if((d.Ansicht.Aktivitaeten?.Count??0)>=200)throw new Arbeitsfehler("Die lokale Zuordnungshistorie ist voll.");
+            var kategorie=e.Kategorie is null?null:Kategorien.Finden(e.Kategorie);
+            Vorgang ziel;
+            if(e.NeuerVorgangId is null){
+                ziel=VorgangAnlegen(new(e.NeuerTitel,kategorie?.Id??d.Ansicht.KategorieId,e.FirmaId,e.DublettenBestaetigt));
+            }else{
+                if(string.IsNullOrWhiteSpace(e.NeuerVorgangId)||e.NeuerVorgangId==e.BisherigerVorgangId||d.Ansicht.Vorgaenge.Contains(e.NeuerVorgangId))throw new Arbeitsfehler("Bitte eine andere Zielakte wählen.");
+                ziel=Akte(e.NeuerVorgangId);if(ziel.Status=="Archiviert")throw new Arbeitsfehler("Bitte eine aktive Zielakte wählen.");
+            }
+            var jetzt=DateTimeOffset.UtcNow;akten[e.BisherigerVorgangId]=Akte(e.BisherigerVorgangId) with{LetztesEreignis=jetzt};akten[ziel.Id]=ziel with{LetztesEreignis=jetzt};
+            d.Ansicht=d.Ansicht with{Vorgaenge=[ziel.Id],Kategorie=kategorie?.Name??d.Ansicht.Kategorie,KategorieId=kategorie?.Id??d.Ansicht.KategorieId,Version=d.Ansicht.Version+1,Aktivitaeten=(d.Ansicht.Aktivitaeten??[]).Append(new Eingangsaktivitaet("Zuordnung geändert",jetzt,Arbeitskontext.Benutzer,ziel.Id,VorherigerVorgangId:e.BisherigerVorgangId)).ToArray()};Erkennen(d,ziel.Id);return Kopie(d.Ansicht);
+        }
+    }
     public Aktennotiz NotizSpeichern(string akte,string? id,Notizeingabe e){lock(sperre){_=Akte(akte);return notizen.Speichern(akte,id,e);}}
     public Aktennotiz NotizEntfernen(string akte,string id,int version,bool wiederherstellen=false){lock(sperre){_=Akte(akte);return notizen.Entfernen(akte,id,version,wiederherstellen);}}
     public Korrespondenz KorrespondenzSpeichern(string akte,Korrespondenzeingabe e)
     {
         lock(sperre){_=Akte(akte);var betreff=Arbeitsregeln.Text(e.Betreff,"Betreff",160);var inhalt=Arbeitsregeln.Text(e.Inhalt,"Inhalt",10000);
             if(e.Art is not ("Brief" or "E-Mail" or "Entwurf" or "Antwortschreiben" or "Anfrage" or "Erinnerung" or "Gesprächsvermerk" or "Sonstige Korrespondenz"))throw new Arbeitsfehler("Bitte Brief, E-Mail oder Entwurf wählen.");
+            if(e.Richtung is not ("Empfangen" or "Gesendet" or "Entwurf"))throw new Arbeitsfehler("Bitte empfangen, gesendet oder Entwurf wählen.");
+            if(e.Art=="Entwurf"&&e.Richtung!="Entwurf")throw new Arbeitsfehler("Ein Entwurf ist noch keine versandte Kommunikation.");
+            var partner=kontakte.Finden(e.KontaktId);if(partner is null||partner.Archiviert)throw new Arbeitsfehler("Bitte eine externe Partei aus den Kontakten wählen.");
+            if(e.KommuniziertAm is null||e.KommuniziertAm>DateTimeOffset.UtcNow.AddMinutes(5))throw new Arbeitsfehler("Bitte den tatsächlichen Kommunikationszeitpunkt prüfen.");
             var ids=(e.DokumentIds??(e.DokumentId is null?[]:new[]{e.DokumentId})).Distinct().ToArray();if(ids.Length>80||ids.Any(id=>!DateiFinden(id).Ansicht.Vorgaenge.Contains(akte)))throw new Arbeitsfehler("Dokumentverweise müssen zur aktuellen Akte gehören.");
             if(post.Values.Count(p=>p.VorgangId==akte)>=250)throw new Arbeitsfehler("Die lokale Korrespondenzgrenze ist erreicht.");
             if(post.Values.Sum(p=>(long)p.Inhalt.Length+p.Betreff.Length)+inhalt.Length+betreff.Length>8*1024*1024)throw new Arbeitsfehler("Der lokale Korrespondenzspeicher ist voll.");
-            var p=new Korrespondenz(Guid.NewGuid().ToString("N"),akte,betreff,inhalt,e.Art,Arbeitskontext.Benutzer,DateTimeOffset.UtcNow,ids.FirstOrDefault(),Array.AsReadOnly(ids));post[p.Id]=p;return p;
+            var p=new Korrespondenz(Guid.NewGuid().ToString("N"),akte,betreff,inhalt,e.Art,Arbeitskontext.Benutzer,DateTimeOffset.UtcNow,ids.FirstOrDefault(),Array.AsReadOnly(ids),e.Richtung,e.KontaktId,e.KommuniziertAm);post[p.Id]=p;return p;
         }
     }
     private Datei DateiFinden(string id)=>dateien.TryGetValue(id,out var d)?d:throw new Arbeitsfehler("Dokument nicht gefunden.",404);

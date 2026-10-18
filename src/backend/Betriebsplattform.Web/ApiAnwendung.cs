@@ -27,6 +27,7 @@ public static class ApiAnwendung
         }
         // Keine Windows-Ereignisprotokoll-Schreibrechte für einen lokalen Prototyp verlangen.
         builder.Logging.ClearProviders();
+        builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics",LogLevel.Warning);
         builder.Logging.AddSimpleConsole(options => options.SingleLine = true);
         // Für diesen lokalen Prototyp keine konfigurierbaren zusätzlichen Kestrel-Endpunkte.
         builder.WebHost.ConfigureKestrel(options =>
@@ -35,13 +36,14 @@ public static class ApiAnwendung
             options.Listen(IPAddress.Loopback, port);
             options.Limits.MaxRequestBodySize = Dokumentpruefung.MaxBytes;
         });
-        builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+        builder.Services.ConfigureHttpJsonOptions(o => {o.SerializerOptions.Converters.Add(new JsonStringEnumConverter());o.SerializerOptions.MaxDepth=16;o.SerializerOptions.UnmappedMemberHandling=JsonUnmappedMemberHandling.Disallow;});
         var app = builder.Build();
         var bestand = new DemoImportbestand();
         app.UseExceptionHandler(fehler => fehler.Run(async context =>
         {
-            context.Response.StatusCode = 500;
-            await context.Response.WriteAsJsonAsync(new ApiFehler("Die Beispieldaten konnten nicht geladen werden. Bitte erneut versuchen."));
+            var fehler=context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+            context.Response.StatusCode=fehler is BadHttpRequestException b?b.StatusCode:500;
+            await context.Response.WriteAsJsonAsync(new ApiFehler(context.Response.StatusCode==413?"Die Anfrage ist zu groß.":context.Response.StatusCode==400?"Bitte Eingaben und Datenformat prüfen.":"Die Anfrage konnte nicht verarbeitet werden. Bitte erneut versuchen."));
         }));
         app.Use(async (context, next) =>
         {
@@ -52,7 +54,7 @@ public static class ApiAnwendung
             var origin = context.Request.Headers.Origin.ToString();
             var eigen = $"http://127.0.0.1:{context.Connection.LocalPort}";
             if (context.Request.Host.Host != "127.0.0.1" || context.Request.Host.Port != context.Connection.LocalPort
-                || (origin.Length > 0 && origin != eigen && origin != "http://127.0.0.1:5173"))
+                || (origin.Length > 0 && origin != eigen && !(app.Environment.IsDevelopment() && origin == "http://127.0.0.1:5173")))
             {
                 context.Response.StatusCode = 403;
                 await context.Response.WriteAsJsonAsync(new ApiFehler("Dieser Prototyp ist nur über seine lokale Adresse erreichbar."));
@@ -75,12 +77,17 @@ public static class ApiAnwendung
                 context.Response.StatusCode = 403;
                 await context.Response.WriteAsJsonAsync(new ApiFehler("Bitte die lokale Arbeitsoberfläche für Änderungen verwenden.")); return;
             }
-            var requestLimit=context.Request.Path=="/api/dokumenteingang"?Dokumentpruefung.MaxBytes:2*1024*1024;
+            if(pfad.StartsWithSegments("/api")&&context.Request.Method is "POST" or "PUT" or "PATCH"
+                &&pfad!="/api/dokumenteingang"&&pfad!="/api/importe/vorschau"
+                &&!(context.Request.ContentType?.Split(';')[0].Trim().Equals("application/json",StringComparison.OrdinalIgnoreCase)??false))
+            {context.Response.StatusCode=415;await context.Response.WriteAsJsonAsync(new ApiFehler("Bitte das vorgesehene JSON-Datenformat verwenden."));return;}
+            var requestLimit=context.Request.Path=="/api/dokumenteingang"?Dokumentpruefung.MaxBytes:context.Request.Path.Value?.StartsWith("/api/import",StringComparison.Ordinal)==true?2*1024*1024:128*1024;
             var bodyFeature=context.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpMaxRequestBodySizeFeature>();
             if(bodyFeature is {IsReadOnly:false})bodyFeature.MaxRequestBodySize=requestLimit;
-            if(context.Request.ContentLength>requestLimit){context.Response.StatusCode=413;await context.Response.WriteAsJsonAsync(new ApiFehler(context.Request.Path=="/api/dokumenteingang"?"Die Datei überschreitet 20 MB.":"Die Datei überschreitet 2,1 MB."));return;}
+            if(context.Request.ContentLength>requestLimit){context.Response.StatusCode=413;await context.Response.WriteAsJsonAsync(new ApiFehler(context.Request.Path=="/api/dokumenteingang"?"Die Datei überschreitet 20 MB.":context.Request.Path.Value?.StartsWith("/api/import",StringComparison.Ordinal)==true?"Die Datei überschreitet 2,1 MB.":"Die Eingabe ist zu umfangreich. Bitte kürzen."));return;}
             await next(context);
         });
+        app.UseStatusCodePages(async s=>{var c=s.HttpContext;if(c.Request.Path.StartsWithSegments("/api"))await c.Response.WriteAsJsonAsync(new ApiFehler(c.Response.StatusCode switch{400=>"Bitte Eingaben und Datenformat prüfen.",403=>"Für diese Aktion fehlt die Berechtigung.",404=>"Eintrag nicht gefunden.",405=>"Diese Aktion wird nicht unterstützt.",413=>"Die Anfrage ist zu groß.",415=>"Bitte das vorgesehene Datenformat verwenden.",_=>"Die Anfrage konnte nicht verarbeitet werden."}));});
         Uebersicht Uebersicht() => akten.KontakteAnwenden(bestand.Uebersicht());
         // Gesamtsalden dürfen keine nicht lesbaren Rechnungen verraten. Teilbestände benötigen
         // später eine eigene berechtigte Kernabfrage statt formatierte Geldtexte neu zu berechnen.

@@ -3,12 +3,12 @@ namespace Betriebsplattform.Web.Akten;
 public sealed class Arbeitsfehler(string text, int status = 400, IReadOnlyList<Dublettenhinweis>? hinweise=null) : Exception(text) { public int Status { get; } = status; public IReadOnlyList<Dublettenhinweis> Hinweise {get;}=hinweise??[]; }
 public sealed record Dublettenhinweis(string Id,string Name,string Art,string Anschrift,IReadOnlyList<string> Angaben,IReadOnlyList<string> Gruende);
 public sealed record Vorgang(string Id, string Titel, string Kategorie, string? FirmaId, string? Rechnungsnummer = null,
-    string? KategorieId=null,string Firma="",string Status="Neu",DateTimeOffset? LetztesEreignis=null,int Dokumentanzahl=0,string Kurzinfo="",int Version=1);
+    string? KategorieId=null,string Firma="",string Status="Offen",DateTimeOffset? LetztesEreignis=null,int Dokumentanzahl=0,string Kurzinfo="",int Version=1);
 public sealed record Vorgangseingabe(string? Titel,string? Kategorie,string? FirmaId,bool DublettenBestaetigt=false);
 public sealed record Bearbeitungsentscheidung(string? Status,int Version);
 public static class Vorgangsbearbeitung
 {
-    public static IReadOnlyList<string> Werte {get;}=Array.AsReadOnly(new[]{"Neu","In Bearbeitung","Wartet auf Rückmeldung","Erledigt","Archiviert"});
+    public static IReadOnlyList<string> Werte {get;}=Array.AsReadOnly(new[]{"Offen","In Bearbeitung","Wartet auf Rückmeldung","Erledigt","Archiviert"});
 }
 public sealed record Kategorieverschiebung(string? Richtung,int Version,string? ZielId=null,int ZielVersion=0);
 public sealed record Notizrevision(int Version, string Betreff, string Inhalt, string Autor, DateTimeOffset Zeitpunkt, string Aktion);
@@ -17,9 +17,10 @@ public sealed record Aktennotiz(string Id, string VorgangId, string Betreff, str
 public sealed record Notizeingabe(string? Betreff, string? Inhalt, int Version = 0);
 public sealed record Versionsentscheidung(int Version);
 public sealed record Zuordnung(string? VorgangId, string? NeuerTitel, string? Kategorie, string? FirmaId, int Version,bool DublettenBestaetigt=false);
-public sealed record Korrespondenzeingabe(string? Betreff, string? Inhalt, string? Art, string? DokumentId=null,IReadOnlyList<string>? DokumentIds=null);
+public sealed record Umzuordnung(string? BisherigerVorgangId,string? NeuerVorgangId,int Version,string? NeuerTitel=null,string? Kategorie=null,string? FirmaId=null,bool DublettenBestaetigt=false);
+public sealed record Korrespondenzeingabe(string? Betreff, string? Inhalt, string? Art, string? DokumentId=null,IReadOnlyList<string>? DokumentIds=null,string? Richtung=null,string? KontaktId=null,DateTimeOffset? KommuniziertAm=null);
 public sealed record Korrespondenz(string Id, string VorgangId, string Betreff, string Inhalt, string Art, string Autor,
-    DateTimeOffset ErfasstAm, string? DokumentId,IReadOnlyList<string>? DokumentIds=null);
+    DateTimeOffset ErfasstAm, string? DokumentId,IReadOnlyList<string>? DokumentIds=null,string? Richtung=null,string? KontaktId=null,DateTimeOffset? KommuniziertAm=null);
 public sealed record Kontaktwert(string Id, string Art, string Wert, bool Aktiv,bool Primaer=false,string Typ="");
 public sealed record Kontaktentscheidung(string Aktion, string Vorher, string Nachher, string DokumentId, string Benutzer, DateTimeOffset Zeitpunkt);
 public sealed record Firmenkontakt(string Id, string Firma, int Version, IReadOnlyList<Kontaktwert> Werte, IReadOnlyList<Kontaktentscheidung> Historie,
@@ -32,8 +33,8 @@ public sealed record Dateiergebnis(string Inhaltstyp, string Vorschau, string Te
 public sealed record Aktendokument(string Id, string Titel, string Dateiname, string Art, string Kategorie, string Kanal,
     DateTimeOffset ErfasstAm, int Version, string Inhaltstyp, string Vorschau, string Textstatus, IReadOnlyList<string> Vorgaenge,
     string? KategorieId=null,string Status="Zur Prüfung",string? AbsenderId=null,string Absender="Nicht angegeben",string? Vorgangsvorschlag=null,bool Pruefbedarf=true,
-    string Kurzfassung="",string Handlungsbedarf="Inhalt und Zuordnung prüfen. Es liegen keine verlässlich ermittelten Fristen vor.",string Auswertungsquelle="Keine automatische Inhaltsauswertung",IReadOnlyList<Eingangsaktivitaet>? Aktivitaeten=null,DateTimeOffset? LetzterEingangAm=null);
-public sealed record Eingangsaktivitaet(string Text,DateTimeOffset Zeitpunkt,string Benutzer,string? VorgangId=null,string? Kanal=null);
+    string Kurzfassung="",string Handlungsbedarf="Inhalt und Zuordnung prüfen. Es liegen keine verlässlich ermittelten Fristen vor.",string Auswertungsquelle="Keine automatische Inhaltsauswertung",IReadOnlyList<Eingangsaktivitaet>? Aktivitaeten=null,DateTimeOffset? LetzterEingangAm=null,DateTimeOffset? GeaendertAm=null);
+public sealed record Eingangsaktivitaet(string Text,DateTimeOffset Zeitpunkt,string Benutzer,string? VorgangId=null,string? Kanal=null,string? VorherigerVorgangId=null);
 public sealed record Dokumenttechnik(string Id, string DateiHash, int Bytezahl, string Quelle, string Textmethode, IReadOnlyList<string> Vorgaenge);
 public sealed record Aktenansicht(Vorgang Vorgang, IReadOnlyList<Aktendokument> Dokumente, IReadOnlyList<Aktennotiz> Notizen,
     IReadOnlyList<Korrespondenz> Korrespondenz, IReadOnlyList<Kontaktvorschlag> Kontaktvorschlaege);

@@ -66,14 +66,14 @@
 .studio .p-sortierung select { width: auto; max-width: 230px; font-size: 14px; }
 .studio .p-ergebnis { color: var(--leise); font-size: 13px; padding: 0 24px 14px; margin: 0; }
 .studio .p-tabellenraum { max-width: 100%; overflow: auto; }
-.studio .p-tabelle { width: 100%; table-layout: fixed; font-size: 15px; }
+.studio .p-tabelle { width: 100%; table-layout: fixed; font-size: var(--schrift-liste); line-height: var(--zeilenhoehe-liste); }
 .studio .p-tabelle th, .studio .p-tabelle td { padding: 16px 18px; vertical-align: top; }
 .studio .p-tabelle thead th { background: var(--tabellenkopf); color: var(--tabellentext); font-size: 13px; font-weight: 600; }
 .studio .p-tabelle th:first-child { width: 19%; }
 .studio .p-tabelle th:nth-child(2) { width: 25%; }
 .studio .p-tabelle th:last-child { width: 17%; }
 .studio .p-tabelle tbody > tr:hover { background: var(--zeile-alternativ); }
-.studio .p-rowlink { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--text); border: 0; padding: 0; text-align: left; font-size: 15px; font-weight: 600; }
+.studio .p-rowlink { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--text); border: 0; padding: 0; text-align: left; font-size: var(--schrift-liste); font-weight: 600; }
 .studio .p-rowlink .icon { width: 16px; height: 16px; flex: 0 0 16px; margin: 0; transform: rotate(-90deg); }
 .studio .p-rowlink:hover { color: var(--akzent); background: transparent; text-decoration: underline; text-underline-offset: 4px; }
 .studio .p-sub { display: block; color: var(--leise); font-size: 13px; font-weight: 400; margin-top: 3px; }
@@ -384,3 +384,35 @@
 
 .studio .p-kategoriensuche{display:grid;gap:.4rem;width:min(100%,32rem);min-width:0;margin:1rem 0 .75rem}
 .studio .p-kategoriensuche input{width:100%;min-width:0}
+
+/* MVP-01.5: fachliche Listen, gemeinsame kompakte Kopfaktionen. */
+.studio .p-sortierkopf{display:inline-flex;gap:.3rem;align-items:center;padding:3px 4px;min-height:32px;background:transparent;color:inherit;border:0;font:inherit;font-weight:600;white-space:nowrap}.studio .p-sortierkopf:hover{background:var(--akzent-hell);color:var(--akzent-dunkel)}
+.studio .status.offen{color:var(--warnung-text,#805000);background:var(--warnung-bg,#fff2d5);border:1px solid currentColor;font-weight:600}
+.studio .p-kontaktstamm{max-width:64rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:1rem;margin:1.2rem 0}.studio .p-kontaktstamm dd{margin:4px 0;overflow-wrap:anywhere}
+.studio .p-kategoriefilter{flex:0 1 19rem;max-width:100%}.studio .p-kategorieoptionen{max-height:200px}.studio .p-kategoriefilter details[open]{position:absolute;inset:24px 0 auto;min-width:0}.studio .p-akte-zeit{font-size:var(--schrift-neben);color:var(--leise);margin:.6rem 0}
+.studio .p-kategorien-kompakt{width:min(100%,52rem)}.studio .p-kategorien-kompakt th,.studio .p-kategorien-kompakt td{padding:8px 12px}.studio .p-kategorien-kompakt td:last-child{width:10rem}.studio .p-kategorien-kompakt .p-sortieraktionen{justify-content:flex-start}.studio .p-baum-toggle{padding:2px 6px;min-width:30px;min-height:30px;background:transparent;color:var(--text);border:0;margin-right:5px}.studio .p-baum-abstand{display:inline-block;width:35px}
+.studio .p-firmenarbeit{max-width:64rem;margin:1.5rem 0}.studio .p-firmenarbeit .p-registertabs{flex-wrap:wrap}.studio .p-firmenarbeit a{display:block;padding:.5rem 0}.studio .p-firmenarbeit small{display:block;color:var(--leise);font-size:var(--schrift-neben)}
+
+.studio .p-kategorien-kompakt .p-tabelle{table-layout:auto;min-width:0}.studio .p-kategorien-kompakt .p-tabelle th:first-child{width:auto}.studio .p-kategorien-kompakt .p-tabelle th:last-child{width:10rem}.studio .p-register .p-tabelle{table-layout:auto;min-width:1100px}.studio .p-tabelle thead th{font-size:var(--schrift-listenkopf)}
+
+/* Übersichtstexte lesbar halten, ohne Detail- und Formularschrift zu vergrößern. */
+.studio .p-tabelle .p-kategorie-name{font-size:var(--schrift-liste)}
+.studio .p-tabelle .status,.studio .p-tabelle .p-partner small,.studio .p-tabelle .p-sub,.studio .p-tabelle td small{font-size:var(--schrift-listenneben)}
+
+.studio .p-tabelle .p-partner{line-height:1.5}
+.studio .p-tabelle .status{line-height:1.45}
+
+/* Abnahme: zusammengehöriger Zeitraum, fachliche Metadaten und klare Hierarchie. */
+.studio .p-datumsbereich{display:flex;gap:12px;flex:0 1 22rem;min-width:0;max-width:100%}
+.studio .p-datumsbereich>label{flex:1 1 0;min-width:0;margin:0}
+.studio .p-datumsbereich input{min-width:0;width:100%}
+.studio .p-eingangsdaten dt,.studio .p-kontaktstamm dt,.studio .p-aktuelle-akte dt{font-size:var(--schrift-listenkopf)}
+.studio .p-eingangsdaten dd,.studio .p-kontaktstamm dd,.studio .p-aktuelle-akte dd,.studio .p-eingangsaktivitaeten li,.studio .p-firmenarbeit .p-aktenliste,.studio .p-kontaktstamm+section .p-akteneintrag{font-size:var(--schrift-liste);line-height:var(--zeilenhoehe-liste)}
+.studio .p-firmenarbeit small,.studio .p-akte-zeit,.studio .p-kontaktstamm+section .p-akteneintrag small{font-size:var(--schrift-listenneben)}
+.studio .p-aktuelle-akte{margin:0 0 16px}
+.studio [aria-label="Kategorienliste"] .p-tabelle th.p-kategorie-kind{padding-inline-start:6rem;border-inline-start:2px solid var(--rand)}
+
+/* Lesbare Registerwerkzeuge: keine Änderung an Buttonmaßen oder Abständen. */
+.studio .p-registerkopf h2{font-size:var(--schrift-registertitel)}
+.studio .p-registerkopf p,.studio .p-anzahl,.studio .p-sortierung label,.studio .p-ergebnis{font-size:var(--schrift-listenkopf)}
+.studio .p-filter button,.studio .p-sortierung select{font-size:var(--schrift-liste)}

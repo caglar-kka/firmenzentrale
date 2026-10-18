@@ -10,10 +10,10 @@ internal sealed partial class Kontaktpflege
    if(id=="DEMO-NORD"){w.Add(new("nord-mail","E-Mail","buero@fjordfalter.invalid",true,true));w.Add(new("nord-tel","Telefon","+49 30 23125 001",true,true));}
    if(id=="DEMO-ISD")w.Add(new("isd-mail","E-Mail","kontakt@elbpfad.invalid",true,true));
    if(id=="DEMO-VERS"){w.Add(new("vers-mail","E-Mail","service@kieselanker.invalid",true,true));w.Add(new("vers-tel","Telefon","+49 40 66969 124",true,true));}
-   kontakte[id]=new(id,name,1,w.AsReadOnly(),[],Anschrift:id=="DEMO-NORD"?"Fennbogen 8 · 00000 Musterhafen":"",ErstelltAm:DateTimeOffset.Parse("2026-10-01T09:00:00Z"));
+   kontakte[id]=new(id,name,1,w.AsReadOnly(),[],Anschrift:id=="DEMO-NORD"?"Fennbogen 8 · 00000 Musterhafen":"",ErstelltAm:DateTimeOffset.Parse("2026-10-01T09:00:00Z"),GeaendertAm:DateTimeOffset.Parse("2026-10-01T09:00:00Z"));
   }
   foreach(var (id,vorname,nachname,firma,abteilung) in new[]{("person-lina","Lina","Fennbrück","DEMO-NORD","Büro"),("person-joris","Joris","Kieswelle","DEMO-ISD","Service"),("person-mara","Mara","Tannhafen","DEMO-VERS","Vertragsservice")})
-   kontakte[id]=new(id,vorname+" "+nachname,1,[new(id+"-tel","Telefon",id=="person-lina"?"+49 30 23125 021":id=="person-joris"?"+49 30 23125 022":"+49 40 66969 125",true,true,"Durchwahl")],[],"Person",firma,"",abteilung,"Ansprechpartner",false,DateTimeOffset.Parse("2026-10-01T09:00:00Z"),Vorname:vorname,Nachname:nachname);
+   kontakte[id]=new(id,vorname+" "+nachname,1,[new(id+"-tel","Telefon",id=="person-lina"?"+49 30 23125 021":id=="person-joris"?"+49 30 23125 022":"+49 40 66969 125",true,true,"Durchwahl")],[],"Person",firma,"",abteilung,"Ansprechpartner",false,DateTimeOffset.Parse("2026-10-01T09:00:00Z"),Vorname:vorname,Nachname:nachname,GeaendertAm:DateTimeOffset.Parse("2026-10-01T09:00:00Z"));
  }
  internal Firmenkontakt? Finden(string? id)=>id is null?null:kontakte.GetValueOrDefault(id);
  internal IReadOnlyList<Firmenkontakt> Liste()=>kontakte.Values.ToArray();

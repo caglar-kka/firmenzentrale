@@ -28,7 +28,7 @@ public sealed class AktenTests
  [Fact] public void VieleEintraegeUndKorrespondenzNutzenDieselbeAkte(){
   var b=new Aktenbestand();for(int i=0;i<50;i++)b.NotizSpeichern(Akte,null,new($"Notiz {i}","Inhalt"));
   for(int i=0;i<80;i++)b.Hinzufuegen(Text($"Dokument {i}"),$"Anlage-{i}.txt","text/plain",Akte);
-  var d=b.Lesen(Akte).Dokumente[0];for(int i=0;i<100;i++)b.KorrespondenzSpeichern(Akte,new($"Schreiben {i}","Inhalt","Brief",d.Id));
+  var d=b.Lesen(Akte).Dokumente[0];for(int i=0;i<100;i++)b.KorrespondenzSpeichern(Akte,new($"Schreiben {i}","Inhalt","Brief",d.Id,Richtung:"Empfangen",KontaktId:"DEMO-VERS",KommuniziertAm:DateTimeOffset.UtcNow));
   var a=b.Lesen(Akte);Assert.Equal(50,a.Notizen.Count);Assert.Equal(80,a.Dokumente.Count);Assert.Equal(100,a.Korrespondenz.Count);
   Assert.Throws<Arbeitsfehler>(()=>b.KorrespondenzSpeichern("demo-nord-rechnung-002",new("Fremd","Inhalt","E-Mail",d.Id)));
  }

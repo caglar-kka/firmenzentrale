@@ -4,6 +4,7 @@ namespace Betriebsplattform.Web.Akten;
 internal sealed class Notizablage
 {
     private readonly Dictionary<string,Aktennotiz> daten=[];
+    internal int Anzahl(IReadOnlySet<string> vorgaenge)=>daten.Values.Count(n=>vorgaenge.Contains(n.VorgangId)&&!n.Entfernt);
     internal IReadOnlyList<Aktennotiz> Liste(string vorgang)=>daten.Values.Where(n=>n.VorgangId==vorgang).OrderByDescending(n=>n.GeaendertAm).ToArray();
     internal Aktennotiz Speichern(string vorgang,string? id,Notizeingabe eingabe)
     {
