@@ -3,7 +3,7 @@ export interface Zahlung {
   status: string; beleg: string; quellenort: string; id?: string | null;
 }
 export interface Kontakt {
-  ansprechpartner: string | null; email: string | null; telefon: string | null; quelle: string;
+  emails?:string[]; telefone?:string[]; ansprechpartnerListe?:string[]; ansprechpartner: string | null; email: string | null; telefon: string | null; quelle: string;
 }
 export interface Rechnung {
   nummer: string; datum: string; aussteller: string; empfaenger: string; betrag: string;
@@ -12,7 +12,7 @@ export interface Rechnung {
   vorgangId?: string | null; perspektive?: {unternehmen: string; rolle: 'Aussteller' | 'Empfänger'} | null;
 }
 export interface Uebersicht {
-  synthetisch: true; gesamtbetrag: string; offenerBetrag: string; rechnungen: Rechnung[];
+  synthetisch: true; offeneForderungen?:string|null; offeneVerbindlichkeiten?:string|null; gesamtbetrag: string; offenerBetrag: string; rechnungen: Rechnung[];
 }
 export interface Quelle { dateiHash: string; blatt: string; zeile: number; zelle: string }
 export interface Meldung { stufe: 'Warnung' | 'Fehler'; code: string; text: string; quelle: Quelle | null }
@@ -34,7 +34,7 @@ const texte = (v: Record<string, unknown>, namen: string[]) => namen.every(n => 
 const optionalerText = (v: unknown) => v === null || typeof v === 'string';
 const optionaleId = (v: unknown) => v === undefined || v === null || (typeof v === 'string' && /^[a-z0-9][a-z0-9-]{0,63}$/.test(v) && !/\s/.test(v));
 const kontakt = (v: unknown): boolean => v === undefined || v === null || (objekt(v)
-  && typeof v.quelle === 'string' && ['ansprechpartner', 'email', 'telefon'].every(n => optionalerText(v[n])));
+  && ['emails','telefone','ansprechpartnerListe'].every(n=>v[n]===undefined||(Array.isArray(v[n])&&v[n].length<=250&&v[n].every(x=>typeof x==='string'))) && typeof v.quelle === 'string' && ['ansprechpartner', 'email', 'telefon'].every(n => optionalerText(v[n])));
 const quelle = (v: unknown): boolean => objekt(v) && texte(v, ['dateiHash', 'blatt', 'zelle']) && Number.isInteger(v.zeile);
 const meldung = (v: unknown): boolean => objekt(v) && (v.stufe === 'Fehler' || v.stufe === 'Warnung')
   && texte(v, ['code', 'text']) && (v.quelle === null || quelle(v.quelle));
@@ -63,7 +63,7 @@ async function laden<T>(pfad: string, pruefen: (v: unknown) => v is T, signal: A
   if (!antwort.ok) throw new Error('Die Beispieldaten konnten nicht geladen werden. Bitte erneut versuchen.');
   let daten: unknown;
   try { daten = await antwort.json(); } catch { throw new Error('Die Antwort konnte nicht gelesen werden. Bitte erneut versuchen.'); }
-  if (!pruefen(daten)) throw new Error('Die Antwort entspricht nicht dem erwarteten synthetischen Datenformat.');
+  if (!pruefen(daten)) throw new Error('Die Antwort entspricht nicht dem erwarteten Datenformat.');
   return daten;
 }
 export const ladeUebersicht = (signal: AbortSignal) => laden('/api/uebersicht', istUebersicht, signal);
@@ -71,17 +71,17 @@ export const ladeImport = (beispiel: Beispiel, signal: AbortSignal) => laden(`/a
 
 
 export interface Dokument {
-  id: string; unternehmenId: string; vorgangId: string; art: 'Originalrechnung' | 'Zahlungsbeleg';
+  id: string; unternehmenId: string; vorgangId: string; art: string;
   dateiname: string; datum: string; version: number; bytezahl: number; dateiHash: string; quelle: string; zahlungId: string | null;
 }
 export interface Dokumentenliste { synthetisch: true; vorgangId: string; dokumente: Dokument[] }
 const id = (v: unknown): v is string => typeof v === 'string' && /^[a-z0-9][a-z0-9-]{0,63}$/.test(v) && !/\s/.test(v);
 export const istDokumentenliste = (v: unknown): v is Dokumentenliste => objekt(v) && v.synthetisch === true && id(v.vorgangId)
-  && Array.isArray(v.dokumente) && v.dokumente.length <= 10 && v.dokumente.every(d => objekt(d) && id(d.id)
+  && Array.isArray(v.dokumente) && v.dokumente.length <= 512 && v.dokumente.every(d => objekt(d) && id(d.id)
     && d.unternehmenId === 'DEMO-NORD' && d.vorgangId === v.vorgangId && texte(d,['dateiname','datum','dateiHash','quelle'])
     && typeof d.dateiHash === 'string' && d.dateiHash.length === 64 && /^[A-F0-9]{64}$/.test(d.dateiHash) && Number.isInteger(d.version) && Number(d.version) > 0
-    && Number.isInteger(d.bytezahl) && Number(d.bytezahl) > 0 && Number(d.bytezahl) <= 100000
-    && ((d.art === 'Originalrechnung' && d.zahlungId === null) || (d.art === 'Zahlungsbeleg' && id(d.zahlungId))))
+    && Number.isInteger(d.bytezahl) && Number(d.bytezahl) > 0 && Number(d.bytezahl) <= 2097152
+    && ((d.art === 'Anhang' && d.zahlungId === null) || (d.art === 'Originalrechnung' && d.zahlungId === null) || (d.art === 'Zahlungsbeleg' && id(d.zahlungId))))
   && new Set(v.dokumente.map(d => d.id)).size === v.dokumente.length;
 export async function ladeDokumente(vorgangId: string, signal: AbortSignal): Promise<Dokumentenliste> {
   try {
@@ -93,4 +93,44 @@ export async function ladeDokumente(vorgangId: string, signal: AbortSignal): Pro
 }
 export function dokumentAdresse(d: Dokument): string {
   return `/api/vorgaenge/${encodeURIComponent(d.vorgangId)}/dokumente/${encodeURIComponent(d.id)}`;
+}
+
+
+export interface Demoimport {
+  id: string; synthetisch: true; blatt: string; spalten: string[]; firmen: string[]; firmenhinweise?: Record<string,import("./akte-api.js").Dublette[]>;
+  mapping: Record<string,string>; mappingBestaetigt: boolean; vorschau: Importansicht;
+  ergebnis: {uebernommen: number; uebersprungen: number; fehlerhaft: number; zurPruefung: number} | null;
+  entschiedenAm: string | null; auswahl: number[];
+}
+export const istDemoimport = (v: unknown): v is Demoimport => objekt(v) && id(v.id) && v.synthetisch === true
+  && v.blatt === 'ISD-Testdaten' && Array.isArray(v.spalten) && v.spalten.length === 9 && v.spalten.every(s=>typeof s==='string')
+  && Array.isArray(v.firmen) && v.firmen.every(s=>typeof s==='string') && objekt(v.mapping)
+  && Object.values(v.mapping).every(s=>typeof s==='string') && typeof v.mappingBestaetigt === 'boolean' && istImportansicht(v.vorschau)
+  && Array.isArray(v.auswahl) && v.auswahl.every(Number.isInteger) && optionalerText(v.entschiedenAm)
+  && (v.ergebnis === null || (objekt(v.ergebnis) && ['uebernommen','uebersprungen','fehlerhaft','zurPruefung'].every(k=>Number.isInteger((v.ergebnis as Record<string,unknown>)[k]) && Number((v.ergebnis as Record<string,unknown>)[k])>=0)));
+
+async function importAntwort(pfad: string, options: RequestInit): Promise<Demoimport> {
+  let response: Response;
+  try { response=await fetch(pfad,{...options,signal:AbortSignal.timeout(15000),cache:'no-store'}); }
+  catch { throw new Error('Die lokale Verbindung ist nicht erreichbar. Bitte erneut versuchen. Der Übernahmestand kann über die bisherigen Importe geprüft werden.'); }
+  let daten: unknown;
+  try { daten=await response.json(); } catch { throw new Error('Die Antwort konnte nicht gelesen werden. Bitte erneut versuchen.'); }
+  if (!response.ok) throw new Error(objekt(daten) && typeof daten.meldung === 'string' && daten.meldung.length < 1000 ? daten.meldung : 'Die Datei konnte nicht verarbeitet werden. Bitte prüfen.');
+  if (!istDemoimport(daten)) throw new Error('Die Importantwort entspricht nicht dem erwarteten Demoformat.');
+  return daten;
+}
+export async function dateiPruefen(datei: File): Promise<Demoimport> {
+  if (!/\.xlsx$/i.test(datei.name) || datei.size === 0 || datei.size > 2*1024*1024) throw new Error('Bitte eine XLSX-Datei bis 2,1 MB auswählen.');
+  return importAntwort('/api/importe/vorschau',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Demo-Import':'1','X-Dateiname':encodeURIComponent(datei.name)},body:datei});
+}
+export const importZuordnen = (v: Demoimport, mapping: Record<string,string>) => importAntwort(`/api/importe/${encodeURIComponent(v.id)}/mapping`,{
+  method:'POST',headers:{'Content-Type':'application/json','X-Demo-Import':'1'},body:JSON.stringify({blatt:v.blatt,unternehmen:mapping,bestaetigt:true})});
+export const importUebernehmen = (v: Demoimport, zeilen: number[]) => importAntwort(`/api/importe/${encodeURIComponent(v.id)}/uebernehmen`,{
+  method:'POST',headers:{'Content-Type':'application/json','X-Demo-Import':'1'},body:JSON.stringify({zeilen,bestaetigt:true})});
+export const importLesen = (id: string) => importAntwort(`/api/importe/${encodeURIComponent(id)}`,{method:'GET'});
+export async function importeLaden(): Promise<Demoimport[]> {
+  const r=await fetch('/api/importe',{signal:AbortSignal.timeout(8000),cache:'no-store'}).catch(()=>{throw new Error('Die lokale Verbindung ist nicht erreichbar. Bitte erneut versuchen.');});
+  const daten: unknown=await r.json();
+  if (!r.ok || !Array.isArray(daten) || !daten.every(istDemoimport)) throw new Error('Bisherige Importe konnten nicht geladen werden.');
+  return daten;
 }

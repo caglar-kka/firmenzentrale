@@ -20,8 +20,8 @@ public sealed class WebPrototypTests
         Assert.Equal("0,00 €", daten.Rechnungen[0].OffenerBetrag);
         Assert.Equal("460,00 €", daten.Rechnungen[1].OffenerBetrag);
         Assert.Equal("450,00 €", daten.Rechnungen[2].OffenerBetrag);
-        Assert.Contains("ISD", daten.Rechnungen[0].Empfaenger);
-        Assert.Contains("ISD", daten.Rechnungen[1].Aussteller);
+        Assert.Equal("DEMO-ISD", daten.Rechnungen[0].EmpfaengerId);
+        Assert.Equal("DEMO-ISD", daten.Rechnungen[1].AusstellerId);
         Assert.Equal(2, daten.Rechnungen[1].Zahlungen.Count);
         Assert.Equal("1.280,00 €", daten.Rechnungen[0].BestaetigtZugeordnet);
         Assert.Equal("500,00 €", daten.Rechnungen[1].BestaetigtZugeordnet);
@@ -36,12 +36,12 @@ public sealed class WebPrototypTests
         var daten = DemoDaten.UebersichtErstellen();
         var ausgang = daten.Rechnungen[0];
         var eingang = daten.Rechnungen[1];
-        Assert.Equal("buero.nord@example.invalid", ausgang.AusstellerKontakt!.Email);
+        Assert.Equal("buero@fjordfalter.invalid", ausgang.AusstellerKontakt!.Email);
         Assert.Equal("+49 30 23125 001", ausgang.AusstellerKontakt.Telefon);
-        Assert.Equal("Alex Beispiel (synthetisch)", ausgang.AusstellerKontakt.Ansprechpartner);
+        Assert.Equal("Lina Fennbrück", ausgang.AusstellerKontakt.Ansprechpartner);
         Assert.Equal(ausgang.AusstellerKontakt, eingang.EmpfaengerKontakt);
         Assert.Equal(ausgang.EmpfaengerKontakt, eingang.AusstellerKontakt);
-        Assert.Equal("kontakt.isd@example.invalid", eingang.AusstellerKontakt!.Email);
+        Assert.Equal("kontakt@elbpfad.invalid", eingang.AusstellerKontakt!.Email);
         Assert.Null(eingang.AusstellerKontakt.Telefon);
         Assert.Null(eingang.AusstellerKontakt.Ansprechpartner);
         Assert.Null(daten.Rechnungen[2].EmpfaengerKontakt);
@@ -83,8 +83,8 @@ public sealed class WebPrototypTests
             var pdf = System.Text.Encoding.ASCII.GetString(bytes);
             Assert.StartsWith("%PDF-1.4", pdf);
             Assert.EndsWith("%%EOF\n", pdf);
-            Assert.Contains("SYNTHETISCH", pdf);
-            Assert.Contains("SYNTH-2026-002", pdf);
+            Assert.DoesNotContain("SYNTHETISCH", pdf);
+            Assert.Contains("RE-2026-1048", pdf);
             Assert.DoesNotContain("/JavaScript", pdf);
             Assert.DoesNotContain("/URI", pdf);
             var xref = int.Parse(pdf.Split("startxref\n")[1].Split('\n')[0], System.Globalization.CultureInfo.InvariantCulture);
@@ -130,8 +130,8 @@ public sealed class WebPrototypTests
             var json = await antwort.Content.ReadFromJsonAsync<JsonElement>();
             Assert.Equal("910,00 €", json.GetProperty("offenerBetrag").GetString());
             var rechnungen = json.GetProperty("rechnungen");
-            Assert.Equal("buero.nord@example.invalid", rechnungen[0].GetProperty("ausstellerKontakt").GetProperty("email").GetString());
-            Assert.Equal("synthetisch/Kontakt-DEMO-ISD", rechnungen[1].GetProperty("ausstellerKontakt").GetProperty("quelle").GetString());
+            Assert.Equal("buero@fjordfalter.invalid", rechnungen[0].GetProperty("ausstellerKontakt").GetProperty("email").GetString());
+            Assert.Equal("Kontaktakte", rechnungen[1].GetProperty("ausstellerKontakt").GetProperty("quelle").GetString());
             Assert.Equal(JsonValueKind.Null, rechnungen[2].GetProperty("empfaengerKontakt").ValueKind);
             var liste = await client.GetFromJsonAsync<JsonElement>("/api/vorgaenge/demo-nord-rechnung-002/dokumente");
             Assert.Equal(2, liste.GetProperty("dokumente").GetArrayLength());
@@ -141,6 +141,7 @@ public sealed class WebPrototypTests
             Assert.Equal("application/pdf", pdf.Content.Headers.ContentType!.MediaType);
             Assert.Equal("inline", pdf.Content.Headers.ContentDisposition!.DispositionType);
             Assert.Equal("nosniff", pdf.Headers.GetValues("X-Content-Type-Options").Single());
+            Assert.Contains("frame-ancestors 'self'", pdf.Headers.GetValues("Content-Security-Policy").Single());
             Assert.Contains("object-src 'none'", pdf.Headers.GetValues("Content-Security-Policy").Single());
             var pdfBytes = await pdf.Content.ReadAsByteArrayAsync();
             Assert.Equal(liste.GetProperty("dokumente")[0].GetProperty("dateiHash").GetString(), Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(pdfBytes)));

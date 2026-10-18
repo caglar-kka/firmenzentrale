@@ -17,7 +17,7 @@ export function datumAnzeigen(iso: string, region: Region = 'DE'): string {
 }
 export type Statusdarstellung = { text: string; ton: 'neutral' | 'erfolg' | 'arbeit' | 'warnung' | 'fehler'; symbol: string };
 export function zahlungsstatus(text: string): Statusdarstellung {
-  if (text === 'Bezahlt' || text === 'Bestätigt (synthetisch)') return { text, ton: 'erfolg', symbol: '✓' };
+  if (text === 'Bezahlt' || text === 'Bestätigt' || text === 'Bestätigt (synthetisch)') return { text: text.startsWith('Bestätigt')?'Zahlung bestätigt':text, ton: 'erfolg', symbol: '✓' };
   if (text === 'Teilzahlung') return { text: 'Teilweise bezahlt', ton: 'arbeit', symbol: '◐' };
   if (text === 'Zur Prüfung') return { text, ton: 'warnung', symbol: '△' };
   return { text, ton: 'neutral', symbol: '○' };
@@ -46,6 +46,13 @@ export function zahlungsrichtung(r: Rechnung, z: Rechnung['zahlungen'][number]):
   if (!eigeneRolle(r) || !r.perspektive) return null;
   const eigen = r.perspektive.unternehmen;
   if (z.zahler === eigen && z.empfaenger !== eigen) return 'Eigene Zahlung';
-  if (z.empfaenger === eigen && z.zahler !== eigen) return z.status === 'Bestätigt (synthetisch)' ? 'Zahlung erhalten' : 'Zahlungseingang zur Prüfung';
+  if (z.empfaenger === eigen && z.zahler !== eigen) return (z.status === 'Bestätigt'||z.status === 'Bestätigt (synthetisch)') ? 'Zahlung erhalten' : 'Zahlungseingang zur Prüfung';
   return null;
 }
+
+export function rechnungsart(r:Rechnung):string{return eigeneRolle(r)==='Aussteller'?'Ausgangsrechnung':eigeneRolle(r)==='Empfänger'?'Eingangsrechnung':'Rechnung';}
+export function zahlungsanzeige(r:Rechnung,z:Rechnung['zahlungen'][number]):Statusdarstellung{
+ const basis=zahlungsstatus(z.status);if(!['Bestätigt','Bestätigt (synthetisch)'].includes(z.status))return basis;
+ const richtung=zahlungsrichtung(r,z);return{...basis,text:richtung==='Eigene Zahlung'?'Eigene Zahlung bestätigt':richtung==='Zahlung erhalten'?'Zahlungseingang bestätigt':'Zahlung bestätigt · Richtung ungeklärt'};
+}
+export const eingangsstatus=(s?:string)=>s==='Zugeordnet'?'Akte zugeordnet':s??'Zur Prüfung';

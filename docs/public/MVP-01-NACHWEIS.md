@@ -441,3 +441,320 @@ Neue Quellen: Web/DemoDokumente.cs, Frontend/Dokumente.tsx. Geändert: ApiAnwend
 Fokussierter eigener Review: keine Pfadkonstruktion aus Dokumentkennungen, keine fremden Inhalte/HTML aus Metadaten, kein Upload oder Schreibendpunkt, keine externen Assets/Pakete, keine gelockerten Sicherheitsheader. Dokumente sind feste öffentlich gedachte synthetische Demo-Inhalte ohne produktive Auth/Mandantensicherheit. Kein allgemeiner PDF-Sicherheits-/Schadsoftwaretest oder vollständiger Accessibilityaudit. Laufzeitgenerierung ersetzt keine produktive Originalablage; Hash ist keine Echtheitsgarantie.
 
 Offen: Screenreader/andere Browser/reale Geräte, 200%-Zoom, separate Viewer-Suche/-Zoom-Bedienprüfung und OS-Mail-/Telefonieübergabe. Browserviewer kann eigene Bearbeitungs-/Cloudangebote anzeigen; Nutzung nicht Teil dieser Implementierung. Produktionsrechte, echte Dateiverarbeitung, Persistenz/Audit/Aufbewahrung, Notizen/Verlauf und weitere Formate bleiben geplante Pakete gemäß [Architektur](ARCHITEKTUR.md). Keine Uploads, OCR, PDF-Änderungen, echten Daten, Finanzaktionen, Pakete, Commits/Pushes oder Library-Synchronisierung. Stop zur persönlichen DOK-01-Abnahme.
+
+
+## Nach DOK-01 – kompakte Rechnungsakte und echter Demoimport, 18.10.2026
+
+Status: umgesetzt und technisch geprüft, menschliche Sicht-/Funktionsabnahme offen. Die vorherige Rechnungsdetailansicht war ausdrücklich nicht abgenommen. Bestehende Anwendung und Arbeitsraumrichtung erhalten; keine weitere Anwendung oder Designvariante.
+
+### Lokale Versionierung
+
+Vor Beginn 28 vorhandene geänderte/neue öffentliche Dateien gegen f3e9e29 geprüft, 62 öffentliche Dateien bytegleich lokal gesichert und SHA-256 verifiziert. Nach ausdrücklicher Nutzerzustimmung lokaler Commit `5f735de890d75cff68579db756a5d4d5e5fb9182`, `chore: Arbeitsraum und synthetische Dokumentendemo sichern`. Danach sauberer Worktree. Die nachfolgende Umsetzung bleibt uncommitted; kein Push, Deployment oder Veröffentlichung. Private Dateien, echte Dokumente und Buildartefakte bleiben ausgeschlossen.
+
+### Tatsächlich implementiert
+
+Rechnungsidentität, Gegenpartei, drei Serverbeträge und Zahlungsstatus bilden den Kopf. Rechnung von/an und kompakte Zahlungsfolge mit Datum, Richtung, bestätigter Zuordnung und getrenntem PDF-Nachweis links. Eine rechtsbündige Aktionsgruppe mit Firma-/Rollenwahl, sicheren Mail-/Telefonlinks, echter lokaler Demonotiz und Kontaktinformationen rechts. Kontakte werden nicht mehr als große offene Karten dargestellt. Notizen: Pflichttext bis 2.000 Zeichen, höchstens 20 je Rechnung, synthetischer Benutzer/Zeit, sessionStorage je Browser-Tab, verständlicher Speicherfehler. Kein automatischer Versand oder Anruf.
+
+Originalrechnung und Zahlungsbeleg als getrennte Auswahl in derselben nativen PDF-Vorschau, optional vergrößert, Schließen/Escape und Rückkehr zur gleichen Rechnung. Bekannte unveränderliche PDF-Testbytes und bestehende Endpunkte wiederverwendet. Nur ihre Antworten erlauben Einbettung im eigenen Ursprung; keine allgemeine Freigabe fremder Frames, Objekte oder PDF-Inhalte. Technische Quellen, Referenzen, IDs, Hash/Größe liegen außerhalb des normalen Arbeitsbereichs in aufklappbaren Prüfansichten. Keine Originalveränderung oder PDF-Schreibschnittstelle.
+
+Importe: tatsächliches File-Input und Rohdateitransport zum lokalen Backend, Format-/Paket-/XML-/Größen-/Formelprüfung durch MVP-02, bestätigtes Vorlagenblatt/Firmenmapping, Originalwerte und Prüfhinweise, Auswahl gültiger Rechnungszeilen, eigene Übernahmebestätigung, verständlicher Bericht. Übernommene Domain-Rechnungen erscheinen in genau dem regulären Demo-Rechnungsbestand und verwenden dessen gemeinsame Fachprojektion. Zahlungskandidaten bleiben ausschließlich im Prüfbericht, ohne Bestätigung, Zuordnung oder Saldenwirkung. Bytegleiche Dateien liefern denselben Vorgang; frische Quell-/Rechnungsdublettensperren und ein gemeinsamer Lock verhindern mehrfache/parallele Übernahme. Originalbytes, Hash, Blatt/Zelle/Zeile, Mapping, Zeilenauswahl und UTC-Entscheidungszeit bleiben bis Neustart verfügbar.
+
+### Frisch erfolgreich ausgeführte Prüfungen
+
+Alle folgenden Kommandos mit Exitcode 0, ohne Paketdownload:
+
+| Kommando / Arbeitsordner | Tatsächliches Ergebnis |
+| --- | --- |
+| `dotnet test src/backend/Betriebsplattform.slnx --no-restore` / Root | 125 bestanden, 0 fehlgeschlagen, 0 übersprungen |
+| `dotnet build src/backend/Betriebsplattform.slnx --no-restore --configuration Release` / Root | erfolgreich, 0 Warnungen, 0 Fehler |
+| `npm.cmd test` / src/frontend | 29 bestanden, TypeScript strict kompiliert |
+| `npm.cmd run build` / src/frontend | erfolgreich, 39 Module, CSS 28,95 kB / JavaScript 239,64 kB |
+| `python -B -m unittest discover -s tests/repository -v` / Root | 7 bestanden; öffentliche Inventar-/Ignore-/Link-/Secretindikatorprüfungen |
+| `git diff --check` | kein Whitespacefehler |
+
+Neue Backendtests prüfen Mapping-/Auswahl-/Bestätigungspflicht, tatsächlichen Bestand und Neustartverlust, beide Rechnungsrichtungen, keine Zahlungsübernahme, negative/ungeklärte Zeilen, parallele und veränderte Wiederholungen, Originalbytekopie, atomare Ablehnung, Sitzungslimit, echte HTTP-Übertragung, 413 bei Übergröße, beschädigten Inhalt, unzulässigen Inhaltstyp und Host-/Origin-/Headergrenzen. Bestehende XLSX-/Finanz-/Dokumentenregressionen bleiben enthalten. Frontendtests prüfen Kontaktwechsel, URI-Grenzen, lokalen Notizablauf einschließlich Rückkehr, Dateieingabe/Request-Body, Mapping, Auswahl und ausdrückliche Bestätigung, Bericht, defekte Importantworten, PDF-Fehler/Wiederholung, Öffnen/Schließen/Vergrößern und Fokus-Rückkehr.
+
+Neue Aktionsgruppen-/Notizprüfung zunächst tatsächlich rot bei 25 bestehenden grünen Fällen. Neue Importtests zunächst Compilerrot vor dem Service. Eine fehlerhafte synthetische Testfixture teilte zunächst versehentlich die Rechnungsnummer mit einer gültigen Zeile; der vorhandene Dublettenschutz sperrte korrekt beide. Fixture berichtigt, keine Fachregel gelockert. Sandboxartefakt-/Dateisperren durch enge Werkzeugfreigabe beziehungsweise Beenden des eigenen Hosts gelöst; letzte Builds sauber. Keine neuen Pakete, Projekt-/Lockfile-/Ignoreänderungen. Kein aktueller Online-Advisoryscan und kein vollständiges unabhängiges Securityaudit.
+
+### Tatsächliche Browserprüfung und ihre Grenze
+
+Microsoft Edge auf dem lokalen Releasehost `http://127.0.0.1:5180`. Beide PDFs im eingebetteten Browserviewer wirklich gelesen, vergrößert und geschlossen. Original: SYNTH-2026-002 / 960 EUR, Zahlungsbeleg: 300 EUR von Nord an ISD. Native PDF-Werkzeuge können lokale Kopien bearbeiten; das Serveroriginal bleibt ohne Rückschreibweg unverändert. Enter öffnet Notiz-/PDF-Dialog, Escape beendet die Vergrößerung. Fokusverlust nach Schließen eines noch modalen Dialogs im Browser reproduziert und durch Fokus-Rückkehr nach dem React-Unmount behoben; anschließend Fokus auf Notiz/Vergrößern mit 3-px-Outline nachgewiesen. Notiz tatsächlich gespeichert und nach Rechnungswechsel/Reload im selben Tab wieder vorhanden. Kontaktwahl ändert tatsächlich Mail-/Telefonziel; ungültige/fehlende Werte ohne aktiven Link. Keine externen OS-Handler aufgerufen.
+
+Synthetische XLSX-Datei über den lokalen Vorlagenendpunkt tatsächlich heruntergeladen. Dateidialog über den sichtbaren Button öffnet sich. Das automatische Befüllen wurde von der Edge-Erweiterung wegen fehlender Dateizugriffsberechtigung blockiert. Keine Erweiterungs-/Sicherheitseinstellung geändert. Deshalb kein vollständiger Browser-Dateipicker-End-to-End-Nachweis: die konkrete heruntergeladene künstliche Datei wurde stattdessen mit eng freigegebenem lokalen HTTP-Aufruf an denselben Uploadendpunkt übertragen. Anschließend echter Browserablauf über Bisherige Demoimporte: Nord/ISD zugeordnet, Mapping bestätigt, Originalwert -5 in G4 und Fehlerfilter geprüft, nur gültige Zeile 2 ausgewählt, separat bestätigt. Bericht 1 übernommen / 0 übersprungen / 1 fehlerhaft / 1 zur Prüfung. SYNTH-RE-01 danach im regulären Bestand geöffnet: 100,25 EUR offen, 0,00 bestätigt, keine Zahlung. Nach absichtlichem Neustart für den finalen Release-Build denselben Ablauf im neuen flüchtigen Bestand wiederholt. Bericht bleibt über die Sitzungsliste aufrufbar.
+
+Detailansicht bei 1760/1440/768/720/375 px und Importbericht bei 1440/768/375 px ohne horizontalen Seitenüberlauf; am Detail immer genau eine Aktionsgruppe. 720 px ist nur Reflowprüfung. Browser-Zoomkürzel änderten innerWidth/DPR nicht; echter 200-%-Zoom bleibt unbestätigt. Vorhandene automatisierte Token-Kontrastgrenzen bestanden, keine vollständige Accessibility-Konformitätsaussage. Leere Rechnungssuche mit Reset, ehrlicher Dokumenten-/Zahlungsleerzustand, falsche PDF-Kennung mit verständlicher Fehlerseite im Browser geprüft; Netzwerk-/Speicher-/Antwortfehler überwiegend automatisiert. Screenreader, weitere Browser/Geräte, OS-Mail-/Telefonieübergabe und vollständige manuelle Dateiauswahl bleiben offen.
+
+### Geänderte öffentliche Dateien seit Baselinecommit
+
+- `README.md`
+- `docs/public/ARCHITEKTUR.md`
+- `docs/public/MVP-01-NACHWEIS.md`
+- `docs/public/adr/0002-lokaler-demoimport-und-pdf-vorschau.md`
+- `src/backend/Betriebsplattform.Web/ApiAnwendung.cs`
+- `src/backend/Betriebsplattform.Web/DemoDaten.cs`
+- `src/backend/Betriebsplattform.Web/DemoImportbestand.cs`
+- `src/frontend/DESIGN.md`
+- `src/frontend/src/App.tsx`
+- `src/frontend/src/Arbeitsraum.css`
+- `src/frontend/src/Dokumente.tsx`
+- `src/frontend/src/Icon.tsx`
+- `src/frontend/src/Importvorschau.tsx`
+- `src/frontend/src/Kontaktkarte.tsx`
+- `src/frontend/src/Rechnungen.tsx`
+- `src/frontend/src/Rechnungsdetails.tsx`
+- `src/frontend/src/api.ts`
+- `src/frontend/tests/app.test.mjs`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/DemoImportTests.cs`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/WebPrototypTests.cs`
+- `tests/repository/test_public_layout.py`
+
+Zusätzlich den bestehenden privaten operativen Plan fortgeschrieben und lokale Screenshotnachweise mit SHA-256 gesichert; keine Library-Synchronisierung. Bilder zeigen Rechnung, beide PDFs, Dateiauswahl, Mapping, Vorschau, Bericht und übernommene Rechnung. Sie bleiben außerhalb des öffentlichen Produktinventars.
+
+### Verbleibende Produktgrenzen und Abnahme
+
+Nur synthetische lokale Demo: feste XLSX-Vorlage mit einem Blatt und neun Spalten, keine beliebige Arbeitsmappe oder 111-Blatt-Migration, maximal 2 MiB je Datei, 20 Dateien und 5.000 übernommene Rechnungen. Keine Zahlungsübernahme oder produktive Buchung. Keine produktive Authentifizierung, Datenbank, dauerhaftes Audit/Idempotenz oder Firmenmigration. Backend-Neustart verliert Importdaten; Tab-Schließen kann Notizen verlieren. Keine automatische Designabnahme. Prüfen: Rechnungen 002 und 003, Kontakt-/Notizaktionen, Originalrechnung/Zahlungsbeleg und Vergrößern; Importe mit synthetischer Übungsdatei beziehungsweise bereits vorhandener Sitzung und SYNTH-RE-01. Menschliche Sicht-/Funktionsentscheidung bleibt ausstehend. [Architekturentscheidung](adr/0002-lokaler-demoimport-und-pdf-vorschau.md).
+
+## Autonomer Aktenblock 18.10.2026 – tatsächlich geprüfter Abschluss
+
+Der vorhandene Stand main/5f735de mit 21 bereits lokalen öffentlichen Änderungen wurde erhalten und vor der Arbeit bytegenau mit SHA-256 gesichert. Der freigegebene zusammenhängende Block wurde mit einem Agenten im bestehenden Arbeitsraum umgesetzt. Keine weiteren Pakete installiert, keine Datenbank/Schemaänderung, echte Firmendaten, externen Produktaktionen, Commits, Pushes oder Veröffentlichung. Die Library wurde nicht synchronisiert. Designabnahme bleibt ausdrücklich beim Auftraggeber.
+
+### Umgesetztes Verhalten
+
+- Sidebar Rechnungen öffnet auch aus derselben Detailroute die Übersicht; Suche/Filter/Sortierung bleiben beim direkten Rückweg erhalten. Eine Aktionsgruppe mit 38×38-px-Rahmen/18-px-Icons, zugänglichen Namen, Tooltips, Fokus und konsistentem Disabled-Zustand. E-Mail/Telefon verwenden validierte Werte; mehrere Werte sind auswählbar. Keine Nachricht versendet und kein Telefonhandler ausgelöst.
+- Zentrale lokale Vorgangsakte für Rechnungen und allgemeine Vorgänge. Dokumente/Notizen/Korrespondenz mit Zählern, einem aktiven Panel, Tastaturtabs und begrenzten Scrollflächen; Auswahl öffnet Inhalt. Backend- und DOMtests verwenden 50 Notizen/80 Dokumente/100 Schreiben. Im Browser wurden mehrere echte synthetische Originale, zwei Notizen und Korrespondenzeinträge verwendet.
+- Notizen mit Betreff, Inhalt, serverseitigem Demo-Autor, Erstellt-/Geändertzeit, Version und vollständigem lokalen Verlauf. Keine stille Überschreibung bei veralteter Version. Entfernen mit Bestätigung, Soft Delete und Wiederherstellen. Frühere Tab-Notizen bleiben lesbar. Korrespondenz kann Brief/E-Mail/Entwurf manuell dokumentieren und vorhandene Dokumente referenzieren; kein Versand/Mailabruf und kein zweiter Anhangsspeicher.
+- Gemeinsamer Dokumentbestand für manuelle Auswahl, gezielten Drop und Scan-Ordner. Unveränderte Bytes, Hash, Dateiname, Eingangsweg, Zeit und Aktenverweise. Gleicher Inhalt erzeugt keine zweite Originalkopie. Technische Werte nur separat abrufbar. PDF, PNG/JPG, TXT, begrenztes DOCX/XLSX bis 2 MiB. Datei-/MIME-/Struktur-/ZIP-/XML-/Größenprüfung, keine Makro-/Formelausführung. Maximal 512 Dateien/64 MiB im Prozess, begrenzte Notiz-/Korrespondenzspeicher.
+- Bekannte Originalrechnung und Zahlungsbeleg weiterhin getrennt und lesbar im nativen PDF-Viewer, vergrößern/schließen/Escape mit Fokus-Rückkehr. Bilder/TXT und DOCX-Textextrakt; XLSX als Anhang ausschließlich kontrollierter Download. Neue fremde PDFs konservativ geprüft und nicht inline ausgeführt. Browser-/Systemdruck verwenden den Originalbestand nur lesend; tatsächliche Hardwareausgabe nicht ausgeführt.
+- Dateiauswahl und Drag & Drop nutzen dieselbe begrenzte Mehrfachauswahl mit Typ-/MIME-/Größenfehlern, Zielrückmeldung und ausdrücklicher Bestätigung. Nur tatsächliche Datei-Drags markieren die jeweilige Fläche. Ein ungezielter Datei-Drop wird abgefangen und nicht verarbeitet. Excel-Drop bleibt vom Dokumentanhang getrennt.
+- Zentraler Posteingang: zunächst Zur Prüfung, manuelle Kategorie und ausdrückliche Zuordnung zu bestehender oder neuer Akte mit Firma. Im Browser wurde automatisch eingelesene synthetische Papierpost der allgemeinen Versicherungsakte zugeordnet und dort wiedergefunden.
+- Kontaktvorschläge aus tatsächlich gelesenem, eindeutig beschriftetem Text. Ziel-Firma, bisheriger/neuer Wert und Quelldokument sind sichtbar. Übernehmen/Zusätzlich speichern/Ignorieren sind versioniert mit alter/neuer Information, Quelle, Benutzer und Zeit. Alte Werte bleiben erhalten; mehrere aktive Kontakte sind möglich. Im Browser wurden zusätzliche E-Mail und Telefonübernahme inklusive sofortiger Aktualisierung der Rechnungsaktionen geprüft; alle drei Entscheidungen laufen zusätzlich als Backendtests.
+- Wiederverwendbarer Suchdienst über tatsächliche Firmen/Personen/Rechnungen/Vorgänge/Dokumente/Eingang. Mindestens zwei Zeichen, 250-ms-Debounce, Abbruch veralteter Anfragen, Pfeil hoch/runter/Enter/Escape, sichtbare Auswahl, Löschen, keine Treffer/Fehler. Der echte synthetische Treffer „Alli“ wurde im Browser per Tastatur geöffnet. Ressourcenlesepolitik und Arbeitsmodulaktivierung liegen serverseitig; keine produktive Authentifizierung/Autorisierung oder Lizenzverwaltung behauptet.
+
+### Scanner, Textauswertung und Architekturgrenzen
+
+Direkte Windows-Scannerintegration: Architektur und `IScannerAdapter` vorbereitet, keine Hardware/Companion-/Treiberinstallation und kein Fake-Scannen. Die Microsoft-Primärquellen und notwendige spätere Entscheidung WIA/TWAIN, Hardware, Signierung, Sitzungsrechte und IPC stehen in ADR 0003.
+
+Scan-to-Folder: tatsächlich implementierter optionaler Polling-Adapter, in dieser Prüfung mit `--scan-demo` am eigenen `src/backend/private/scan-eingang` aktiv. Zwei stabile Beobachtungen, keine Reparse-Points/rekursiven Pfade, gemeinsamer Validator/Hash-Dublettenschutz, kein Löschen. Zwei synthetische Dateien wurden automatisch eingelesen, 0 abgewiesen, 0 wartend; eine im Browser zugeordnet. Der Prozess liest nach Neustart erneut ein, weil auch die Zielablage flüchtig ist. Kein physischer Scanner getestet.
+
+TXT/DOCX-Text und begrenzte unkomprimierte PDF-Textoperationen sind deterministisch; keine KI oder OCR für Scanbilder. EML/MSG, allgemeine PDF-Auswertung, beliebige Office-Inhalte, automatische Kontakt-/Klassifikationsentscheidung, Outlook/Graph und produktive Modul-/Rechte-/Lizenzverwaltung bleiben bewusst offen. Der Formatfilter ist kein Malware-Scanner. Vor realen Daten zusätzlich Autorisierung, persistente Audit-/Schreibrechte, Aufbewahrung/Löschung, Restore, Betrieb und sichere Scanner-Vertrauensgrenze entscheiden. Alle neuen Akten-/Kontaktänderungen können beim Serverneustart verloren gehen; Dateien im Scan-Quellordner werden nicht gelöscht.
+
+### Tatsächlich ausgeführte Prüfungen
+
+| Prüfung | Ergebnis |
+| --- | --- |
+| `dotnet test src/backend/Betriebsplattform.slnx --no-restore` | 144 erfolgreich, 0 fehlgeschlagen, 0 übersprungen |
+| `npm.cmd test` in `src/frontend` | 38 erfolgreich, 0 fehlgeschlagen |
+| `python -m unittest discover -s tests/repository -p test_*.py` | 7 erfolgreich |
+| `dotnet build src/backend/Betriebsplattform.slnx --no-restore --configuration Release` | erfolgreich, 0 Warnungen/0 Fehler |
+| `npm.cmd run build` | TypeScript strict/Vite erfolgreich, 44 Module |
+| Öffentliche Grenze/Dateiinventar/erkennbare Secrets/MD-Verweise | Repositorytests erfolgreich; drei geprüfte Microsoft-Zitate ausdrücklich im Linktest erfasst |
+
+Der neue Navigationstest war zunächst rot; die Sidebar-Korrektur machte ihn grün. Neue Backendtests erforderten zuerst die korrekte optionale API-Signatur in der Fixture. Alte Frontendtests wurden auf die primäre Akte umgestellt, ohne Finanz-/Importprüfungen zu entfernen. Der neue Debounce-Test war wegen React/jsdom-Eingabesimulation zunächst rot; native Value-Setter plus Legacy-keyup korrigieren ausschließlich die Testeingabe. Im echten Browser bestätigter Farbkontrastfehler der Eintragsbuttons wurde mit bestehenden Tokens behoben. Ein zunächst vor dem PDF-Rendern aufgenommenes graues Vorschaufenster wurde durch eine sichtbar lesbare Aufnahme ersetzt. Kein unabhängiger Agentenreview oder vollständiges Securityaudit behauptet.
+
+Realer Edge-Browser: Rechnung → Sidebar-Übersicht; Notiz erstellen/bearbeiten/Verlauf/Soft Delete/Wiederherstellen; native PDF-Vergrößerung und Escape/Fokus (3-px-Outline); PNG vollständig geladen (640×400), DOCX-Textextrakt/TXT und XLSX-Downloadhinweis; Kontaktentscheidung mit E-Mail-Auswahl/Telefonlink; Papierposteingang/Zuordnung/Versicherungsakte; Teilbegriffsuche/Pfeil/Enter; Korrespondenz erfassen und zentralen Dokumentverweis öffnen. Keine neuen Browserfehler im geprüften Tab.
+
+XLSX-Regression: ausschließlich lokale synthetische Vorlage über denselben Backend-Endpunkt übertragen, anschließend in der echten UI über Bisherige Demoimporte geöffnet, Nord/ISD gemappt, Zeile 2 und Übernahme ausdrücklich bestätigt. Ergebnis 1 übernommen/0 übersprungen/1 fehlerhaft/1 zur Prüfung. SYNTH-RE-01 danach im regulären Bestand mit 100,25 EUR offen/0 bestätigt/keiner Zahlung geöffnet. Die als Dokument abgelegte XLSX löste davor keinen Import aus.
+
+Reflow ohne horizontalen Seitenüberlauf: Rechnungsakte bei 1440/768/720/375 px; Posteingang und Import-Einstieg bei 1440/720/375 px. Dokumentliste tatsächlich maximal 160 px, weitere Listen maximal 260 px. Das ist kein Nachweis echten 200-%-Browserzooms und kein vollständiger Screenreader-/Accessibility-Audit.
+
+**Offener Browsernachweis:** Der native Dateidialog wurde über die echte Schaltfläche angefordert. Die ChatGPT-Edge-Erweiterung blockiert das automatische Setzen lokaler Dateien wegen fehlendem „Allow access to file URLs“. Keine Erweiterungs-/Sicherheitseinstellung geändert. Daher kein vollständiger Browser-Dateiauswahl-/Datei-Drop-End-to-End-Nachweis und kein vorgetäuschter Drag-&-Drop-Browserscreenshot. Mehrfachauswahl/Drop einschließlich sichtbarem Dragzustand, falschem Typ, MIME, Größe und Bestätigung sind als DOMtests geprüft; echte Byteübertragung und Zuordnung zusätzlich als Backend-/HTTPtests. Manueller Datei-Drop/Dateiauswahl, echter 200-%-Zoom, Screenreader sowie Scanner-/Druckerhardware bleiben Abnahmepunkte.
+
+### Screenshots und konkrete Sichtprüfung
+
+Neun echte synthetische Edge-Aufnahmen unter `src/backend/private/pruefungen/aktenblock` mit SHA-256 in `screenshots.json`: `01-rechnungsdetail.jpg`, `02-notizen.jpg`, `03-pdf-vorschau.jpg`, `04-dokumente.jpg`, `05-posteingang.jpg`, `06-kontaktvorschlag.jpg`, `07-suche.jpg`, `08-excel-import.jpg`, `09-importbericht.jpg`. Ein Drag-&-Drop-Browserscreenshot fehlt aus dem oben dokumentierten Grund. Reflow-Messungen liegen daneben als JSON; keine Library-Synchronisierung.
+
+Zur menschlichen Prüfung: Rechnungen → SYNTH-2026-002 (Dokumente/Notizen/Korrespondenz, Original/Zahlungsbeleg, offene Ansprechpartnerinformation); Posteingang → verbleibende synthetische Dateien/Kategorie/Zuordnung; Vorgänge → Betriebsversicherung 2026 mit zugeordneter Papierpost; Kontakte → ISD mit zusätzlichen Werten und Verlauf; globale Suche z. B. Alli/Nord/SYNTH; Importe → Bisherige Demoimporte → übernommener Importbericht, danach SYNTH-RE-01 im Bestand. Keine automatische UX-Abnahme.
+
+### Lokale Dateien und Git
+
+HEAD bleibt `5f735de`. 20 bereits getrackte Dateien geändert und 19 neue öffentliche Dateien untracked (einschließlich der zuvor vorhandenen Produktänderungen). Nichts gestaged; kein weiterer Commit oder Push. Private Planung, Vorher-Sicherung und Prüfarbeitsdateien bleiben ausgeschlossen. Die vollständige Dateiliste dieses uncommitteten Gesamtstands:
+
+- `README.md`
+- `docs/public/ARCHITEKTUR.md`
+- `docs/public/MVP-01-NACHWEIS.md`
+- `src/backend/Betriebsplattform.Web/ApiAnwendung.cs`
+- `src/backend/Betriebsplattform.Web/ApiModelle.cs`
+- `src/backend/Betriebsplattform.Web/DemoDaten.cs`
+- `src/backend/Betriebsplattform.Web/DemoDokumente.cs`
+- `src/frontend/DESIGN.md`
+- `src/frontend/src/App.tsx`
+- `src/frontend/src/Arbeitsraum.css`
+- `src/frontend/src/Dokumente.tsx`
+- `src/frontend/src/Icon.tsx`
+- `src/frontend/src/Importvorschau.tsx`
+- `src/frontend/src/Kontaktkarte.tsx`
+- `src/frontend/src/Rechnungen.tsx`
+- `src/frontend/src/Rechnungsdetails.tsx`
+- `src/frontend/src/api.ts`
+- `src/frontend/tests/app.test.mjs`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/WebPrototypTests.cs`
+- `tests/repository/test_public_layout.py`
+- `docs/public/adr/0002-lokaler-demoimport-und-pdf-vorschau.md`
+- `docs/public/adr/0003-zentrale-vorgangsakte-und-eingangsadapter.md`
+- `src/backend/Betriebsplattform.Web/Akten/AktenEndpoints.cs`
+- `src/backend/Betriebsplattform.Web/Akten/AktenSuche.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Aktenbestand.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Aktenmodell.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Dokumentpruefung.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Kontaktpflege.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Notizablage.cs`
+- `src/backend/Betriebsplattform.Web/Akten/ScanOrdnerAdapter.cs`
+- `src/backend/Betriebsplattform.Web/DemoImportbestand.cs`
+- `src/frontend/src/Aktenansichten.tsx`
+- `src/frontend/src/Aktenbereich.tsx`
+- `src/frontend/src/Dateieingang.tsx`
+- `src/frontend/src/Suche.tsx`
+- `src/frontend/src/akte-api.ts`
+- `src/frontend/tests/akte.test.mjs`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/AktenTests.cs`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/DemoImportTests.cs`
+
+
+## Produktreife-Block: tatsächlicher Abschlussstand 18.10.2026
+
+### Rekonstruktion und Erhalt des Arbeitsstands
+
+HEAD bleibt 5f735de. Der vorhandene größere uncommittierte Arbeitsstand wurde erhalten und vor Erweiterung privat mit Dateiinventar/Hash gesichert. Bei der Fortsetzung belegten Quellcode und Tests bereits zentrale Akten/Notizen/Dokumente, Upload-/Dropkomponente, optionalen Scan-Ordner, Typeahead und begrenzten XLSX-Import. Diese Strecken wurden erweitert, nicht parallel neu aufgebaut. Die zunächst noch offene Browserprüfung und Dokumentation wurden fortgesetzt.
+
+Zusätzlich implementiert: erfundenes zusammenhängendes Beispielszenario, eine zentral abschaltbare globale Kennzeichnung; stabile Unternehmens-/Personenreferenzen; zentrale Kontaktanlage/-bearbeitung mit Anschrift, Ansprechpartnern, Abteilung/Rolle, mehreren Telefon-/E-Mail-Werten und Hauptwerten, Dublettenbestätigung, Version/Verlauf/Archiv. Dokumententscheidungen erhalten frühere Werte; offene Vorschläge werden nach einer Kontaktbearbeitung gegen die aktuelle Version geprüft. Keine harte Kontaktlöschung.
+
+Gemeinsame Kategorienverwaltung mit stabilen IDs, Beschreibung/Reihenfolge, einer Unterebene, Version und Archiv. Systemstatus können dort nicht umdefiniert werden. Sonstiges/Ungeklärt bleiben verfügbar. Backend-Verwaltungspolitik wird zusätzlich zur UI geprüft. Die feste lokale Beispielidentität ist keine produktive Anmeldung. Normale Mitarbeiteransichten enthalten keine Prüfdatenbuttons, JSON-Rohdaten, Hash-/Byte-/Pfadkarten. Diagnose ist expliziter Servermodus plus Diagnose.Lesen.
+
+Sidebar führt in allen fünf Arbeitsbereichen zur Übersicht. Hashroute modelliert Bereich/Datensatz/Dokument; Browser Back/Forward funktioniert. Direkter Rückweg erhält vorhandene Listenfilter; ein dauerhafter bereichsübergreifender Workspace-Zustand ist nicht implementiert. Kontakte, Vorgänge und Posteingang haben skalierbare Listen/Pagination; Vorgänge Suche/Kategorie/Status/Sortierung, Eingang Suche/Status/Kategorie/Firma/Zeitraum/Kanal. Die Vorgangsspalte heißt Bearbeitungsstatus; nicht erfasste Aufgaben/Fristen/Ereignisse werden nicht erfunden.
+
+Notizen verwenden klare Archivierungsbeschriftung, Bestätigung, ausgeblendete archivierte Einträge, Wiederherstellung und Verlauf. Korrespondenz unterstützt sieben Büroarten und mehrere durchsuchbar ausgewählte Dokumentverweise aus der vollständigen aktuellen Akte. Upload im Dialog verwendet denselben Eingang; erfolgreich hinzugefügte Dokumente sind unmittelbar ausgewählt. Kein Versand und keine Dateikopie. Ein begrenzter Aktenbereich bleibt aktiv, die Listen besitzen eigene Scrollflächen.
+
+### Tatsächlich gefundene und behobene Fehler
+
+- Die reale Browseranlage zeigte: erfolgreiche POST-Einzelantworten von Kontakt/Kategorie wurden irrtümlich als GET-Liste validiert. Zwei zusätzliche rote Regressionen reproduzierten den offenen Dialog; gemeinsame Antwortprüfung nach Operation korrigiert, beide anschließend grün und Anlage im Browser erfolgreich.
+- Kontaktbearbeitung blendete zusätzliche Anschriften aus; weitere Kontaktarten bleiben erhalten. Offene Dokumentvorschläge erhalten aktuelle Kontaktversion und Vergleichswerte. Primärwahl ersetzt keinen alten Telefon-/Mailwert ohne Verlauf.
+- Unterkategorieanlage und Kategorienreihenfolge korrigiert: keine irrtümliche Wurzelknotenprüfung bei neuer Kategorie; Kinder nach dem Elternknoten, maximal eine Unterebene.
+- Kollidierende React-Keys von Vorschau/Zuordnungsformular getrennt. Letzter Frontendtestlauf ohne diese Warnung; sichtbarer Browser ohne Warnungen/Fehler.
+- Native Formularbuttons im eingebetteten Dateieingang lösen keinen versehentlichen Korrespondenz-Submit aus. Radio-/Checkboxgrößen, Fokus auf erstes Eingabefeld, Kontaktwertbeschriftungen und Ladezustände verbessert.
+- Übergröße wird früh anhand Content-Length abgewiesen. Der HTTP-Grenztest verwendet Expect: 100-continue, um die 413-Antwort statt eines betriebssystemabhängigen Abbruchs beim parallelen Senden zu prüfen; zeilenweise/gestreamte Prüfung und 2-MiB-Limit bleiben bestehen.
+
+### Frisch ausgeführte Quality-Gates
+
+| Prüfung | Tatsächlich ausgeführter Befehl | Ergebnis |
+|---|---|---|
+| Backend vollständig | dotnet test src/backend/Betriebsplattform.slnx --no-restore | 160 erfolgreich, 0 Fehler/übersprungen |
+| Frontend vollständig | npm.cmd test (src/frontend) | 46 erfolgreich, 0 Fehler/übersprungen |
+| Repository | python -B -m unittest discover -s tests/repository -v | 7 erfolgreich |
+| Backend Release | dotnet build src/backend/Betriebsplattform.slnx --no-restore --configuration Release | 0 Fehler, 0 Warnungen |
+| Frontend Build | npm.cmd run build (src/frontend) | TypeScript strict + Vite erfolgreich, 49 Module |
+| Diff | git diff --check | erfolgreich |
+| Fachkern/Importkern/Abhängigkeiten | git diff --quiet HEAD für beide Kernverzeichnisse sowie package.json/package-lock.json | Exitcode 0, unverändert |
+
+Tests umfassen bestehende Rechnungs-/Teilzahlungs-/Importregeln, Datei-/Office-/PDF-Negativfälle, Scanner-Idempotenz, Notizversionen/Archiv, 50 Notizen/80 Dokumente/100 Schreiben, Kontaktentscheidung/-version/-historie/-archiv/-dubletten/-hauptwerte, Kategorien/Fallbacks/Systemstatus, serverseitige Verwaltungsverweigerung, explizite Diagnose, Navigation, Typeahead mit Debounce/Tastatur, Mehrfachanhänge und Upload direkt im Dialog. Das ist ein fokussierter Single-Agent-Review mit tatsächlichen Tests, kein unabhängiges Vollaudit oder vollständiger Produktions-/Barrierefreiheitsnachweis.
+
+### Sichtbare Browserprüfung und laufender Beispieldatenbestand
+
+Reale lokale Edge-Anwendung geprüft. PDF lesbar im eigenen Arbeitsraum und vergrößert; Escape schließt den Dialog und erhält dieselbe Rechnung. Vier Aktionsrahmen jeweils rund 38 × 38 CSS-px und Icons rund 18 px; Fokuswechsel zur Kontaktinformation beobachtet. Firma angelegt, Ansprechpartner zugeordnet, Kontaktanschrift und zusätzliche Hauptnummer gespeichert; vorheriger Wert im Verlauf erhalten. Kategorie tatsächlich angelegt und in der Eingangszuordnung verfügbar. Eingangsdokument ohne Kopie zu neuem Vorgang mit gewählter Firma/Kategorie zugeordnet. Korrespondenz mit zwei aktuellen Dokumentverweisen tatsächlich gespeichert. Übersicht/Detail, Sidebar sowie Browser Back/Forward geprüft. Autocomplete mit Vers, Pfeiltaste und Enter öffnet den gefundenen Datensatz/das Dokument.
+
+Die vorlagenkonforme XLSX wurde als echte lokale Datei über den vorhandenen HTTP-Eingang übertragen. Danach im Browser Firmen zugeordnet, gültige Zeile ausgewählt, Übernahme bestätigt und Bericht geöffnet: 1 übernommen, 1 Fehler, 1 Zahlung zur Prüfung. RE-2026-1063 ist mit 100,25 EUR offen/0 bestätigt im regulären Bestand auffindbar. Kein Zahlungseingang aus Excel bestätigt. Nach dem abschließenden Build/Neustart wurden dieselben ausschließlich erfundenen Abnahmebeispiele über die tatsächlichen Endpunkte wieder angelegt: vier Rechnungen, insgesamt 1.010,25 EUR gemischter offener Gesamtbetrag; eigener zusätzlicher Kontakt mit Ansprechpartner, Kategorie Objektunterlagen und zugehöriger allgemeiner Vorgang. Die Oberfläche verwendet genau diesen In-Memory-Bestand.
+
+Desktop und schmalere Reflow-Prüfung ohne horizontalen Seitenüberlauf: beobachtet innerWidth 1600/scrollWidth 1583 und innerWidth 800/scrollWidth 783. Temporäre Viewportvorgabe anschließend zurückgesetzt; dies ist ausdrücklich kein Nachweis für echten 200-%-Browserzoom. Letzte Browserkonsole ohne Warnungen/Fehler.
+
+Screenshots lokal und von Git ausgeschlossen: Rechnungsübersicht/-detail, geöffnete PDF, Kontaktübersicht/-editor/-verlauf, Vorgangsübersicht, Versicherungsakte/Dokumentbestand, Kontaktänderungsvorschlag, Notizen, Korrespondenzdialog mit zwei Anhängen, Kategorienverwaltung, Posteingang/-zuordnung, geöffnetes Autocomplete, Importübersicht/-mapping/-vorschau/-bericht und Reflow. Die private Screenshotübersicht enthält die Einzelbilder und ihren jeweiligen Prüfkontext. Keine automatische Designabnahme.
+
+### Bewusst offene Grenzen und Abnahme
+
+- Native Browser-Dateiauswahl und echtes Datei-Drag-&-Drop bleiben manuell durch den Auftraggeber nachzuweisen. Bestehende Edge-Erweiterungs-/Dateizugriffsrechte wurden nicht verändert. Komponenten-/HTTP-Tests belegen Auswahl, mehrere Dateien, Drop, Validierung und echten Upload; sie ersetzen diesen nativen End-to-End-Nachweis nicht.
+- Echter 200-%-Zoom, Screenreader, weitere Browser/Geräte, OS-Mail-/Telefonieübergabe und Papier-/Systemdruck bleiben manuell offen. Druckfunktion/CSS und unveränderte Fachwerte sind geprüft; kein tatsächlicher Papierdruck behauptet.
+- Scan-to-Folder ist implementiert und regressionsgetestet, wird optional mit --scan-demo aktiviert; der abschließend laufende Host ist ohne diesen Schalter gestartet. Direkter Scanner ist vorbereitet, keine Hardware angebunden/keine Treiber installiert.
+- PDF-Text nur deterministisch begrenzt, DOCX nur Text, TXT direkt; keine OCR für Bilder/Scans. Eigene bekannte PDFs/Bilder/Text als Vorschau, andere validierte Office-Dateien und fremde PDFs kontrollierter Download. Keine EML-/MSG-Auswertung, kein Outlook-/Graph-Client.
+- XLSX-Import bleibt auf ein Vorlagenblatt ISD-Testdaten/neun Spalten begrenzt. Historische Quellwerte bleiben unverändert. Keine beliebige Excel-Migration, produktive Buchung oder Datenbank aktiviert.
+- Produktive Identität, Rollen/Mandanten-/Ressourcenrechte einschließlich aller abgeleiteten Metadaten, dauerhafte Persistenz/Audit/Backup mit Restore, Aufbewahrung und Härtung für echte Daten bleiben gesonderte Gates. Namen/Dokumente sind erfundene Beispiele, keine Unternehmens-/Personenoriginale.
+- Git: kein Commit, kein Push, kein Remotezugriff, kein Release. Index leer; 53 öffentliche Dateien seit HEAD geändert/neu (einschließlich der vorherigen uncommittierten Blöcke). Private Anweisungen, Sicherungen, Dateien und Screenshots bleiben ausgeschlossen. Kein Nachweis einer ChatGPT-Library-Synchronisierung.
+
+### Öffentliche Dateien im uncommittierten Arbeitsstand
+
+- `README.md`
+- `docs/public/ARCHITEKTUR.md`
+- `docs/public/MVP-01-NACHWEIS.md`
+- `src/backend/Betriebsplattform.Web/ApiAnwendung.cs`
+- `src/backend/Betriebsplattform.Web/ApiModelle.cs`
+- `src/backend/Betriebsplattform.Web/DemoArbeitsmappe.cs`
+- `src/backend/Betriebsplattform.Web/DemoDaten.cs`
+- `src/backend/Betriebsplattform.Web/DemoDokumente.cs`
+- `src/frontend/DESIGN.md`
+- `src/frontend/src/App.tsx`
+- `src/frontend/src/Arbeitsraum.css`
+- `src/frontend/src/Dokumente.tsx`
+- `src/frontend/src/Icon.tsx`
+- `src/frontend/src/Importvorschau.tsx`
+- `src/frontend/src/Kontaktkarte.tsx`
+- `src/frontend/src/Rechnungen.tsx`
+- `src/frontend/src/Rechnungsdetails.tsx`
+- `src/frontend/src/api.ts`
+- `src/frontend/src/darstellung.ts`
+- `src/frontend/tests/app.test.mjs`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/WebPrototypTests.cs`
+- `tests/repository/test_public_layout.py`
+- `docs/public/adr/0002-lokaler-demoimport-und-pdf-vorschau.md`
+- `docs/public/adr/0003-zentrale-vorgangsakte-und-eingangsadapter.md`
+- `docs/public/adr/0004-kontakte-kategorien-und-arbeitsumgebung.md`
+- `src/backend/Betriebsplattform.Web/Akten/AktenEndpoints.cs`
+- `src/backend/Betriebsplattform.Web/Akten/AktenSuche.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Aktenbestand.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Aktenmodell.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Arbeitsumgebung.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Beispielakten.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Dokumentpruefung.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Kategorienverwaltung.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Kontaktpflege.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Kontaktverwaltung.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Notizablage.cs`
+- `src/backend/Betriebsplattform.Web/Akten/ScanOrdnerAdapter.cs`
+- `src/backend/Betriebsplattform.Web/DemoImportbestand.cs`
+- `src/frontend/src/Aktenansichten.tsx`
+- `src/frontend/src/Aktenbereich.tsx`
+- `src/frontend/src/Arbeitskontext.tsx`
+- `src/frontend/src/Buero.tsx`
+- `src/frontend/src/Dateieingang.tsx`
+- `src/frontend/src/Dokumentauswahl.tsx`
+- `src/frontend/src/Kategorien.tsx`
+- `src/frontend/src/Kontakte.tsx`
+- `src/frontend/src/Suche.tsx`
+- `src/frontend/src/akte-api.ts`
+- `src/frontend/tests/akte.test.mjs`
+- `src/frontend/tests/produktreife.test.mjs`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/AktenTests.cs`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/DemoImportTests.cs`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/ProduktreifeTests.cs`
+
+
+## Enger UX-/Fach-Delta-Nachweis nach Sichtprüfung (18.10.2026)
+
+Keine neue Produktreife-Runde: bestehende Komponenten angepasst. Getrennte serverseitig validierte Vorgangsstatus, kleine direkte Vorgangsanlage und versionierter Statuswechsel; Kategorien atomar innerhalb der Geschwister hoch/runter. Forderungen/Verbindlichkeiten aus vorhandenen Kernbeträgen getrennt projiziert; bei nicht vollständig bestimmter eigener Richtung keine irreführenden Teilsummen. Keine Fälligkeitsregel oder Änderung des Finanz-/Importkerns.
+
+Betroffene Ansichten: Rechnungskennzahlen/natürliche Anzahl/Aussteller-Empfänger; Vorgangsübersicht/-kopf; Eingangsfilter und menschliche Dokumenttitel/Kanalprojektion; Kontakte ohne Aktiv-Wiederholung; Kategorien ohne Sortierzahlen, mit Einrückung und kompakten Aktionen; gebündelte Aktenhinweise und Aktionshierarchie; Korrespondenzbezeichnung; PDF-Breitenanpassung. Ursprüngliche Dateiherkunft und Dokumentbytes bleiben erhalten. Telefon-Untertypen mangels Modellinformationen bewusst nicht erfunden.
+
+Gezielt erfolgreich: zunächst 3 neue Backendtests, danach 54 Tests aus ProduktreifeTests/AktenTests/WebPrototypTests/DemoImportTests wegen der tatsächlich gekoppelten Anzeige-/HTTP-/Importprojektion. Nach kleiner Quellenbeschriftung nur 23 Akten-/Delta-Tests erneut. Frontend zuerst 5 neue Delta-Tests, danach 25 per Namensfilter ausgewählte Tests der geänderten Ansichten und gekoppelten Akten-/Dialog-/PDF-Komponenten; zwei alte UI-Erwartungen an geänderte Beschriftung/Sortierung angepasst. Diese Zahlen sind überlappende Prüfungen, keine addierbaren Gesamtsuiten. Finanzkern-, XLSX-Leser-/Sicherheitsklassen, übrige Frontendtests und Repositorytests nicht erneut ausgeführt: deren Code, Abhängigkeiten und öffentliches Dateiinventar unverändert. Keine vollständige Regression behauptet.
+
+Webprojekt Releasebuild (mit unveränderten Kernreferenzen) und Frontend strict/Vite erfolgreich; Git-Diff-Prüfung erfolgreich. Reale Edge-Prüfung nur betroffener Ansichten: Vorgang angelegt, Status unabhängig von Zahlungen gewechselt, Kategorie tatsächlich verschoben, weitere Filter eingeklappt, Hinweise über Tabs sichtbar, Quellen verständlich, PDF mit FitH und Escape-Rückweg. Acht gezielte private Screenshots, keine erneute Sammlung der21 Baselinebilder. Konsole ohne Fehler/Warnungen. Echte 200%-Zoom-/Screenreader-/native Datei- und OS-Handlerprüfungen aus der Baseline bleiben offen; keine automatische UX-Abnahme. Kein Commit/Push/Release.
+
+
+### UX-/Datenqualitäts-Delta – 18.10.2026
+
+Gezielt erweitert: reservierter Suchicon-Platz, „Zahlung bestätigt“, sichtbare Aktenbegriffe, Kategorien unter Einstellungen mit Suche/Zeilenbearbeitung/nativer Sortierung und Tastaturalternative, Kontaktanschrift/Telefonarten/Website/bevorzugte Angaben, gemeinsame Pflichtfeldkennzeichnung. Zentrale deterministische Vergleichsschlüssel für Kontakte, Akten, Suche und Firmenhinweise im begrenzten Import; Warnung und bewusste separate Anlage statt automatischem Merge. Rechnungs-/Quellkennungs- und Dateihashschutz bleiben erhalten.
+
+Posteingang zeigt prüfbedürftige beziehungsweise verarbeitete Eingänge aus demselben Dokumentbestand. Vorab vorhandene Aktenbelege ohne Eingangsnachweis werden nicht als neue Eingänge ausgegeben. Manuelle Zuordnung und identische Wiederholungseingänge besitzen Aktivität, Zeitpunkt und Kanal; Originale bleiben erhalten. Kurzfassung/Handlungsbedarf sind ausdrücklich redaktionelle Beispielangaben oder als nicht zuverlässig ausgewertet gekennzeichnet. Keine neue OCR/KI, Fristbestätigung oder automatische Finanzwirkung.
+
+Dokumentgrenze server-/clientseitig 20.000.000 Byte (20 MB). Office-ZIP/XML-Grenzen bleiben getrennt bei 2 MiB pro Teil und 16 MiB entpackt, bestehende Format-/Aktivinhaltprüfungen bleiben erhalten. Text/CSV: UTF-8, höchstens 64.000 Zeichen; CSV nur als Download, keine Formelauswertung. PDF, PNG/JPEG, DOCX/XLSX und TXT weiterhin innerhalb der konservativen Formatprüfung. TIFF, alte XLS-Dateien und Makroformate nicht freigegeben. Strukturierter XLSX-Import behält seine eigene 2-MiB-Grenze (UI: 2,1 MB) und bisherigen Vorlagen-/Firmenumfang.
+
+Tatsächlich ausgeführt: 68 Backendtests aus ProduktreifeTests, AktenTests, DemoImportTests und WebPrototypTests; 58 Frontendtests aus den drei direkt gekoppelten Testdateien, nach letzter reiner Vergleichsanzeige-/Zustandskorrektur nochmals 10 relevante Eingangs-/Navigations-/Datenqualitätsfälle. Web-Release-Build und Frontend-Build erfolgreich. Red-Nachweis der neuen Backendfälle zunächst fehlende Implementierung; zwischenzeitliche UI-Assertions/Prüfkörperfehler korrigiert, keine offenen Testfehler. Keine erneute Vollregression unveränderter Finanzkern-/Importbibliothek oder Repositorytests: keine Änderung dieser Quellen, Abhängigkeiten oder Dateiinventare.
+
+Realer Browser: Suchabstand (44 px Innenabstand, Icon endet 32 px hinter Feldbeginn), Rechnung/Zahlungsstatus/PDF-Ladeabschluss, Kontaktformular und echte Dublettenwarnung, Wechsel zum bestehenden Kontakt ohne stehengebliebenen Warntext, Aktenwarnung und Navigation, Eingangssichten und echte Zuordnung mit sichtbarer Aktivität, Kategorieneditor/Escape, Typeahead mit Pfeil/Enter. Bei nominell 720 px Ansichtsprüfung kein Seitenüberlauf und kein innerer Kontaktformular-Überlauf; dies ist kein echter 200-%-Zoomnachweis. Acht gezielte lokale Screenshots, keine automatische UX-Abnahme.
+
+Offen: manuelle native Dateiauswahl/Datei- und Kategorien-Drag-&-Drop-Endprüfung im Browser, echter Zoom/Screenreader; inhaltsbasierte Scan-Dubletten, automatische Extraktion/Klassifikation/Zuordnung und nachträglicher Zuordnungswechsel. Bestehende begrenzte In-Memory-Demo bleibt ohne produktive Persistenz/Auth. Wiederholtes Akten-/Kontaktladen pro Suchtreffer entfernt; vollständige Metadatenlisten und In-Memory-Auswertung bleiben Skalierungsgrenzen. Serverseitige Pagination/Filter-/Sortierabfragen und Lastbudgets vor großen Beständen nötig, hier kein Produktionsumbau. Keine neue Bibliothek, kein Commit/Push/Release.
+
+
+### Folge-Delta: strukturierte Kontakte und ruhige Aktenansichten (18.10.2026)
+Bestehende Kontakte additiv um Vorname/Nachname/Hausnummer ergänzt; Firmenname bleibt zusammenhängend, alte Freitextanschriften bleiben ohne geratenes Zerlegen erhalten. Firma: Name/Telefon/E-Mail verpflichtend; Person: Vorname/Nachname/Telefon. UI-Stern/required/aria-required und Servervalidierung. Zentrale Dublettenhinweise berücksichtigen strukturierte Personennamen, Organisation und Anschrift; bewusste getrennte Anlage bleibt möglich. Unvollständige Ansprechpartner aus Dokumenten müssen zuerst als zentraler Personenkontakt gepflegt werden. Bei expliziter Übernahme einer neuen unstrukturierten Anschrift keine veralteten strukturierten Werte behalten; vorherige Anschrift bleibt im Verlauf.
+
+Vorschau standardmäßig geschlossen, Inhalt erst nach Auswahl; Schließen und erneutes Öffnen desselben Zahlungsbelegs im Browser geprüft. Richtungsabhängige Zahlungsbezeichnungen aus vorhandener Perspektive, keine neue Geldlogik. Kürzere zentrale Uploadtexte, unveränderte 20-MB-Dokumentgrenze und separate XLSX-Importgrenze. Eingangsschnellsichten bleiben primär, Statusfilter sekundär, suchbare Kategorieauswahl maximal240px scrollbar; „Akte zugeordnet“, Eingangsgruppen mit Abstand, konkreter Rückweg aus Akte zum Eingang. Aktenstatus zeigt Speichern/Erfolg/Fehler, zehn Sekunden versioniertes Rückgängig. Profilbereich ausdrücklich lokal, Firmenverweis dezent, Ansprechpartner mit Kontaktdaten, kompakte Anhänge. Notizfehler: neu gespeicherte Notiz wird ausgewählt; ausgewählter Listenpunkt wiederholt nicht den vollständigen Text. Kein doppelter Datensatz erzeugt.
+
+Nachweise: 56 Backendtests ausschließlich ProduktreifeTests/AktenTests; 67 Frontendtests der drei direkt gekoppelten Dateien app/akte/produktreife. Nach letzter reiner Iconänderung neun Folgedelta-Fälle frisch wiederholt. Backend-Releasebuild und Frontendbuild erfolgreich. Keine komplette Backend-/Repository-/Import-Fachregression: Finanzkern, XLSX-Verarbeitung, Dateivalidierung und Repositorystruktur wurden hier nicht geändert. Diff-Prüfung der Änderungen erfolgreich.
+
+Realer Edge-Browser auf127.0.0.1:5180: Rechnung mit geschlossener Vorschau/Beleg öffnen-schließen-wiederöffnen; Notiz erstellen/gezielt auswählen; Eingangssichten/Kategoriesuche/Detail; Eingang→Akte→genauer Eingang; Status speichern und rückgängig; Firma samt strukturierter Anschrift anlegen, Person mit Firma/Funktion/Mobil/E-Mail anlegen und bearbeiten, Firmenbearbeitung erhält Hausnummer, Ansprechpartner/Firmenverweis; Korrespondenz/kompakte Anhänge/Word-Textinhalt; Archivierungsdialog und Abbrechen. Fünf lokale Screenshots unter src/backend/private/pruefungen/ux-stammdaten. Kein horizontaler Seitenüberlauf in der beobachteten Desktopansicht, keine Browser-Konsolenfehler. Dies ersetzt keinen echten Zoom-/Screenreader-/nativen Datei-Drop-Endtest. Dateiauswahl/Datei-Drag-and-Drop bleiben manuell zu prüfen; vorhandene Edge-Berechtigungen nicht verändert. Keine neue Bibliothek/OCR/KI/Makrofreigabe, keine neuen Formate/Finanzregeln/DB-Migration, keine automatische UX-Abnahme.

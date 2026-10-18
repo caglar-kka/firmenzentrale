@@ -9,6 +9,39 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 PUBLIC_FILES = {
+    'src/backend/Betriebsplattform.Web/Akten/Arbeitsumgebung.cs',
+    'src/backend/Betriebsplattform.Web/Akten/Beispielakten.cs',
+    'src/backend/Betriebsplattform.Web/Akten/Kategorienverwaltung.cs',
+    'src/backend/Betriebsplattform.Web/Akten/Kontaktverwaltung.cs',
+    'src/frontend/src/Arbeitskontext.tsx',
+    'src/frontend/src/Buero.tsx',
+    'src/frontend/src/Dokumentauswahl.tsx',
+    'src/frontend/src/Kategorien.tsx',
+    'src/frontend/src/Kontakte.tsx',
+    'tests/backend/Betriebsplattform.Rechnungen.Tests/ProduktreifeTests.cs',
+    'src/frontend/tests/produktreife.test.mjs',
+    'docs/public/adr/0004-kontakte-kategorien-und-arbeitsumgebung.md',
+
+    'src/backend/Betriebsplattform.Web/Akten/Aktenbestand.cs',
+    'src/backend/Betriebsplattform.Web/Akten/AktenEndpoints.cs',
+    'src/backend/Betriebsplattform.Web/Akten/Aktenmodell.cs',
+    'src/backend/Betriebsplattform.Web/Akten/AktenSuche.cs',
+    'src/backend/Betriebsplattform.Web/Akten/Dokumentpruefung.cs',
+    'src/backend/Betriebsplattform.Web/Akten/Kontaktpflege.cs',
+    'src/backend/Betriebsplattform.Web/Akten/Notizablage.cs',
+    'src/backend/Betriebsplattform.Web/Akten/ScanOrdnerAdapter.cs',
+    'tests/backend/Betriebsplattform.Rechnungen.Tests/AktenTests.cs',
+    'src/frontend/tests/akte.test.mjs',
+    'src/frontend/src/akte-api.ts',
+    'src/frontend/src/Dateieingang.tsx',
+    'src/frontend/src/Aktenbereich.tsx',
+    'src/frontend/src/Aktenansichten.tsx',
+    'src/frontend/src/Suche.tsx',
+    'docs/public/adr/0003-zentrale-vorgangsakte-und-eingangsadapter.md',
+
+    'src/backend/Betriebsplattform.Web/DemoImportbestand.cs',
+    'tests/backend/Betriebsplattform.Rechnungen.Tests/DemoImportTests.cs',
+    'docs/public/adr/0002-lokaler-demoimport-und-pdf-vorschau.md',
     'src/backend/Betriebsplattform.Web/DemoDokumente.cs', 'src/frontend/src/Dokumente.tsx',
     'src/frontend/src/Kontaktkarte.tsx', 'src/frontend/src/kontaktaktionen.ts',
     '.gitignore', '.gitattributes', 'README.md', 'CONTRIBUTING.md', 'AGENTS.md',
@@ -135,7 +168,15 @@ class PublicLayoutTests(unittest.TestCase):
                 continue
             text = (ROOT / name).read_text(encoding='utf-8')
             for target in re.findall(r'\[[^\]]+\]\(([^)]+)\)', text):
-                self.assertNotIn('://', target, 'Only local documentation links expected')
+                # Reviewed primary-source citations are references, never build dependencies.
+                if target in {
+                    'https://www.bundesnetzagentur.de/DE/Fachthemen/Telekommunikation/Nummerierung/DramaNumbers/artikel.html',
+                    'https://learn.microsoft.com/en-us/windows-hardware/drivers/image/wia-architecture-overview',
+                    'https://learn.microsoft.com/en-us/uwp/api/windows.devices.scanners',
+                    'https://learn.microsoft.com/en-us/windows/apps/develop/devices-sensors/scan-from-your-app',
+                }:
+                    continue
+                self.assertNotIn('://', target, 'External reference requires explicit source review')
                 resolved = (ROOT / name).parent.joinpath(target).resolve()
                 self.assertTrue(resolved.is_relative_to(ROOT))
                 self.assertIn(resolved.relative_to(ROOT).as_posix(), PUBLIC_FILES)

@@ -1,5 +1,17 @@
 # Architektur und Projektstruktur
 
+## Aktueller lokaler Ausschnitt – nach DOK-01
+
+Die Rechnung nutzt eine gemeinsame Kontaktaktionsgruppe und interne native PDF-Vorschau. Ein `DemoImportbestand` hält kontrolliert hochgeladene synthetische XLSX-Dateien, Prüfergebnisse, bestätigte Firmenzuordnung, Zeilenauswahl und Entscheidungszeit im Prozessspeicher. Der bestehende MVP-02-Leser und die gemeinsame Anzeigeprojektion in `DemoDaten` werden wiederverwendet; importierte Rechnungen durchlaufen den vorhandenen Fachkern bei der Anzeige. Kein zusätzliches Paket, PDF-Dienst oder zweiter Frontendweg.
+
+GET `/api/importe` und `/api/importe/{id}` liefern die Demo-Prüfhistorie. POST `/api/importe/vorschau` akzeptiert begrenzte Rohbytes mit `application/octet-stream`, Dateinamenheader und ausdrücklichem Demoheader; POST `/api/importe/{id}/mapping` bestätigt Blatt/Firmen, POST `/api/importe/{id}/uebernehmen` bestätigt ausgewählte gültige Rechnungen. Schreibaktionen verlangen zusätzlich einen vorhandenen erlaubten Origin. Loopback-/Hostgrenzen bleiben erhalten. Kein CORS-Wildcard, Dateipfad oder temporäres Uploadverzeichnis. GET `/api/importvorlage/{beispiel}` liefert ausschließlich lokal erzeugte synthetische Übungsdateien.
+
+Maximal 2 MiB pro Datei, 20 Dateien und 5.000 importierte Rechnungen pro Prozess. Derselbe Lock schützt neue Prüfung, Dublettensets und atomare Übernahme. Bytegleiche Dateien liefern denselben Vorgang; erneute identische Bestätigung liefert denselben Abschluss. Veränderte Wiederholungen werden anhand Quellsystem/Art/Datensatz-ID und Aussteller/Rechnungsnummer erneut geprüft. Originalbytes, Zellwerte, Mapping, Auswahl und Zeit bleiben bis zum Neustart erhalten. Keine automatische Zahlungsübernahme, Bestätigung oder Zuordnung.
+
+Die bisherige CSP-Sperre der Anwendung gegen Einbettung bleibt bestehen. Nur bekannte selbst erzeugte Demo-PDF-Antworten erhalten `frame-ancestors 'self'`; der Arbeitsraum erlaubt Same-Origin-Frames. Skripte, fremde Frames und Objekte werden dadurch nicht allgemein freigegeben. Native PDF-Werkzeuge können lokale Kopien erzeugen; der Server besitzt keinen PDF-Schreibendpunkt. Diese Ausnahme gilt nicht als Freigabe fremder PDFs.
+
+Notizen sind begrenzter sessionStorage je Rechnung im aktuellen Browser-Tab mit synthetischem Benutzer und Zeit; keine serverseitige Historie oder Teamfunktion. Die folgenden MVP-/DOK-01-Abschnitte beschreiben die ursprünglichen Ausschnitte. Aktuelle Ergänzung und Revisionsgrenzen: [ADR 0002](adr/0002-lokaler-demoimport-und-pdf-vorschau.md).
+
 ## Zielbild und implementierter Ausschnitt
 
 Ein React-Frontend spricht mit einem ASP.NET-Core-Backend. Das Backend bündelt die fachlichen Module in einem modularen Monolithen und greift über EF Core und Npgsql auf PostgreSQL zu. Geschäftsdaten bleiben in der vorgesehenen lokalen Kundenumgebung. Ein späterer mobiler oder hybrider Zugang benötigt eine eigene Sicherheits- und Betriebsentscheidung.
@@ -228,3 +240,18 @@ Dokumente.tsx lädt Metadaten einmal je Detailansicht, prüft synthetische Kennz
 Bei echten Dokumenten oder mehreren Unternehmen muss ein serverseitig autorisierter Vorgangs-/Dokumentdienst den Katalog ersetzen. Dokumentidentität/Version und Aktenzuordnung dann getrennt halten: mehrere berechtigte Akten verweisen auf dieselben unveränderten Bytes, Rechteprüfung je Verknüpfung. Rollen für Geschäftsführung, Büro und Mitarbeiter serverseitig am Zugriff durchsetzen. Notizen/Kommentare mit Autor/Zeit und Bearbeitungsereignisse können später an Vorgang oder Version anknüpfen; niemals Originalbytes überschreiben oder „Bezahlt“ als Finanzaktion behandeln. Aufbewahrung, Restore, Audit und Fremd-PDF-/Upload-Sicherheit bleiben offene Produktionsvoraussetzungen.
 
 Neuprüfungs-Trigger: echte Daten, beliebige Dateien, Upload, Einbettung/Viewerbibliothek, weitere Dokumentformate, Persistenz oder produktive Rechte. Dann neue Sicherheits-/Abhängigkeitsentscheidung statt Erweiterung des Test-PDF-Generators. Desktop ist gemäß Nutzerentscheidung Priorität; keine eigenständige mobile Anwendung. Der gemischte Gesamtbestand von 910,00 EUR bleibt ausdrücklich kein Forderungssaldo. Keine Finanzberechnung, Importlogik, Bankbuchungsdaten oder fachliche Vorgangsarten erweitert.
+
+## Aktuelle Ergänzung: allgemeine Vorgangsakte (18.10.2026)
+
+Die frühere DOK-01-Beschreibung dokumentiert den damaligen festen PDF-Katalog. Der aktuelle gemeinsame Aktenbestand erweitert ihn: zentrale Originale/Integrität und getrennte Aktenverweise, versionierte Notizen/Soft Delete, Posteingang mit manueller Kategorie/Zuordnung, Korrespondenzverweise, Kontaktprüfentscheidungen und zentrale berechtigungsvorbereitete Suche. Upload, gezielter Drop und optionaler Scan-Ordner verwenden denselben Validator/Ablagedienst. Die alten Dokumentendpunkte bleiben kompatible Lesewege zu diesem Bestand, keine zweite Dokumentenverwaltung.
+
+`Web/Akten` trennt Anzeigemodelle, Notizablage, Kontaktpflege, Datei-/Textextraktion, Aktenbestand, Suchdienst, Eingangsadapter und HTTP-Verträge. Finanz-/Importkern bleiben eigenständig. Modulaktivierung, Ressourcenrechte und mögliche spätere Lizenzen sind getrennte Ebenen; der Server prüft aktive Arbeitsbereiche, die Demo-Lesepolitik erlaubt bewusst alle synthetischen Ressourcen. Keine produktive Authentifizierung oder abschließend festgelegte Produktmodulliste.
+
+Die aktuelle Notizablage ersetzt den sessionStorage-Prototyp; alte Tab-Notizen werden unverändert angezeigt. Fremde PDFs werden nicht als sicherer allgemeiner Inline-Viewer freigegeben. Office-Anhänge erzeugen keine Buchung und keinen Excel-Datenimport. Direkte Windows-Scannersteuerung ist nur vorbereitet; der aktivierbare lokale Testordner ist tatsächlich implementiert. Entscheidungen, Quellen, Grenzen und Revisionsanlässe stehen in [ADR 0003](adr/0003-zentrale-vorgangsakte-und-eingangsadapter.md).
+
+
+## Aktueller Produktreife-Stand (18.10.2026)
+
+Die zentrale Kontaktpflege verwaltet Firmen/Personen/Ansprechpartner, mehrere und primäre Kontaktwerte, Version/Dublettenprüfung/Verlauf/Archiv. Anzeigebereiche lösen dieselben stabilen Kontakt-IDs auf. Der gemeinsame Kategorienservice verwaltet Geschäftsrubriken mit einer Unterebene und Archiv; Systemstatus bleiben eigenständig. Arbeitsumgebung trennt globale Beispieldatenkennzeichnung und explizite Diagnose von Fachfunktionen. Server-Aktionspolitik, Ressourcenlesepolitik und Modulaktivierung sind getrennt und kein Ersatz für produktive Authentifizierung.
+
+Korrespondenz referenziert mehrere zentrale Dokumente. Suchauswahl und Upload verwenden denselben Akten-/Dokumentenbestand. Hashnavigation modelliert Bereich/Datensatz/Dokument; Listenfilter bleiben beim unmittelbaren Detailrückweg erhalten. Posteingang/Vorgänge sind paginierte Arbeitslisten. Normale Mitarbeiteransichten enthalten keine rohen technischen Daten. Die ältere Beschreibung aufklappbarer Prüfdaten und des Tab-Notizprototyps ist historisch; aktuell gilt [ADR 0004](adr/0004-kontakte-kategorien-und-arbeitsumgebung.md). Kein produktives Schema, keine neue Abhängigkeit und keine Finanzregel wurde dafür eingeführt.

@@ -5,7 +5,8 @@ using System.Text;
 namespace Betriebsplattform.Web;
 
 public sealed record Dokumentansicht(string Id, string UnternehmenId, string VorgangId, string Art,
-    string Dateiname, string Datum, int Version, int Bytezahl, string DateiHash, string Quelle, string? ZahlungId);
+    string Dateiname, string Datum, int Version, int Bytezahl, string DateiHash, string Quelle, string? ZahlungId,
+    string Inhaltstyp = "application/pdf", string Vorschau = "pdf", string? Titel = null);
 public sealed record Dokumentenliste(bool Synthetisch, string VorgangId, IReadOnlyList<Dokumentansicht> Dokumente);
 
 // Öffentlich gedachte synthetische Demo: kein Dateisystemzugriff, Upload oder produktives Archiv.
@@ -15,17 +16,14 @@ public static class DemoDokumente
     private const string Vorgang = "demo-nord-rechnung-002";
     private static readonly Eintrag[] Katalog =
     [
-        Erstellen("original-002-v1", "Originalrechnung", "SYNTH-2026-002-Originalrechnung.pdf", null,
-            "SYNTHETISCHE ORIGINALRECHNUNG - KEINE ECHTE RECHNUNG",
-            "Rechnung SYNTH-2026-002", "Rechnung von: ISD (synthetisch)", "Rechnung an: Beispielbetrieb Nord",
-            "Rechnungsdatum: 17.10.2026", "Rechnungsbetrag: 960,00 EUR", "Quelle: synthetisch/Rechnung-002",
-            "DOK-01 Testdokument. Keine steuerlich verwendbare Rechnung.", "Keine echten Kunden-, Bank- oder Unternehmensdaten."),
-        Erstellen("zahlung-002-v1", "Zahlungsbeleg", "SYNTH-ZA-002-Zahlungsbeleg.pdf", "demo-zahlung-002",
-            "SYNTHETISCHER ZAHLUNGSBELEG - KEIN ECHTER BANKNACHWEIS",
-            "Rechnung SYNTH-2026-002 / Zahlung SYNTH-ZA-002", "Zahler: Beispielbetrieb Nord", "Zahlungsempfaenger: ISD (synthetisch)",
-            "Zahlungsdatum: 17.10.2026", "Zahlungsbetrag: 300,00 EUR", "Fuer diese Rechnung: 300,00 EUR",
-            "Bestaetigung ausschliesslich im synthetischen Testkern.", "Quelle: synthetisch/SYNTH-ZA-002",
-            "DOK-01 Testdokument. Keine Zahlung oder Buchung ausloesen.")
+        Erstellen("original-002-v1", "Originalrechnung", "Rechnung_Oktober_2026.pdf", null,
+            "ELBPFAD BUEROAUSSTATTUNG GMBH", "Originalrechnung RE-2026-1048",
+            "Rechnung an: Fjordfalter Objektpflege GmbH", "Rechnungsdatum: 17.10.2026",
+            "Bueromaterial und Arbeitsplatzbedarf", "Rechnungsbetrag: 960,00 EUR"),
+        Erstellen("zahlung-002-v1", "Zahlungsbeleg", "Zahlungsbeleg_17-10-2026.pdf", "demo-zahlung-002",
+            "ZAHLUNGSBELEG", "Rechnung RE-2026-1048", "Zahler: Fjordfalter Objektpflege GmbH",
+            "Zahlungsempfaenger: Elbpfad Bueroausstattung GmbH", "Zahlungsdatum: 17.10.2026",
+            "Zahlungsbetrag: 300,00 EUR", "Fuer diese Rechnung: 300,00 EUR")
     ];
 
     public static Dokumentenliste? Liste(string vorgangId) => vorgangId is
@@ -48,7 +46,7 @@ public static class DemoDokumente
 
     // Ausschließlich feste ASCII-Testtexte, eine A4-Seite, Standardschrift.
     // Kein allgemeiner PDF-Writer und keine Verarbeitung fremder PDF-Inhalte.
-    private static byte[] TestPdf(string[] zeilen)
+    internal static byte[] TestPdf(string[] zeilen)
     {
         string Esc(string s) => s.Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
         var stream = "BT /F1 12 Tf 18 TL 42 790 Td\n" + string.Join("\n", zeilen.Select(z => $"({Esc(z)}) Tj T*")) + "\nET\n";

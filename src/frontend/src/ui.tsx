@@ -46,6 +46,7 @@ export function Titel({ oben, titel, text }: { oben: string; titel: string; text
   return <header className="p-titel"><p className="p-eyebrow">{oben}</p><h1>{titel}</h1><p>{text}</p></header>;
 }
 
-export function Kennzahlen({ offen, betrag, anzahl }: { offen: string; betrag: string; anzahl: number }) {
-  return <dl className="p-bilanz"><div><dt>Offene Positionen · Gesamtbestand</dt><dd>{offen}</dd><span>Bestätigte Zahlungen berücksichtigt</span></div><div><dt>Rechnungsbeträge gesamt</dt><dd>{betrag}</dd></div><div><dt>Rechnungen im Bestand</dt><dd>{anzahl.toString().padStart(2, '0')}</dd></div></dl>;
+export function Kennzahlen({ offen, betrag, anzahl,forderungen,verbindlichkeiten }: { offen: string; betrag: string; anzahl: number;forderungen?:string|null;verbindlichkeiten?:string|null }) {
+  const getrennt=!!forderungen&&!!verbindlichkeiten;
+  return <dl className="p-bilanz">{getrennt?<><div><dt>Offene Forderungen</dt><dd>{forderungen}</dd><span>Von Kunden noch zu erhalten</span></div><div><dt>Offene Verbindlichkeiten</dt><dd>{verbindlichkeiten}</dd><span>Von uns noch zu bezahlen</span></div></>:<><div><dt>Offene Rechnungsbeträge</dt><dd>{offen}</dd><span>Zahlungsrichtungen nicht vollständig zugeordnet · kein Forderungssaldo</span></div><div><dt>Rechnungsbeträge gesamt</dt><dd>{betrag}</dd></div></>}<div><dt>Rechnungsbestand</dt><dd>{anzahl} {anzahl===1?'Rechnung':'Rechnungen'}</dd></div></dl>;
 }

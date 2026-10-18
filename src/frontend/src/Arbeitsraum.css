@@ -229,48 +229,158 @@
 .studio .p-breadcrumb li + li::before { content: '/'; margin-right: 8px; color: var(--leise); }
 .studio .p-breadcrumb button { background: transparent; color: var(--akzent); padding: 6px 2px; border: 0; text-decoration: underline; text-underline-offset: 4px; font-size: 14px; }
 .studio .p-breadcrumb button:hover { background: var(--akzent-hell); }
-.studio .p-dokumente small { color: var(--leise); font-size: 13px; }
-.studio .p-dokumente h3 .icon { margin-right: 6px; }
 @media (max-width: 680px) { .studio .p-detailnavigation .p-zurueck { width: 100%; justify-content: center; } }
 
 
-/* Desktop-Vorgangsakte: kompakte Kontaktzeilen, bestehende Tokens. */
-.studio .p-firmenbereich { margin: 0 0 28px; padding: 18px 0; border-block: 1px solid var(--rand); }
-.studio .p-firmenbereich h2 { font-size: 16px; margin: 0 0 14px; }
-.studio .p-kontakte { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px 28px; }
-.studio .p-kontaktkarte { min-width: 0; position: relative; display: flex; align-items: center; gap: 12px; justify-content: space-between; }
-.studio .p-kontaktname { min-width: 0; display: grid; gap: 2px; }
-.studio .p-kontaktname strong { font-size: 15px; overflow-wrap: anywhere; }
-.studio .p-kontaktrolle, .studio .p-kontaktname small { color: var(--leise); font-size: 13px; }
+
+/* Kompakte Rechnungsakte: eine Aktionsgruppe und ein Dokumentenbereich. */
+.studio .p-detailnavigation { margin-bottom: 18px; }
+.studio .p-detailkopf { margin-bottom: 18px; }
+.studio .p-detailkopf h1 { font-size: 30px; }
+.studio .p-detailpartner { margin: 4px 0 0; color: var(--leise); }
+.studio .p-detailbetraege { padding: 20px 24px; margin-bottom: 24px; }
+.studio .p-detailbetraege dd { font-size: 28px; }
+.studio .p-detailraster { grid-template-columns: minmax(0,1fr) minmax(380px,1.1fr); gap: 28px; }
+.studio .p-vorgang { min-width: 0; }
+.studio .p-kontakte { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; padding: 0 0 20px; margin: 0 0 20px; border-bottom: 1px solid var(--rand); }
+.studio .p-kontaktname { min-width: 0; }
+.studio .p-kontaktname small { display: block; color: var(--leise); font-size: 13px; margin-top: 3px; }
+.studio .p-kontaktname dd { overflow-wrap: anywhere; }
+.studio .p-nachweise { padding: 20px; background: var(--flaeche); border: 1px solid var(--rand); }
+.studio .p-aktionszeile { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-bottom: 20px; }
+.studio .p-aktionszeile select { min-width: 0; width: 100%; max-width: 240px; font-size: 13px; min-height: 38px; }
 .studio .p-kontaktaktionen { display: flex; gap: 6px; flex-shrink: 0; }
+.studio .p-kontaktdetails { position: relative; }
 .studio .p-aktion { display: inline-flex; position: relative; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 8px; border: 1px solid var(--eingaberand); border-radius: 6px; color: var(--akzent-dunkel); background: var(--flaeche); cursor: pointer; list-style: none; }
 .studio .p-aktion::-webkit-details-marker { display: none; }
 .studio .p-aktion .icon { width: 19px; height: 19px; }
-.studio .p-aktion:hover, .studio .p-kontaktdetails[open] summary { background: var(--akzent-hell); border-color: var(--akzent); }
+.studio .p-aktion:hover { background: var(--akzent-hell); }
+.studio .p-aktion:disabled { color: var(--leise); background: var(--weich); cursor: default; }
 .studio .p-tooltip { visibility: hidden; pointer-events: none; position: absolute; z-index: 8; bottom: calc(100% + 8px); right: 0; width: max-content; max-width: 180px; background: var(--text); color: var(--flaeche); border-radius: 4px; padding: 6px 9px; font-size: 13px; font-weight: 400; }
 .studio .p-aktion:hover .p-tooltip, .studio .p-aktion:focus-visible .p-tooltip { visibility: visible; }
-.studio .p-kontaktdetails dl { position: absolute; z-index: 7; top: calc(100% + 10px); right: 0; width: min(360px,85vw); padding: 18px; border: 1px solid var(--eingaberand); background: var(--flaeche); border-radius: 8px; box-shadow: 0 6px 18px #24263118; }
-.studio .p-kontaktdetails dl > div { margin: 0 0 12px; overflow-wrap: anywhere; }
-.studio .p-demohinweis { margin-top: 12px; color: var(--leise); font-size: 13px; }
-.studio .p-demohinweis summary { padding: 4px 0; }
-.studio .p-kontakthinweis { margin: 8px 0 0; }
-.studio .p-zahlungskopf { margin-bottom: 12px; }
-.studio .p-zahlungskopf p { margin: 4px 0 0; font-size: 14px; color: var(--leise); }
-.studio .p-zahlungsdaten { gap: 12px 24px; }
-.studio .p-pdf { min-width: 0; margin: 14px 0; }
-.studio .p-pdf > a { display: flex; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--eingaberand); border-radius: 6px; background: var(--flaeche); color: var(--akzent-dunkel); text-decoration: none; }
-.studio .p-pdf > a:hover { background: var(--akzent-hell); border-color: var(--akzent); }
-.studio .p-pdf a span { min-width: 0; flex: 1; overflow-wrap: anywhere; }
-.studio .p-pdf strong, .studio .p-pdf small { display: block; font-size: 14px; }
-.studio .p-pdf small { margin-top: 4px; font-size: 13px; }
-.studio .p-pdf a > .icon { flex-shrink: 0; }
-.studio .p-pdf details { font-size: 13px; }
-.studio .p-pdf code { overflow-wrap: anywhere; }
-.studio .p-nachweise h2 { font-size: 18px; margin-bottom: 14px; }
-.studio .p-nachweise small { font-size: 13px; color: var(--leise); }
-.studio .p-rechnungsgrundlage { margin-top: 20px; border-top: 1px solid var(--rand); padding-top: 6px; font-size: 14px; }
-@media(max-width: 1100px) { .studio .p-kontakte { grid-template-columns: 1fr; } }
+.studio .p-kontaktdetails dl { position: absolute; z-index: 7; top: calc(100% + 10px); right: 0; width: min(330px,80vw); padding: 18px; border: 1px solid var(--eingaberand); background: var(--flaeche); border-radius: 8px; }
+.studio .p-zahlungsfolge li { padding: 0; display: block; }
+.studio .p-zahlungsfolge article { padding: 16px 0; border: 0; border-bottom: 1px solid var(--rand); border-radius: 0; background: transparent; }
+.studio .p-zahlungskopf { margin: 0 0 10px; }
+.studio .p-zahlungskopf strong { font-size: 22px; }
+.studio .p-zahlungskopf time { display: block; font-size: 13px; color: var(--leise); margin-bottom: 4px; }
+.studio .p-zahlungskopf p { margin: 2px 0 0; font-size: 14px; }
+.studio .p-zahlungsabschluss { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--leise); }
+.studio .p-textaktion { color: var(--akzent-dunkel); padding: 0; background: transparent; border: 0; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.studio .p-technische-details { margin-top: 24px; color: var(--leise); font-size: 13px; }
+.studio .p-technische-details dl { border-bottom: 1px solid var(--rand); padding: 10px 0; }
+.studio .p-technische-details dd { overflow-wrap: anywhere; }
+.studio .p-vorschaukopf { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 13px; margin-bottom: 8px; }
+.studio .p-vorschaukopf > div { display: flex; gap: 8px; }
+.studio .p-vorschaukopf button { font-size: 13px; padding: 6px 10px; border: 1px solid var(--eingaberand); background: var(--flaeche); color: var(--text); }
+.studio .p-pdf-vorschau { width: 100%; height: 540px; border: 1px solid var(--rand); border-radius: 4px; background: var(--weich); }
+.studio .p-dialog { color: var(--text); background: var(--flaeche); border: 1px solid var(--eingaberand); border-radius: 10px; padding: 24px; width: min(620px,90vw); max-height: 92vh; overflow: auto; }
+.studio .p-dialog::backdrop { background: var(--text); opacity: .6; }
+.studio .p-dialog textarea { width: 100%; border: 1px solid var(--eingaberand); padding: 12px; font: inherit; resize: vertical; }
+.studio .p-dialog p { font-size: 14px; color: var(--leise); }
+.studio .p-dialogaktionen { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.studio .p-pdf-dialog { width: 92vw; height: 92vh; max-width: 1500px; }
+.studio .p-pdf-dialog .p-pdf-vorschau { height: calc(100% - 55px); min-height: 300px; }
+@media(max-width:1100px) { .studio .p-detailraster { grid-template-columns: minmax(0,1fr); } }
+@media(max-width:680px) { .studio .p-kontakte { grid-template-columns: 1fr; } .studio .p-aktionszeile { flex-wrap: wrap; } .studio .p-aktionszeile select { max-width: none; } .studio .p-detailbetraege dd { font-size: 22px; } }
 
-.studio .p-dokumente .p-notiz { padding: 0; margin: 12px 0; font-size: 13px; }
-.studio .p-dokumente > small { display: block; margin-top: 12px; }
-.studio .p-zahlungsfolge + .p-notiz { padding: 0; font-size: 13px; }
+.studio .p-demobanner { padding: 12px 16px; background: var(--akzent-hell); color: var(--akzent-dunkel); font-size: 14px; border-radius: 6px; margin: 0 0 24px; }
+.studio .p-upload, .studio .p-mapping, .studio .p-importliste { background: var(--flaeche); border: 1px solid var(--rand); border-radius: 10px; padding: 24px; margin: 20px 0; }
+.studio .p-upload h2 { margin: 0 0 8px; }
+.studio .p-upload p, .studio .p-mapping p { color: var(--leise); font-size: 14px; }
+.studio .p-uploadaktionen { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
+.studio .p-uploadaktionen a { color: var(--akzent-dunkel); font-size: 14px; }
+.studio .p-bestaetigung { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; }
+.studio input[type="checkbox"] { width: 18px; height: 18px; min-height: 18px; flex: 0 0 18px; accent-color: var(--akzent); margin: 3px 8px 0 0; }
+.studio .p-mappingfelder { display: grid; grid-template-columns: repeat(auto-fit,minmax(230px,1fr)); gap: 16px; margin: 18px 0; }
+.studio .p-mappingfelder label { display: block; margin-bottom: 6px; font-size: 14px; overflow-wrap: anywhere; }
+.studio .p-mappingfelder select { width: 100%; min-width: 0; }
+.studio .p-importvorgang { margin-top: 30px; }
+.studio .p-importvorgang .p-pruefraster { display: block; }
+.studio .p-importvorgang .p-pruefakte { padding: 14px 18px; margin-bottom: 16px; }
+.studio .p-importvorgang .p-pruefakte > .p-eyebrow, .studio .p-importvorgang .p-pruefakte > hr { display: none; }
+.studio .p-importvorgang .p-fehlerzahl { display: inline; font-size: 24px; margin-right: 8px; }
+.studio .p-importvorgang .p-pruefakte h2 { display: inline; font-size: 16px; }
+.studio .p-importvorgang .p-pruefakte > p { display: inline; margin: 0 12px 0 6px; }
+.studio .p-uebernahme { padding: 22px 0; display: flex; align-items: center; gap: 24px; justify-content: space-between; flex-wrap: wrap; }
+.studio .p-importbericht { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; padding: 20px; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 8px; }
+.studio .p-importbericht dd { font-size: 28px; }
+.studio .p-importliste button { margin: 6px 12px 6px 0; }
+.studio .p-technische-details pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.studio .p-uebungen { margin-top: 32px; border-top: 1px solid var(--rand); padding-top: 12px; }
+@media(max-width:680px) { .studio .p-importbericht { grid-template-columns: 1fr 1fr; } }
+
+.studio .p-neuedatei > summary { font-weight: 600; color: var(--akzent-dunkel); padding: 10px 0; }
+.studio .p-mapping > summary { font-weight: 600; }
+
+.studio .p-kontaktaktionen > .p-aktion, .studio .p-kontaktaktionen > details > .p-aktion { box-sizing: border-box; width: 38px; height: 38px; min-width: 38px; min-height: 38px; margin: 0; padding: 9px; line-height: 1; flex: 0 0 38px; vertical-align: middle; }
+.studio .p-kontaktaktionen { align-items: center; }
+.studio .p-kontaktaktionen > details { margin: 0; border: 0; }
+.studio .p-kontaktaktionen .p-aktion .icon { width: 18px; height: 18px; flex: 0 0 18px; }
+
+/* Vorgangsakte */
+.studio .p-aktenbereich{min-width:0;background:var(--flaeche);padding:18px;border:1px solid var(--rand);border-radius:12px}.studio .p-registertabs{display:flex;gap:4px;border-bottom:1px solid var(--rand);padding-bottom:8px;flex-wrap:wrap}.studio .p-registertabs button[aria-selected=true]{background:var(--text);color:var(--flaeche)}.studio .p-aktenliste{max-height:260px;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;margin:12px 0}.studio .p-akteneintrag{display:flex;flex-direction:column;text-align:left;width:100%;gap:5px;padding:11px;margin-bottom:5px;white-space:normal;overflow-wrap:anywhere}.studio .p-akteneintrag[aria-pressed=true]{border-color:var(--akzent);background:var(--akzent-hell)}.studio .p-aktenliste small,.studio .p-dateieingang small{display:block;margin-top:5px;color:var(--leise)}.studio .p-demohinweis,.studio .p-dateiinfo{font-size:13px;color:var(--leise)}.studio .p-dateieingang{position:relative;padding:12px 0}.studio .p-dropaktiv{outline:3px dashed var(--akzent);outline-offset:4px;background:var(--akzent-hell)}.studio .p-dropmeldung{display:block;padding:20px;color:var(--text)}.studio .p-aktenwerkzeuge{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.studio .p-bildvorschau{display:block;max-width:100%;max-height:60vh;object-fit:contain;margin:auto}.studio .p-textvorschau{max-height:420px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--grund);padding:16px}.studio .p-mehrzeilig{white-space:pre-wrap;overflow-wrap:anywhere;max-height:350px;overflow:auto}.studio .p-kontaktvorschlaege{margin-top:18px}.studio .p-kontaktvorschlaege article{padding:12px;border-bottom:1px solid var(--rand)}.studio .p-kontaktvorschlaege dl{display:grid;grid-template-columns:1fr 1fr;gap:12px}.studio .p-eingangsraster{display:grid;grid-template-columns:minmax(200px,1fr) minmax(300px,2fr);gap:24px}.studio .p-zuordnung{padding-top:20px;max-width:650px}.studio .p-zuordnung label,.studio .p-dialog form>label{display:block;margin:12px 0}.studio .p-zuordnung input:not([type=checkbox]),.studio .p-zuordnung select,.studio .p-dialog input,.studio .p-dialog textarea,.studio .p-dialog select{display:block;width:100%;padding:10px;margin-top:6px}.studio .p-vorgangsliste{max-height:65vh}.studio .p-suche{position:relative;flex:1;max-width:510px;min-width:180px}.studio .p-suche>input{width:100%;padding:10px 35px 10px 12px}.studio .p-suche>button{position:absolute;right:4px;top:4px;padding:5px 10px}.studio .p-suchvorschlaege{position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--flaeche);border:1px solid var(--rand);border-radius:8px;box-shadow:0 8px 24px color-mix(in srgb,var(--text) 12%,transparent);max-height:350px;overflow:auto}.studio .p-suchvorschlaege ul{list-style:none;padding:5px;margin:0}.studio .p-suchvorschlaege li{padding:10px;cursor:pointer}.studio .p-suchvorschlaege li[aria-selected=true],.studio .p-suchvorschlaege li:hover{background:var(--akzent-hell);outline:2px solid var(--akzent);outline-offset:-2px}.studio .p-suchvorschlaege small{display:block;font-size:13px;color:var(--leise)}.studio .p-suchvorschlaege p{padding:0 12px;font-size:13px}.studio .p-kontextkopf{gap:20px;flex-wrap:wrap}.studio .p-aktionszeile{flex-wrap:wrap}.studio .p-aktionszeile select{min-width:0;max-width:100%}
+@media(max-width:900px){.studio .p-eingangsraster{grid-template-columns:1fr}.studio .p-registertabs button{font-size:13px;padding:8px}.studio .p-kontextkopf{gap:8px}}
+@media print{.p-seitenleiste,.p-kontextkopf,.p-footer,.p-detailnavigation,.p-aktionszeile,.p-registertabs,.p-dateieingang,button,details,.p-demohinweis{display:none!important}.studio,.studio .p-arbeitsraum,.studio .p-detailraster{display:block!important;margin:0!important;padding:0!important}.studio .p-aktenliste,.studio .p-mehrzeilig,.studio .p-textvorschau{max-height:none;overflow:visible}.studio .p-aktenliste:not(:has(.p-akteneintrag[aria-pressed=true])){display:none}.studio .p-akteneintrag[aria-pressed=false]{display:none}}
+
+.studio .p-akteneintrag,.studio .p-registertabs button{background:var(--flaeche);color:var(--text);border:1px solid var(--rand);box-shadow:none}.studio .p-akteneintrag strong{color:inherit}.studio .p-akteneintrag:hover,.studio .p-akteneintrag[aria-pressed=true]{background:var(--akzent-hell);color:var(--akzent-dunkel);border-color:var(--akzent)}.studio .p-registertabs button[aria-selected=true]{background:var(--akzent-hell);color:var(--akzent-dunkel);border-color:var(--akzent)}.studio .p-kontaktvorschlaege .p-dialogaktionen{gap:6px;flex-wrap:wrap}.studio .p-aktenbereich article{min-width:0}.studio .p-aktenbereich dd{overflow-wrap:anywhere}
+
+.studio .p-nachweise>.p-aktenbereich{border:0;border-top:1px solid var(--rand);border-radius:0;padding:14px 0 0}.studio .p-aktionszeile select{flex:1 1 200px;width:auto;max-width:280px}.studio .p-aktenbereich [aria-label="Dokumentenliste"]{max-height:160px}.studio .p-aktenbereich [aria-label="Dokumentenliste"] .p-akteneintrag{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px;padding:8px}.studio .p-aktenbereich [aria-label="Dokumentenliste"] small{margin:0;font-size:13px}.studio .p-aktenbereich [aria-label="Dokumentenliste"] strong{font-size:14px}
+@media(max-width:680px){.studio .p-aktenbereich [aria-label="Dokumentenliste"] .p-akteneintrag{grid-template-columns:1fr;gap:3px}.studio .p-aktionszeile select{max-width:100%}}
+
+/* Büroarbeitslisten und zentrale Stammdaten */
+.p-arbeitsfilter{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:1rem 0}.p-arbeitsfilter label{display:grid;gap:.3rem;grid-column:1/-1;grid-row:2}.p-arbeitsfilter input,.p-arbeitsfilter select{width:100%;min-width:0}.p-breadcrumb ol{display:flex;gap:.8rem;list-style:none;padding:0;flex-wrap:wrap}.p-breadcrumb button{padding:.2rem .4rem}.p-kontaktstamm{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem}.p-kontaktwert{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.5rem 0}.p-kontaktwert input[type=text],.p-kontaktwert input[type=email],.p-kontaktwert input[type=tel]{flex:1;min-width:150px}.p-dokumentauswahl{margin:1rem 0;min-width:0}.p-dokumentauswahl label{display:flex;gap:.7rem;align-items:center}.p-dokumentauswahl .p-aktenliste{max-height:220px}.p-dokumentauswahl small{display:block}.p-dokumentauswahl input[type=search]{min-width:0;width:100%}.p-seiten{display:flex;align-items:center;gap:1rem;margin:1rem 0}.p-globalhinweis{font-size:.8rem;color:var(--text-muted,#52616b)}
+@media print{.p-sidebar,.p-topbar,.p-globalhinweis,.p-breadcrumb,.p-arbeitsfilter,.p-seiten,.p-dateieingang,.p-registertabs,button,form,.p-scannerstatus,.p-dialog{display:none!important}.p-arbeitsplatz,.p-hauptinhalt{display:block!important;margin:0!important;padding:0!important}.p-aktenliste,.p-tabellenraum{max-height:none!important;overflow:visible!important}}
+
+.studio .p-dialog input[type=checkbox],.studio .p-dialog input[type=radio]{display:inline-block;width:auto;margin:0 .4rem 0 0;padding:0;flex:0 0 auto}.studio .p-dokumentauswahl label{display:flex;margin:.6rem 0}.studio .p-kontaktwert label{display:flex;align-items:center;gap:.3rem}.studio .p-kontaktwert label:has(input[type=tel]),.studio .p-kontaktwert label:has(input[type=email]){display:block;flex:1}.studio .p-dialog label,.studio .p-kontaktstamm dd{overflow-wrap:anywhere}.studio .p-arbeitsfilter input,.studio .p-arbeitsfilter select{padding:.6rem;border:1px solid var(--eingaberand);border-radius:5px;color:var(--text);background:var(--flaeche);font:inherit}.studio .p-listenseiten{display:flex;gap:1rem;align-items:center;margin:1rem 0}
+@media print{.p-listenseiten,.p-kontaktvorschlaege,.p-dateiinfo{display:none!important}.studio .p-tabelle a{color:#000}.studio iframe{border:0}}
+
+/* Gezielte Hierarchie für Büroaktionen und Listen. */
+.studio .p-button-sekundaer{background:var(--flaeche);color:var(--akzent-dunkel);border:1px solid var(--eingaberand);box-shadow:none}.studio .p-button-leise{background:transparent;color:var(--text);border:1px solid transparent;box-shadow:none}.studio .p-button-leise:hover,.studio .p-button-sekundaer:hover{background:var(--akzent-hell);color:var(--akzent-dunkel)}.studio .p-sortieraktionen{display:flex;gap:6px;align-items:center;justify-content:flex-end}.studio .p-sortieraktionen>button{min-height:32px;min-width:32px;padding:4px 8px}.studio .p-zeilenaktionen summary{padding:5px 8px;cursor:pointer;font-size:14px}.studio .p-zeilenaktionen>div{display:flex;gap:6px;padding-top:6px}.studio .p-zeilenaktionen button{min-height:34px;padding:5px 9px;font-size:14px}.studio .p-tabelle th.p-kategorie-kind{padding-left:40px;font-weight:500}.studio .p-arbeitsfilter:has(.p-weitere-filter){align-items:start}.studio .p-weitere-filter{flex:1 1 100%;padding-top:4px}.studio .p-weitere-filter summary{cursor:pointer;color:var(--akzent-dunkel);width:fit-content;padding:4px 0}.studio .p-weitere-filter .p-arbeitsfilter{margin:.6rem 0;max-width:900px}.studio .p-statuswahl{display:flex;gap:12px;align-items:center;margin:0 0 20px}.studio .p-statuswahl select{padding:6px 10px}.studio .p-hinweise{margin:16px 0;padding:14px 16px;border:1px solid var(--rand);border-left:3px solid var(--akzent);border-radius:6px}.studio .p-hinweise .p-kontaktvorschlaege{margin-top:10px}.studio .p-hinweise .p-dialogaktionen{justify-content:flex-start;gap:8px}.studio .p-hinweise button{min-height:36px;padding:6px 10px;font-size:14px}.studio .p-bilanz>div:first-child dd{font-size:32px}.studio .p-bilanz dd{white-space:normal}.studio .p-bilanz span,.studio .p-akteneintrag small{font-size:14px}.studio .p-detailkopf>div:last-child:has(button){display:flex;gap:10px;align-items:center;flex-wrap:wrap}.studio .p-dialogaktionen{gap:10px}
+@media print{.p-hinweise,.p-statuswahl,.p-sortieraktionen,.p-weitere-filter{display:none!important}}
+
+.studio .p-statuswahl select{width:min(100%,360px);flex:0 1 360px;min-width:180px}.studio .p-zeilenaktionen summary{min-height:32px;line-height:22px}.studio .p-zeilenaktionen[open]>summary{margin-bottom:0}.studio [aria-label="Kategorienliste"] .p-tabelle td,.studio [aria-label="Kategorienliste"] .p-tabelle th{padding:8px 16px;vertical-align:middle}.studio [aria-label="Kategorienliste"] .p-tabelle th.p-kategorie-kind{padding-left:40px}.studio .p-weitere-filter summary{min-height:32px}.studio .p-hinweise dl{max-width:760px}.studio .p-hinweise .p-kontaktvorschlaege article p{margin:6px 0}.studio .p-hinweise .p-kontaktvorschlaege dl>div{margin:6px 0}
+
+/* Gezielte Büro-UX: reservierter Iconplatz und lesbare Nebeninformationen. */
+.studio{--schrift-neben:14px}
+.studio .p-suche:has(>.icon)>input{padding-inline-start:44px}
+.studio .p-suche>.icon{top:50%;transform:translateY(-50%);pointer-events:none}
+.studio .p-sub,.studio .p-pruefhinweis,.studio .p-dateiinfo,.studio .p-dateieingang small,.studio .p-pflichtinfo{font-size:var(--schrift-neben);color:var(--leise);line-height:1.5}
+.studio .p-kontaktstamm{background:transparent;gap:16px;margin:20px 0}
+.studio .p-kontaktstamm>div{background:var(--flaeche);border:1px solid var(--rand);border-radius:6px;padding:12px}
+.studio .p-kontaktstamm dt{font-weight:500;color:var(--leise);font-size:var(--schrift-neben)}
+.studio .p-kontaktstamm dd{margin:6px 0 0;overflow-wrap:anywhere}
+.studio .p-formraster{display:grid;grid-template-columns:1fr 2fr;gap:12px}
+.studio .p-formraster label{min-width:0}
+.studio .p-kontaktwert{display:grid;grid-template-columns:minmax(0,1fr) 32px;align-items:end;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--rand)}
+.studio .p-kontaktwert>label{display:block;min-width:0}.studio .p-kontaktwert:has(select){grid-template-columns:130px minmax(0,1fr) 32px}.studio .p-kontaktwert input[type=tel],.studio .p-kontaktwert input[type=email],.studio .p-kontaktwert input[type=url]{min-width:0;width:100%}
+.studio .p-kontaktwert>.p-bevorzugt{display:flex;align-items:center;gap:6px;font-size:var(--schrift-neben);grid-column:1/-1;grid-row:2}
+.studio .p-kontaktwert input[type=radio]{width:auto;margin:0}
+.studio .p-kontaktwert>button{grid-column:-2/-1;grid-row:1;padding:5px 9px;min-width:32px;min-height:32px}
+.studio .p-dialog fieldset>.p-button-leise{padding:5px 8px;margin-top:5px;min-height:32px}
+.studio .p-eingangskurz{padding:16px;border:1px solid var(--rand);border-radius:8px;max-width:850px;margin:16px 0}
+.studio .p-eingangskurz h2{font-size:18px;margin:0 0 8px}.studio .p-eingangskurz h3{font-size:16px;margin:16px 0 6px}
+.studio .p-eingangsdaten{display:flex;flex-wrap:wrap;gap:16px 32px}
+.studio .p-eingangsdaten dd{margin:4px 0 0}
+.studio .p-kategorie-name{color:var(--text);background:transparent;border:0;padding:4px;text-align:left;font-weight:600}
+.studio .p-kategorien-scroll{max-height:60vh;overflow:auto}
+@media(max-width:680px){.studio .p-formraster{grid-template-columns:1fr}}
+
+.studio .p-dialog:has(.p-kontaktwert){width:min(760px,94vw)}.studio .p-dialog>.p-vorschaukopf{position:sticky;top:-24px;z-index:2;background:var(--flaeche);padding:12px 0;margin-top:-12px}.studio .p-dialog form>.p-dialogaktionen{position:sticky;bottom:-24px;z-index:2;background:var(--flaeche);padding:12px 0}.studio .p-registertabs button[aria-pressed=true]{background:var(--akzent-hell);border-color:var(--akzent);color:var(--akzent-dunkel)}
+@media(max-width:500px){.studio .p-kontaktwert:has(select){grid-template-columns:minmax(0,1fr) 32px}.studio .p-kontaktwert:has(select)>label:has(input[type=tel]){grid-row:2}.studio .p-kontaktwert:has(select)>.p-bevorzugt{grid-row:3}}
+
+/* Gezielte Folge-Deltas: Kontaktsuche, Herkunft und nachvollziehbares Autosave. */
+.studio .p-kontaktsuche{flex:2 1 320px;max-width:560px}.studio .p-kontaktsuche .p-suche{width:100%;max-width:none}.studio .p-kontaktsuche input{font-size:16px;min-height:42px}
+.studio .p-adresszeile{display:grid;grid-template-columns:minmax(0,3fr) minmax(90px,1fr);gap:12px}.studio .p-adresszeile label{min-width:0}
+.studio .p-firmenverweis{display:inline-flex;align-items:center;gap:8px;color:var(--akzent-dunkel);text-decoration:underline;text-underline-offset:3px}.studio .p-firmenverweis .icon{flex-shrink:0}
+.studio .p-benutzer{display:flex;align-items:center;gap:8px;border-left:1px solid var(--rand);padding-left:16px;line-height:1.4}.studio .p-benutzer small{display:block;color:var(--leise);font-size:12px}.studio .p-benutzer strong{font-size:14px;font-weight:500}
+.studio .p-statusfeedback{display:flex;gap:12px;align-items:center;margin:-6px 0 20px;font-size:14px;flex-wrap:wrap}.studio .p-statusfeedback button{padding:4px 8px;min-height:32px}.studio .p-herkunft{margin-bottom:10px}
+.studio .p-eingangsinfo,.studio .p-eingangsaktivitaeten,.studio .p-eingangsdokument{margin:22px 0;padding-top:4px}.studio .p-eingangsinfo h2,.studio .p-eingangsaktivitaeten h2,.studio .p-eingangsdokument h2{font-size:18px;margin:0 0 12px}.studio .p-eingangsdaten{margin:0}.studio .p-eingangsaktivitaeten{border-top:1px solid var(--rand);padding-top:18px}
+.studio .p-anhang{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;min-height:32px;max-width:100%;font-size:14px;margin:4px 8px 4px 0;text-align:left;overflow-wrap:anywhere}
+.studio .p-kategoriefilter{flex:1 1 200px;position:relative;min-width:0}.studio .p-kategoriefilter>span{display:block;margin-bottom:5px}.studio .p-kategoriefilter details{position:relative}.studio .p-kategoriefilter summary{border:1px solid var(--eingaberand);border-radius:5px;padding:10px;cursor:pointer;background:var(--flaeche)}
+.studio .p-kategoriefilter details[open]{z-index:15;background:var(--flaeche);border:1px solid var(--rand);border-radius:6px;padding:8px;box-shadow:0 6px 20px #0002}
+.studio .p-kategoriefilter details[open]>label{display:block;margin:8px 0}.studio .p-kategorieoptionen{max-height:240px;overflow:auto;overscroll-behavior:contain}.studio .p-kategorieoptionen button{display:block;width:100%;padding:7px 10px;min-height:34px;background:var(--flaeche);color:var(--text);border:0;border-radius:3px;text-align:left;font-size:14px}.studio .p-kategorieoptionen button[aria-pressed=true],.studio .p-kategorieoptionen button:hover{background:var(--akzent-hell);color:var(--akzent-dunkel)}.studio .p-kategorieoptionen .p-kategorie-kind{padding-left:26px}.studio .p-kategorieoptionen small{display:block;color:var(--leise);font-size:13px}
+@media(max-width:500px){.studio .p-adresszeile{grid-template-columns:minmax(0,2fr) minmax(70px,1fr)}}
+
+.studio .p-kategoriensuche{display:grid;gap:.4rem;width:min(100%,32rem);min-width:0;margin:1rem 0 .75rem}
+.studio .p-kategoriensuche input{width:100%;min-width:0}

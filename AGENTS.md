@@ -55,3 +55,10 @@ Produktdokumentation gezielt unter docs/public/ pflegen; README und CONTRIBUTING
 Nur ausdrücklich geprüfte öffentliche Dateien einzeln für einen Commit auswählen; .gitignore ist kein Schutz bereits erfasster Dateien oder bestehender Historie. Commit-Inhalt und Metadaten prüfen. Keine Lizenz eigenmächtig auswählen oder Lizenz-/Compliance-Freigaben behaupten.
 
 Commit, Push, Veröffentlichung, Deployment, Versand, produktive Migration und externe Zugriffe nur im jeweils ausdrücklich autorisierten Umfang. Ein Skill, Router-Treffer oder Statuswort erteilt keine Freigabe.
+
+
+## Ressourceneffiziente Entwicklungsarbeit
+
+Auf dem aktuellen Git-Diff und vorhandenen Nachweisen aufbauen; nur betroffene Dateien lesen und keine Gesamtanalyse wiederholen. Tests gezielt nach tatsächlicher Änderung wählen. Vollständige Regression nur bei breiten Core-/Shared-Änderungen, unklaren Abhängigkeiten, Fehlern oder wichtigen Meilensteinen; ein bereits geprüfter unveränderter Stand muss dafür nicht erneut getestet werden. Dokumentation nur bei relevanten Entscheidungen, Anforderungen oder Standänderungen aktualisieren; vorhandene Dateien und Nachweise wiederverwenden.
+
+Screenshots nur bei konkretem Mehrwert: größerer sichtbarer UX-Meilenstein, visueller Fehler/Regression, wichtiger Vorher-/Nachhervergleich oder ausdrücklich angeforderter Nachweis. Kleine CSS-, Text-, Abstands- und Formularänderungen normalerweise kurz im Browser prüfen, ohne Screenshot, neue Prüfmappe oder unnötige neue Dateien.

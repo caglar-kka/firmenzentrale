@@ -8,31 +8,33 @@ public static class DemoDaten
 {
     private static readonly DateOnly Datum = new(2026, 10, 17);
     private static readonly DateTimeOffset ErfasstAm = new(2026, 10, 17, 12, 0, 0, TimeSpan.Zero);
-    private static readonly IReadOnlyDictionary<string, string> Namen = new Dictionary<string, string>
+    internal static readonly IReadOnlyDictionary<string, string> Namen = new Dictionary<string, string>
     {
-        ["DEMO-NORD"] = "Beispielbetrieb Nord", ["DEMO-ISD"] = "ISD (synthetischer Geschäftspartner)", ["DEMO-WEST"] = "Musterbetrieb West"
+        ["DEMO-NORD"] = "Fjordfalter Objektpflege GmbH", ["DEMO-ISD"] = "Elbpfad Büroausstattung GmbH", ["DEMO-WEST"] = "Fennbogen Gewerbeservice GmbH", ["DEMO-VERS"] = "Kieselanker Versicherung AG", ["DEMO-KASSE"] = "Fennquell Gesundheitskasse", ["DEMO-AMT"] = "Verwaltungsstelle Musterhafen", ["DEMO-MOBIL"] = "Tannufer Kommunikation GmbH"
     };
-    private static string Geld(decimal wert) => wert.ToString("N2", CultureInfo.GetCultureInfo("de-DE")) + " €";
+    internal static string Geld(decimal wert) => wert.ToString("N2", CultureInfo.GetCultureInfo("de-DE")) + " €";
 
     // Ausschließlich erfundene Kontakte. Maildomain .invalid; Telefon aus dem
     // BNetzA-Filmrufnummernbereich Berlin (030) 23125 000–999. Nicht erreichbar.
     private static Kontaktansicht? Kontakt(string unternehmen) => unternehmen switch
     {
-        "DEMO-NORD" => new("Alex Beispiel (synthetisch)", "buero.nord@example.invalid", "+49 30 23125 001", "synthetisch/Kontakt-DEMO-NORD"),
-        "DEMO-ISD" => new(null, "kontakt.isd@example.invalid", null, "synthetisch/Kontakt-DEMO-ISD"),
+        "DEMO-NORD" => new("Lina Fennbrück", "buero@fjordfalter.invalid", "+49 30 23125 001", "synthetisch/Kontakt-DEMO-NORD"),
+        "DEMO-ISD" => new(null, "kontakt@elbpfad.invalid", null, "synthetisch/Kontakt-DEMO-ISD"),
         _ => null
     };
 
-    public static Uebersicht UebersichtErstellen()
+    internal static Rechnung[] Grundrechnungen() =>
+        [
+            new Rechnung(Guid.NewGuid(), "RE-2026-1039", "DEMO-NORD", "DEMO-ISD", Datum, 1280m, new("SYNTH-RE-001", "synthetisch/Rechnung-001")),
+            new Rechnung(Guid.NewGuid(), "RE-2026-1048", "DEMO-ISD", "DEMO-NORD", Datum, 960m, new("SYNTH-RE-002", "synthetisch/Rechnung-002")),
+            new Rechnung(Guid.NewGuid(), "RE-2026-1051", "DEMO-NORD", "DEMO-WEST", Datum, 450m, new("SYNTH-RE-003", "synthetisch/Rechnung-003"))
+        ];
+
+    public static Uebersicht UebersichtErstellen(IEnumerable<Rechnung>? importiert = null)
     {
         // Den nicht nebenläufigen Kern nur lokal aufbauen. Danach ausschließlich unveränderliche Ansichten teilen.
         var kern = new Rechnungskern();
-        var rechnungen = new[]
-        {
-            new Rechnung(Guid.NewGuid(), "SYNTH-2026-001", "DEMO-NORD", "DEMO-ISD", Datum, 1280m, new("SYNTH-RE-001", "synthetisch/Rechnung-001")),
-            new Rechnung(Guid.NewGuid(), "SYNTH-2026-002", "DEMO-ISD", "DEMO-NORD", Datum, 960m, new("SYNTH-RE-002", "synthetisch/Rechnung-002")),
-            new Rechnung(Guid.NewGuid(), "SYNTH-2026-003", "DEMO-NORD", "DEMO-WEST", Datum, 450m, new("SYNTH-RE-003", "synthetisch/Rechnung-003"))
-        };
+        var rechnungen = Grundrechnungen().Concat(importiert ?? []).ToArray();
         foreach (var rechnung in rechnungen) kern.RechnungErfassen(rechnung);
         var zahlungen = new Dictionary<Guid, List<Zahlungsansicht>>();
         void ZahlungAnzeigen(Rechnung rechnung, decimal betrag, bool bestaetigt, string beleg)
@@ -47,7 +49,7 @@ public static class DemoDaten
             }
             if (!zahlungen.TryGetValue(rechnung.Id, out var liste)) zahlungen[rechnung.Id] = liste = [];
             liste.Add(new(Datum.ToString("yyyy-MM-dd"), Namen[zahlung.Zahler], Namen[zahlung.Empfaenger], Geld(zahlung.Betrag),
-                Geld(bestaetigt ? betrag : 0m), bestaetigt ? "Bestätigt (synthetisch)" : "Zur Prüfung", zahlung.Nachweis.Beleg, zahlung.Nachweis.Quellenort,
+                Geld(bestaetigt ? betrag : 0m), bestaetigt ? "Bestätigt" : "Zur Prüfung", zahlung.Nachweis.Beleg, zahlung.Nachweis.Quellenort,
                 beleg switch { "SYNTH-ZA-001" => "demo-zahlung-001", "SYNTH-ZA-002" => "demo-zahlung-002", "SYNTH-ZA-003" => "demo-zahlung-003", "SYNTH-ZA-004" => "demo-zahlung-004", _ => null }));
         }
         ZahlungAnzeigen(rechnungen[0], 1280m, true, "SYNTH-ZA-001");
@@ -59,11 +61,14 @@ public static class DemoDaten
             var offen = kern.OffenerBetrag(r.Id);
             return new Rechnungsansicht(r.Nummer, r.Datum.ToString("yyyy-MM-dd"), Namen[r.Aussteller], Namen[r.Empfaenger],
                 Geld(r.Betrag), Geld(offen), Geld(r.Betrag - offen), offen == 0m ? "Bezahlt" : offen == r.Betrag ? "Offen" : "Teilzahlung",
-                r.Nachweis.Beleg, r.Nachweis.Quellenort, zahlungen[r.Id].AsReadOnly(), Kontakt(r.Aussteller), Kontakt(r.Empfaenger),
-                r.Nummer switch { "SYNTH-2026-001" => "demo-nord-rechnung-001", "SYNTH-2026-002" => "demo-nord-rechnung-002", "SYNTH-2026-003" => "demo-nord-rechnung-003", _ => null },
-                r.Aussteller == "DEMO-NORD" ? new(Namen["DEMO-NORD"], "Aussteller") : r.Empfaenger == "DEMO-NORD" ? new(Namen["DEMO-NORD"], "Empfänger") : null);
+                r.Nachweis.Beleg, r.Nachweis.Quellenort, zahlungen.TryGetValue(r.Id, out var liste) ? liste.AsReadOnly() : Array.Empty<Zahlungsansicht>(), Kontakt(r.Aussteller), Kontakt(r.Empfaenger),
+                r.Nummer switch { "RE-2026-1039" => "demo-nord-rechnung-001", "RE-2026-1048" => "demo-nord-rechnung-002", "RE-2026-1051" => "demo-nord-rechnung-003", _ => "import-" + r.Id.ToString("N") },
+                r.Aussteller == "DEMO-NORD" ? new(Namen["DEMO-NORD"], "Aussteller") : r.Empfaenger == "DEMO-NORD" ? new(Namen["DEMO-NORD"], "Empfänger") : null,r.Aussteller,r.Empfaenger);
         }).ToArray();
-        return new(true, Geld(rechnungen.Sum(r => r.Betrag)), Geld(rechnungen.Sum(r => kern.OffenerBetrag(r.Id))), Array.AsReadOnly(ansichten));
+        var richtungVollstaendig=rechnungen.All(r=>(r.Aussteller=="DEMO-NORD")!=(r.Empfaenger=="DEMO-NORD"));
+        return new(true, Geld(rechnungen.Sum(r => r.Betrag)), Geld(rechnungen.Sum(r => kern.OffenerBetrag(r.Id))), Array.AsReadOnly(ansichten),
+            richtungVollstaendig?Geld(rechnungen.Where(r=>r.Aussteller=="DEMO-NORD").Sum(r=>kern.OffenerBetrag(r.Id))):null,
+            richtungVollstaendig?Geld(rechnungen.Where(r=>r.Empfaenger=="DEMO-NORD").Sum(r=>kern.OffenerBetrag(r.Id))):null);
     }
 
     public static Importansicht Importvorschau(string beispiel)
@@ -71,9 +76,14 @@ public static class DemoDaten
         using var datei = new MemoryStream(DemoArbeitsmappe.Erstellen(beispiel));
         var profil = new Importprofil("SYNTH-ISD", new Dictionary<string, string>
         {
-            ["Beispielbetrieb Nord"] = "DEMO-NORD", ["ISD"] = "DEMO-ISD"
+            [Namen["DEMO-NORD"]] = "DEMO-NORD", [Namen["DEMO-ISD"]] = "DEMO-ISD"
         });
         var bericht = new ExcelImportvorschau().Pruefen(datei, "synthetisch.xlsx", profil);
+        return ImportDarstellen(bericht);
+    }
+
+    internal static Importansicht ImportDarstellen(Importbericht bericht)
+    {
         string? Name(string? referenz) => referenz is null ? null : Namen.GetValueOrDefault(referenz, referenz);
         var zeilen = bericht.Zeilen.Select(z => new Importzeilenansicht(z.Zeile, z.HatFehler,
             z.Rechnung is not null ? "Rechnung" : z.Zahlung is not null ? "Zahlung" : null,

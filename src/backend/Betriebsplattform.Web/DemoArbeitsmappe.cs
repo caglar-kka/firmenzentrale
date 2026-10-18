@@ -14,15 +14,15 @@ internal static class DemoArbeitsmappe
             new XAttribute("t", "inlineStr"), new XElement(s + "is", new XElement(s + "t", wert)));
         XElement Zeile(int zeile, string id, string art, string nummer, string von, string an, string betrag) =>
             new(s + "row", new XAttribute("r", zeile),
-                new[] { id, art, nummer, von, an, "2026-10-17", betrag, "EUR", "SYNTH-BELEG-" + zeile }.Select((wert, i) =>
+                new[] { id, art, nummer, von, an, "2026-10-17", betrag, "EUR", "Beleg-" + zeile }.Select((wert, i) =>
                     i == 6 ? new XElement(s + "c", new XAttribute("r", "G" + zeile), new XElement(s + "v", wert)) : Text(i, zeile, wert)));
         var kopf = new XElement(s + "row", new XAttribute("r", 1),
             new[] { "DatensatzId", "Art", "Nummer", "Von", "An", "Datum", "Betrag", "Waehrung", "Beleg" }.Select((v, i) => Text(i, 1, v)));
         var daten = new XElement(s + "sheetData", kopf,
-            Zeile(2, "SYNTH-RE-01", "Rechnung", "SYNTH-RE-01", "Beispielbetrieb Nord", "ISD", "100.25"),
-            Zeile(3, "SYNTH-ZA-01", "Zahlung", "", "ISD", "Beispielbetrieb Nord", "50"));
-        if (fall == "fehler") daten.Add(Zeile(4, "SYNTH-RE-02", "Rechnung", "SYNTH-RE-02", "ISD", "Beispielbetrieb Nord", "-5"));
-        if (fall == "dublette") daten.Add(Zeile(4, "SYNTH-ZA-01", "Zahlung", "", "ISD", "Beispielbetrieb Nord", "75"));
+            Zeile(2, "Zeile-01", "Rechnung", "RE-2026-1063", DemoDaten.Namen["DEMO-NORD"], DemoDaten.Namen["DEMO-ISD"], "100.25"),
+            Zeile(3, "Zeile-02", "Zahlung", "", DemoDaten.Namen["DEMO-ISD"], DemoDaten.Namen["DEMO-NORD"], "50"));
+        if (fall == "fehler") daten.Add(Zeile(4, "Zeile-03", "Rechnung", "RE-2026-1064", DemoDaten.Namen["DEMO-ISD"], DemoDaten.Namen["DEMO-NORD"], "-5"));
+        if (fall == "dublette") daten.Add(Zeile(4, "Zeile-02", "Zahlung", "", DemoDaten.Namen["DEMO-ISD"], DemoDaten.Namen["DEMO-NORD"], "75"));
         var teile = new Dictionary<string, string>
         {
             ["[Content_Types].xml"] = """

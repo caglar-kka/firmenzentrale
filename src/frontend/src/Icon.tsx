@@ -2,6 +2,9 @@ import type { ReactNode } from 'react';
 
 // Eigene einfache Geometrien; keine externen Assets, Fonts oder Iconpakete.
 const formen = {
+  profil: <><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></>,
+  firma: <><path d="M4 21V3h12v18M16 10h4v11H2M8 7h4M8 11h4M8 15h4M9 21v-3h2v3"/></>,
+  notiz: <><path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h5" /></>,
   kontakt: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6m0-10v.1" /></>,
   email: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></>,
   telefon: <path d="m8 3 3 5-3 3a16 16 0 0 0 5 5l3-3 5 3v3a2 2 0 0 1-2 2C10 21 3 14 3 5a2 2 0 0 1 2-2h3Z" />,

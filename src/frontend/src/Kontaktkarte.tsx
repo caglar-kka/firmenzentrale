@@ -1,22 +1,16 @@
-import type { Kontakt } from './api.js';
+import { useState } from 'react';
+import type { Kontakt, Rechnung } from './api.js';
 import { Icon } from './Icon.js';
 import { emailLink, telefonLink } from './kontaktaktionen.js';
+import { eigeneRolle } from './darstellung.js';
 
-interface KontaktkarteProps { organisation: string; rolle: string; kontakt?: Kontakt | null; referenz: string }
-export default function Kontaktkarte({ organisation, rolle, kontakt, referenz }: KontaktkarteProps) {
-  const email = emailLink(kontakt?.email, referenz);
-  const telefon = telefonLink(kontakt?.telefon);
-  return <article className="p-kontaktkarte" aria-label={`Kontakt ${rolle}`}>
-    <div className="p-kontaktname"><span className="p-kontaktrolle">{rolle === 'Rechnungsaussteller' ? 'Rechnung von' : rolle === 'Rechnungsempfänger' ? 'Rechnung an' : rolle}</span><strong>{organisation}</strong>{kontakt?.ansprechpartner && <small>{kontakt.ansprechpartner}</small>}</div>
-    <div className="p-kontaktaktionen">
-      {email && <a className="p-aktion" href={email} aria-label={`E-Mail an ${organisation} schreiben`}><Icon name="email" /><span className="p-tooltip" role="tooltip">E-Mail schreiben</span></a>}
-      {telefon && <a className="p-aktion" href={telefon} aria-label={`${organisation} anrufen`}><Icon name="telefon" /><span className="p-tooltip" role="tooltip">Anrufen</span></a>}
-      <details className="p-kontaktdetails"><summary className="p-aktion" aria-label={`Kontaktdetails für ${organisation}`}><Icon name="kontakt" /><span className="p-tooltip" role="tooltip">Kontaktdetails</span></summary><dl>
-        {!kontakt?.ansprechpartner && <div><dt>Ansprechpartner</dt><dd>Kein Ansprechpartner hinterlegt.</dd></div>}
-        <div><dt>E-Mail</dt><dd>{email ? kontakt?.email : kontakt?.email ? 'E-Mail-Adresse nicht nutzbar.' : 'Keine E-Mail-Adresse hinterlegt.'}</dd></div>
-        <div><dt>Telefon</dt><dd>{telefon ? kontakt?.telefon : kontakt?.telefon ? 'Telefonnummer nicht nutzbar.' : 'Keine Telefonnummer hinterlegt.'}</dd></div>
-        {kontakt?.quelle && <div><dt>Kontaktquelle</dt><dd>{kontakt.quelle}</dd></div>}
-      </dl></details>
-    </div>
-  </article>;
+export default function Kontaktkarte({ organisation, rolle, kontakt }: { organisation: string; rolle: string; kontakt?: Kontakt | null; referenz?: string }) {
+  return <div className="p-kontaktname"><dt>{rolle}</dt><dd><strong>{organisation}</strong>{kontakt?.ansprechpartner && <small>{kontakt.ansprechpartner}</small>}</dd></div>;
+}
+export function Kontaktaktionen({rechnung:r,onNotiz}:{rechnung:Rechnung;onNotiz?:()=>void}){
+ const[ziel,Z]=useState(eigeneRolle(r)==='Aussteller'?'an':'von'),[email,M]=useState(''),[tel,T]=useState('');const kontakt=ziel==='von'?r.ausstellerKontakt:r.empfaengerKontakt,firma=ziel==='von'?r.aussteller:r.empfaenger;
+ const mails=kontakt?.emails?.length?kontakt.emails:kontakt?.email?[kontakt.email]:[],telefone=kontakt?.telefone?.length?kontakt.telefone:kontakt?.telefon?[kontakt.telefon]:[];
+ const mail=emailLink(mails.includes(email)?email:mails[0],r.nummer),telefon=telefonLink(telefone.includes(tel)?tel:telefone[0]);
+ return <div className="p-aktionszeile" aria-label="Aktionen zur Rechnung"><select aria-label="Kontakt für Aktionen" value={ziel} onChange={e=>{Z(e.target.value);M('');T('');}}><option value="von">{r.aussteller} · Rechnung von</option><option value="an">{r.empfaenger} · Rechnung an</option></select>{mails.length>1&&<select aria-label="E-Mail-Empfänger" value={mails.includes(email)?email:mails[0]} onChange={e=>M(e.target.value)}>{mails.map(m=><option key={m}>{m}</option>)}</select>}{telefone.length>1&&<select aria-label="Telefonnummer wählen" value={telefone.includes(tel)?tel:telefone[0]} onChange={e=>T(e.target.value)}>{telefone.map(t=><option key={t}>{t}</option>)}</select>}
+ <div className="p-kontaktaktionen">{mail?<a className="p-aktion" href={mail} aria-label={`E-Mail an ${firma} schreiben`} title="E-Mail schreiben"><Icon name="email"/><span className="p-tooltip" role="tooltip">E-Mail schreiben</span></a>:<button className="p-aktion" disabled aria-label="Keine nutzbare E-Mail-Adresse" title="Keine nutzbare E-Mail-Adresse"><Icon name="email"/></button>}{telefon?<a className="p-aktion" href={telefon} aria-label={`${firma} anrufen`} title="Anrufen"><Icon name="telefon"/><span className="p-tooltip" role="tooltip">Anrufen</span></a>:<button className="p-aktion" disabled aria-label="Keine nutzbare Telefonnummer" title="Keine nutzbare Telefonnummer"><Icon name="telefon"/></button>}<button className="p-aktion" disabled={!onNotiz} onClick={onNotiz} aria-label="Notiz erstellen" title={onNotiz?'Notiz erstellen':'Keine Akte verfügbar'}><Icon name="notiz"/><span className="p-tooltip" role="tooltip">Notiz erstellen</span></button><details className="p-kontaktdetails"><summary className="p-aktion" aria-label="Kontaktinformationen" title="Kontaktinformationen"><Icon name="kontakt"/><span className="p-tooltip" role="tooltip">Kontaktinformationen</span></summary><dl><div><dt>Firma</dt><dd>{firma}</dd></div><div><dt>Ansprechpartner</dt><dd>{kontakt?.ansprechpartnerListe?.join(', ')||kontakt?.ansprechpartner||'Nicht hinterlegt'}</dd></div><div><dt>E-Mail</dt><dd>{mails.join(', ')||'Nicht hinterlegt'}</dd></div><div><dt>Telefon</dt><dd>{telefone.join(', ')||'Nicht hinterlegt'}</dd></div></dl></details></div></div>;
 }
