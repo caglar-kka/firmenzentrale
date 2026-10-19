@@ -268,3 +268,46 @@ Suchvergleich ist deterministisch, tokenbasiert, umlaut-/schreibweisentolerant u
 Zeitpunkte werden als DateTimeOffset/UTC gespeichert und als ISO-Zeit übertragen; Darstellung erfolgt in der Browserzeitzone. Erfassung, letzte Bearbeitung und tatsächliche Kommunikation bleiben getrennte Angaben. Interne Adressvorschläge verwenden nur vorhandene Kontaktwerte, keine externe Adress-/Geocoding-API.
 
 Bestehende Security-by-Design-/Negativtestregeln bleiben verbindlich: mutierende Aktenaktionen benötigen Verwaltungs- und Ressourcenrechte, lokale Requests passende Origin und Aktionsheader. JSON ist getrennt auf128KiB und16 Ebenen begrenzt, unbekannte Felder werden abgewiesen; Datei-/Importgrenzen bleiben bestehen. Kein produktives Authentifizierungs-/Mandantenmodell behauptet. Dependency-Prüfung und ausstehende Patchfreigabe siehe Nachweis.
+
+
+## MVP-02A — PostgreSQL persistence foundation
+
+Status: PostgreSQL live gate passed on 19 October 2026 against native PostgreSQL 18.6 on loopback, database `firmenzentrale_dev`, using synthetic data only. The original environment/authentication blockers have been resolved. Real schema, CRUD/negative constraints, concurrency, reassignment/rollback, host/process restart and API/Edge browser checks are recorded in the existing development evidence. SQLite/model checks alone were not treated as live proof. This does not approve a production pilot.
+
+The existing modular monolith remains. `Web/Persistenz` contains a request-scoped EF Core unit of work, storage records separated from API DTOs and the financial domain, database queries and the optional PostgreSQL host adapter. EF Core 10.0.11 and Npgsql EF provider 10.0.3 are used; SQLite 10.0.11 is test-only. The default `Demo` branch preserves the existing synthetic scenario, importer and optional scan folder. PostgreSQL has no seed, no implicit migration and no fallback. Existing in-memory processes are never migrated.
+
+### Explicit local configuration and migrations
+
+Use environment variables or .NET User Secrets (`FirmenZentrale.LocalDevelopment`), never committed credentials. Do not paste credentials into shared logs, source or command history. User Secrets are a local development convenience, not a production secret vault. Example without credentials, from the repository root:
+
+```powershell
+$env:FirmenZentrale__Persistence__Provider = 'PostgreSql'
+$env:ConnectionStrings__FirmenZentrale = 'Host=127.0.0.1;Database=firmenzentrale_dev'
+$env:FirmenZentrale__Persistence__DocumentRoot = Join-Path (Get-Location) 'src/backend/private/persistente-dateien'
+# Configure authentication privately for your separate synthetic development database.
+# Apply only after reviewing the initial migration; do not target an existing business database.
+dotnet run --project src/backend/Betriebsplattform.Web --no-launch-profile -- --apply-migrations
+dotnet run --project src/backend/Betriebsplattform.Web --no-launch-profile
+```
+
+`PostgreSql` is the exact configured provider value. The schema command is explicit and exits; normal startup only checks connection and pending migrations. There is no `EnsureDeleted`, startup schema recreation or automatic production migration. Failure stops PostgreSQL startup with a sanitized error. Changing to Demo requires an explicit configuration change. The UI identifies the PostgreSQL development store instead of claiming it is reset on restart. The host still binds only to `127.0.0.1:5180`; neither network permissions nor database ports are opened.
+
+### Relational model and concurrency
+
+The initial migration covers contacts/structured addresses/company-person relationships/contact values, categories, cases, invoice direction and amounts, payments/confirmations/allocations, document metadata/current assignment/intake history, notes/revisions, correspondence/central attachment references and contact proposals/history. All actual relationships use foreign keys with restrictive delete rules. There is no hard-delete HTTP action for historical business records. Required fields, bounded strings, positive financial amounts, stable statuses, category self-reference checks, unique normalized categories/file hashes/storage keys, one current assignment per document and one active preferred value per contact/type are enforced where appropriate. Similar names and invoice numbers are not made globally unique.
+
+Indexes target contact/name/address search, category hierarchy, case status/time, invoice issuer/reference/amount and status/date, payment dates, assignments and history timelines. Foreign-key indexes complement these paths. Case/category cycle prevention also remains in the service. Configuration/module selection is not authorization or licensing.
+
+Application-managed integer `Version` is an EF concurrency token. Both synchronous and asynchronous saves advance it. Services compare the submitted version and EF checks the original database version during UPDATE; a stale update returns HTTP 409. Contact-value-only edits also enlist the contact version. UI status undo uses the returned version. Multi-save contact updates, document intake/assignment and A→B→A / A→B→C reassignment use explicit transactions, including history and any newly created case. Financial writes replay the relevant bounded aggregate through the unchanged financial domain and save dependent state atomically. This milestone adds no public financial-write API.
+
+Document metadata contains identifiers, original name, MIME, size, hash, storage key, source/channel, status, timestamps and relationships; no binary content is stored in the relational model. `IDokumentdateien` separates bytes. Its local development adapter uses generated keys, rejects traversal/reparse paths, writes new files only and verifies size/hash on read. It is not a production storage/backup solution: a failed metadata transaction may leave an unreferenced development file; cleanup and recovery require a later controlled storage design.
+
+### Bounded queries and remaining gates
+
+Contact, invoice, inbox and case overviews use server filtering/sorting/pagination (20 records); company work uses SQL counts and lazy pages. Deep links fetch the selected record separately. Shared contact/case selectors request bounded pages rather than loading the full stock. Invoice sums remain whole-stock aggregates. Search first narrows SQL candidates and then applies the existing tolerant matcher to bounded results (100–200 candidates/type; linked document candidates capped at 1,000). This preserves bounded resource use but is not exhaustive fuzzy retrieval or a large-data performance claim. Measure and improve candidates/index plans before a large pilot.
+
+Case detail reads are bounded to 200 documents, 250 notes, 200 correspondence entries, 1,000 note revisions and 100 contact proposals; contact histories are capped at 500 entries per request. These are development read limits, not production pagination for large archives. Categories currently have a bounded metadata list. Dedicated history/detail pagination and load measurement remain necessary before large real-data use. No binary previews are eagerly loaded.
+
+SQL uses EF parameterization, fixed sort choices and validated IDs; no user-built SQL. Origin/action-header guards, strict JSON/size limits, resource/module hooks and output escaping remain in place. Provider errors, connection strings and inner exception details are not returned to users; sensitive EF/Npgsql logging is disabled. Aggregate list APIs fail closed for a custom permission policy until database-level permission predicates exist. Local demo permissions are not production authentication, tenant isolation or authorization.
+
+Pilot gates: realistic-load query plans; production document storage and orphan/recovery strategy; backup with restore test; authenticated actors and database-level resource rights; schema deployment procedure, monitoring and controlled deployment. The restricted synthetic XLSX importer and scan-folder adapter remain operational in Demo mode and are explicitly unavailable in PostgreSQL mode; wiring real imports/scan intake needs a separate persistence-aware input package. No OCR, mail adapter or public database is introduced.

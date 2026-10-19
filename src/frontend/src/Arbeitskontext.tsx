@@ -1,6 +1,6 @@
 import{createContext,useContext,useEffect,useState,type ReactNode}from'react';
 import{anfrage,type Kategorie}from'./akte-api.js';
-export interface Umgebung{beispielkennzeichnung:boolean;diagnose:boolean;benutzer:string;kategorienVerwalten:boolean;kontakteVerwalten:boolean;aktenVerwalten?:boolean}
+export interface Umgebung{fluechtigeDaten?:boolean;beispielkennzeichnung:boolean;diagnose:boolean;benutzer:string;kategorienVerwalten:boolean;kontakteVerwalten:boolean;aktenVerwalten?:boolean}
 const standard:Umgebung={beispielkennzeichnung:false,diagnose:false,benutzer:'',kategorienVerwalten:false,kontakteVerwalten:false};
 const Kontext=createContext(standard);
 export const useUmgebung=()=>useContext(Kontext);

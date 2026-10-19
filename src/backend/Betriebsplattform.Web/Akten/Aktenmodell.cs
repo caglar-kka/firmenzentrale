@@ -25,7 +25,7 @@ public sealed record Kontaktwert(string Id, string Art, string Wert, bool Aktiv,
 public sealed record Kontaktentscheidung(string Aktion, string Vorher, string Nachher, string DokumentId, string Benutzer, DateTimeOffset Zeitpunkt);
 public sealed record Firmenkontakt(string Id, string Firma, int Version, IReadOnlyList<Kontaktwert> Werte, IReadOnlyList<Kontaktentscheidung> Historie,
     string Art="Firma",string? FirmaId=null,string Anschrift="",string Abteilung="",string Rolle="",bool Archiviert=false,DateTimeOffset ErstelltAm=default,DateTimeOffset GeaendertAm=default,
-    string Strasse="",string Plz="",string Ort="",string Land="",string Hausnummer="",string Vorname="",string Nachname="");
+    string Strasse="",string Plz="",string Ort="",string Land="",string Hausnummer="",string Vorname="",string Nachname="",string? FirmaName=null);
 public sealed record Kontaktvorschlag(string Id, string FirmaId, string DokumentId, string Art, string Bisher, string Neu,
     string Quelle, string Status, int Kontaktversion, string Firma);
 public sealed record Kontaktfreigabe(string? Aktion, int Version);

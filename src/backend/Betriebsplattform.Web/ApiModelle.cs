@@ -13,7 +13,7 @@ public sealed record Rechnungsansicht(string Nummer, string Datum, string Ausste
     IReadOnlyList<Zahlungsansicht> Zahlungen, Kontaktansicht? AusstellerKontakt = null, Kontaktansicht? EmpfaengerKontakt = null,
     string? VorgangId = null, Unternehmensperspektive? Perspektive = null,string? AusstellerId=null,string? EmpfaengerId=null);
 public sealed record Uebersicht(bool Synthetisch, string Gesamtbetrag, string OffenerBetrag,
-    IReadOnlyList<Rechnungsansicht> Rechnungen,string? OffeneForderungen=null,string? OffeneVerbindlichkeiten=null);
+    IReadOnlyList<Rechnungsansicht> Rechnungen,string? OffeneForderungen=null,string? OffeneVerbindlichkeiten=null,int? Anzahl=null,int? Bestandsanzahl=null);
 public sealed record Importzeilenansicht(int Zeile, bool HatFehler, string? Art, string? Betrag,
     string? Datum, string? Von, string? An, IReadOnlyList<Originalzelle> Zellen, IReadOnlyList<Pruefmeldung> Meldungen);
 public sealed record Importansicht(bool Synthetisch, string? DateiHash, bool HatFehler, int Zeilenanzahl,

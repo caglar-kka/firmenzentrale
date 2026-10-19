@@ -5,7 +5,7 @@ export interface Vorschlag{firma?:string;id:string;firmaId:string;dokumentId:str
 export interface Post{id:string;betreff:string;inhalt:string;art:string;autor:string;erfasstAm:string;dokumentId:string|null;dokumentIds?:string[];richtung?:string;kontaktId?:string;kommuniziertAm?:string}
 export interface Akte{vorgang:Vorgang;dokumente:Dokument[];notizen:Notiz[];korrespondenz:Post[];kontaktvorschlaege:Vorschlag[]}
 export interface Kategorie{id:string;name:string;beschreibung:string;elternId:string|null;reihenfolge:number;version:number;archiviert:boolean}
-export interface Kontakt{geaendertAm?:string;vorname?:string;nachname?:string;hausnummer?:string;strasse?:string;plz?:string;ort?:string;land?:string;art?:string;firmaId?:string|null;anschrift?:string;abteilung?:string;rolle?:string;archiviert?:boolean;id:string;firma:string;version:number;werte:{art:string;wert:string;aktiv:boolean;primaer?:boolean;typ?:string}[];historie:{aktion:string;vorher:string;nachher:string;benutzer:string;zeitpunkt:string;dokumentId:string}[]}
+export interface Kontakt{firmaName?:string|null;geaendertAm?:string;vorname?:string;nachname?:string;hausnummer?:string;strasse?:string;plz?:string;ort?:string;land?:string;art?:string;firmaId?:string|null;anschrift?:string;abteilung?:string;rolle?:string;archiviert?:boolean;id:string;firma:string;version:number;werte:{art:string;wert:string;aktiv:boolean;primaer?:boolean;typ?:string}[];historie:{aktion:string;vorher:string;nachher:string;benutzer:string;zeitpunkt:string;dokumentId:string}[]}
 export interface Treffer{id:string;art:string;titel:string;zusatz:string;ziel:string;vorgangId:string|null}
 export const zeit=(s:string,zeitzone?:string)=>Number.isNaN(Date.parse(s))?'Zeitpunkt nicht verfügbar':new Date(s).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short',...(zeitzone?{timeZone:zeitzone}:{})});
 export interface Dublette{id:string;name:string;art:string;anschrift:string;angaben:string[];gruende:string[]}
@@ -31,8 +31,10 @@ export function antwortGueltig(pfad:string,v:unknown,schreiben=false):boolean{
  if(schreiben&&pfad==='kontakte')return obj(v)&&strs(v,'id','firma')&&Array.isArray(v.werte)&&Array.isArray(v.historie);
 
  if(/^akten\/[^/]+$/.test(pfad))return obj(v)&&vorgang(v.vorgang)&&arr(v.dokumente,dok)&&arr(v.notizen,n=>obj(n)&&strs(n,'id','betreff','inhalt','autor','erstelltAm','geaendertAm')&&typeof n.entfernt==='boolean'&&arr(n.historie,h=>obj(h)&&strs(h,'betreff','inhalt','aktion','autor','zeitpunkt')))&&arr(v.korrespondenz,k=>obj(k)&&strs(k,'id','betreff','inhalt','art','autor','erfasstAm'))&&arr(v.kontaktvorschlaege,k=>obj(k)&&strs(k,'id','firmaId','dokumentId','art','bisher','neu','quelle','status'));
+ if((pfad.startsWith('akten?')||pfad.startsWith('kontakte?'))&&pfad.includes('seite='))return obj(v)&&Number.isInteger(v.anzahl)&&arr(v.eintraege,pfad.startsWith('akten?')?vorgang:k=>obj(k)&&strs(k,'id','firma')&&Array.isArray(k.werte)&&Array.isArray(k.historie));
  if(pfad==='akten'||pfad.startsWith('akten?'))return arr(v,vorgang);
- if(pfad==='posteingang')return obj(v)&&arr(v.dokumente,dok)&&obj(v.scanner)&&strs(v.scanner,'status');
+ if(/^posteingang\/[^/?]+$/.test(pfad))return dok(v);
+ if(pfad==='posteingang'||pfad.startsWith('posteingang?'))return obj(v)&&arr(v.dokumente,dok)&&obj(v.scanner)&&strs(v.scanner,'status');
  if(pfad==='kategorien')return arr(v,k=>obj(k)&&strs(k,'id','name','beschreibung')&&typeof k.archiviert==='boolean');
  if(pfad==='kontakte')return arr(v,k=>obj(k)&&strs(k,'id','firma')&&arr(k.werte,w=>obj(w)&&strs(w,'art','wert')&&typeof w.aktiv==='boolean')&&Array.isArray(k.historie));
  if(pfad.startsWith('suche?'))return arr(v,t=>obj(t)&&strs(t,'id','art','titel','zusatz','ziel')&&['rechnung','vorgang','dokument','eingang','kontakt'].includes(String(t.ziel)));

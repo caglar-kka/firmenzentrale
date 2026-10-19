@@ -9,6 +9,23 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 PUBLIC_FILES = {
+    'src/backend/Betriebsplattform.Web/Persistenz/Arbeitsaktionen.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/Datensaetze.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/Dokumentdateien.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/DokumentDaten.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/FinanzDaten.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/FirmenAbfragen.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/FirmenDaten.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/FirmenDbContext.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/Migrationen/20261019001700_InitialRelational.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/Migrationen/20261019001700_InitialRelational.Designer.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/Migrationen/FirmenDbContextModelSnapshot.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/Persistenzkonfiguration.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/Persistenzverwaltung.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/PostgreSqlHost.cs',
+    'src/backend/Betriebsplattform.Web/Webschutz.cs',
+    'tests/backend/Betriebsplattform.Rechnungen.Tests/Mvp02APersistenzTests.cs',
+
     'src/backend/Betriebsplattform.Web/Akten/Arbeitsumgebung.cs',
     'src/backend/Betriebsplattform.Web/Akten/Beispielakten.cs',
     'src/backend/Betriebsplattform.Web/Akten/Kategorienverwaltung.cs',

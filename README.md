@@ -14,7 +14,7 @@ The application currently focuses on German. Repository documentation is primari
 
 ## Current Status
 
-Development-stage, local-first prototype. MVP-01.5 consolidates the existing workflows, search, data quality and focused security controls. Only fictional/synthetic data is supported. There is no production authentication or production PostgreSQL persistence; working data is held in memory and can be lost on restart.
+Development-stage, local-first prototype. MVP-02A adds an explicit PostgreSQL persistence foundation alongside the existing Demo mode. Only fictional/synthetic data is supported. Demo records are temporary; PostgreSQL is never silently replaced by Demo mode. Local PostgreSQL 18.6 migration, schema, CRUD, constraints, concurrency, transactional rollback, restart persistence and API/browser smoke checks have passed with synthetic data. Production authentication, storage operations and deployment are not approved.
 
 ## Core Capabilities
 
@@ -32,14 +32,14 @@ Development-stage, local-first prototype. MVP-01.5 consolidates the existing wor
 | --- | --- |
 | Frontend | React, TypeScript (strict), Vite |
 | Backend | ASP.NET Core, C#, .NET 10 |
-| Persistence | In-memory prototype; PostgreSQL 18, EF Core 10 and Npgsql are planned |
+| Persistence | Demo in memory; optional PostgreSQL 18 / EF Core 10.0.11 / Npgsql provider 10.0.3 |
 | Structure | Modular monolith; local-first operation |
 
 ## Architecture
 
 One React frontend and one ASP.NET Core host reuse central domain services for invoices/payments, case files, documents, contacts and import. The inbox is an intake gateway, not a permanent archive or mandatory route: documents can be filed directly when the target case is known. Internal notes and external correspondence have different meanings.
 
-Technical namespaces and project paths still use the original internal naming. No productive database integration or general workflow engine is implied. See the [architecture documentation](docs/public/ARCHITEKTUR.md) and [ADRs](docs/public/adr/0001-rechnungs-und-zahlungskern.md).
+Technical namespaces and project paths still use the original internal naming. The optional database foundation is not a production or general workflow-engine approval. See the [architecture documentation](docs/public/ARCHITEKTUR.md) and [ADRs](docs/public/adr/0001-rechnungs-und-zahlungskern.md).
 
 ## Getting Started
 
@@ -68,6 +68,8 @@ Open `http://127.0.0.1:5180`. Stop with `Ctrl+C`. The host binds to IPv4 loopbac
 
 For the optional synthetic scan-folder intake, append `-- --scan-demo` to the run command and place only synthetic files in `src/backend/private/scan-eingang`. The adapter reads stable files, checks duplicates and leaves source files intact. Use **Aktualisieren** in the inbox. Direct scanner control and OCR are not implemented.
 
+For the optional PostgreSQL development mode, configuration, manual migration and live-test evidence are described in the [architecture documentation](docs/public/ARCHITEKTUR.md). No credentials belong in this repository. The default mode remains Demo.
+
 ## Development Data & Safety
 
 Never use real customer, company, personnel, financial or credential data in the application, repository, issues or attachments. Original documents remain unchanged; uncertain contact changes, assignments and import rows require human review. No macros are executed and no payment is confirmed from Excel status text.
@@ -78,8 +80,8 @@ The structured importer supports only the synthetic, macro-free MVP-02 XLSX temp
 
 ## Current Limitations
 
-- No production authentication, tenant isolation, persistent PostgreSQL storage or production deployment approval.
-- In-memory records, imports and histories are temporary; they are not a durable business archive.
+- No production authentication, tenant isolation or production deployment approval. Local PostgreSQL 18.6 checks passed with synthetic data; they do not constitute production pilot approval.
+- Demo records, imports and histories remain temporary. PostgreSQL starts without demo seeds; the restricted XLSX importer and scan-folder adapter remain Demo-only. The development file adapter is not a production archive or backup solution.
 - No production email integration or sending, direct scanner integration, general OCR or AI classification.
 - No complete accounting system, automated financial posting, general Excel migration or country-specific tax implementation.
 - Production backup/restore, access control, operational monitoring and further accessibility/security validation remain pilot gates. Existing checks do not establish production readiness.
@@ -94,7 +96,7 @@ The structured importer supports only the synthetic, macro-free MVP-02 XLSX temp
 
 ## Roadmap / Next Milestone
 
-MVP-02A is the next planned milestone toward controlled PostgreSQL persistence. Schema/migrations, durable transactions/audit, access boundaries and backup/restore must be implemented and verified separately. This README does not mark those items as delivered or authorize productive data migration. Optional integrations and further modules remain later work.
+MVP-02A implements the relational model, initial migration, explicit provider selection, transactional reassignment and optimistic version checks. The PostgreSQL 18.6 live gate has passed locally. MVP-02B should verify durable file storage and backup/restore and implement authentication/authorization before any real-data pilot. No productive data migration is authorized.
 
 ## License
 

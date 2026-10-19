@@ -12,7 +12,7 @@ export interface Rechnung {
   vorgangId?: string | null; perspektive?: {unternehmen: string; rolle: 'Aussteller' | 'Empfänger'} | null;
 }
 export interface Uebersicht {
-  synthetisch: true; offeneForderungen?:string|null; offeneVerbindlichkeiten?:string|null; gesamtbetrag: string; offenerBetrag: string; rechnungen: Rechnung[];
+  synthetisch: true; anzahl?:number;bestandsanzahl?:number;offeneForderungen?:string|null; offeneVerbindlichkeiten?:string|null; gesamtbetrag: string; offenerBetrag: string; rechnungen: Rechnung[];
 }
 export interface Quelle { dateiHash: string; blatt: string; zeile: number; zelle: string }
 export interface Meldung { stufe: 'Warnung' | 'Fehler'; code: string; text: string; quelle: Quelle | null }
@@ -66,7 +66,7 @@ async function laden<T>(pfad: string, pruefen: (v: unknown) => v is T, signal: A
   if (!pruefen(daten)) throw new Error('Die Antwort entspricht nicht dem erwarteten Datenformat.');
   return daten;
 }
-export const ladeUebersicht = (signal: AbortSignal) => laden('/api/uebersicht', istUebersicht, signal);
+export const ladeUebersicht = (signal: AbortSignal,query='') => laden('/api/uebersicht'+query, istUebersicht, signal);
 export const ladeImport = (beispiel: Beispiel, signal: AbortSignal) => laden(`/api/importvorschau/${beispiel}`, istImportansicht, signal);
 
 

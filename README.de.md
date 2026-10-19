@@ -14,7 +14,7 @@ Die Anwendung ist derzeit auf Deutsch ausgerichtet. Der Einstieg in die Reposito
 
 ## Aktueller Stand
 
-Lokaler Prototyp in Entwicklung. MVP-01.5 konsolidiert bestehende Fachabläufe, Suche, Datenqualität und gezielte Sicherheitskontrollen. Ausschließlich erfundene/synthetische Daten werden unterstützt. Produktive Authentifizierung und PostgreSQL-Persistenz fehlen; Arbeitsdaten liegen im Arbeitsspeicher und können bei einem Neustart verloren gehen.
+Lokaler Prototyp in Entwicklung. MVP-02A ergänzt eine ausdrücklich aktivierbare PostgreSQL-Persistenzgrundlage neben dem bisherigen Demo-Modus. Ausschließlich erfundene/synthetische Daten werden unterstützt. Demo-Daten bleiben flüchtig; ein stiller Rückfall von PostgreSQL auf Demo ist ausgeschlossen. Migration, Schema, CRUD, Constraints, Concurrency, Transaktions-Rollback, Neustartpersistenz und API-/Browser-Smoke wurden lokal mit PostgreSQL 18.6 und synthetischen Daten erfolgreich geprüft. Produktive Authentifizierung, Speicherbetrieb und Bereitstellung sind nicht freigegeben.
 
 ## Kernfunktionen
 
@@ -32,7 +32,7 @@ Lokaler Prototyp in Entwicklung. MVP-01.5 konsolidiert bestehende Fachabläufe, 
 | --- | --- |
 | Frontend | React, TypeScript (strict), Vite |
 | Backend | ASP.NET Core, C#, .NET 10 |
-| Persistenz | In-Memory-Prototyp; PostgreSQL 18, EF Core 10 und Npgsql sind geplant |
+| Persistenz | Demo im Arbeitsspeicher; optional PostgreSQL 18 / EF Core 10.0.11 / Npgsql-Provider 10.0.3 |
 | Struktur | Modularer Monolith; lokal zuerst |
 
 ## Architektur
@@ -68,6 +68,8 @@ dotnet run --project src/backend/Betriebsplattform.Web --configuration Release -
 
 Für den optionalen synthetischen Scan-Ordner den Startbefehl um `-- --scan-demo` ergänzen und nur synthetische Dateien in `src/backend/private/scan-eingang` ablegen. Der Adapter liest stabile Dateien, prüft Dubletten und lässt Quelldateien unverändert. Im Posteingang **Aktualisieren** verwenden. Direkte Scannersteuerung und OCR sind nicht implementiert.
 
+Konfiguration, bewusste Migration und Live-Test-Nachweise des optionalen PostgreSQL-Entwicklungsmodus stehen in der [Architektur](docs/public/ARCHITEKTUR.md). Zugangsdaten gehören nicht ins Repository. Standard bleibt Demo.
+
 ## Entwicklungsdaten & Sicherheit
 
 Keine echten Kunden-, Unternehmens-, Personal-, Finanz- oder Zugangsdaten in Anwendung, Repository, Issues oder Anhängen verwenden. Originaldokumente bleiben unverändert; unsichere Kontaktänderungen, Zuordnungen und Importzeilen verlangen menschliche Prüfung. Makros werden nicht ausgeführt und Excel-Statuswerte bestätigen keine Zahlung.
@@ -78,8 +80,8 @@ Der strukturierte Import unterstützt ausschließlich die synthetische, makrofre
 
 ## Aktuelle Grenzen
 
-- Keine produktive Authentifizierung, Mandantentrennung, dauerhafte PostgreSQL-Persistenz oder produktive Bereitstellungsfreigabe.
-- Datensätze, Importe und Historien im Arbeitsspeicher sind flüchtig und kein dauerhaftes Geschäftsarchiv.
+- Keine produktive Authentifizierung, Mandantentrennung oder Bereitstellungsfreigabe. Die lokalen PostgreSQL-18.6-Prüfungen mit synthetischen Daten sind bestanden; dies ist keine produktive Pilotfreigabe.
+- Demo-Datensätze, Importe und Historien bleiben flüchtig. PostgreSQL startet ohne Beispieldaten; begrenzter XLSX-Import und Scan-Ordner bleiben im Demo-Modus. Der lokale Entwicklungs-Dateiadapter ist kein produktives Archiv oder Backup.
 - Keine produktive E-Mail-Integration oder Versandfunktion, direkte Scannerintegration, allgemeine OCR oder KI-Klassifikation.
 - Keine vollständige Buchhaltung, automatischen Finanzbuchungen, allgemeine Excel-Migration oder länderspezifische Steuerimplementierung.
 - Produktive Backups/Wiederherstellung, Rechteverwaltung, Betriebsüberwachung sowie weitere Barrierefreiheits-/Sicherheitsprüfungen bleiben Pilot-Gates. Bestehende Prüfungen belegen keine Produktivreife.
@@ -94,7 +96,7 @@ Der strukturierte Import unterstützt ausschließlich die synthetische, makrofre
 
 ## Roadmap / Nächster Meilenstein
 
-MVP-02A ist der nächste geplante Meilenstein in Richtung kontrollierter PostgreSQL-Persistenz. Schema/Migrationen, dauerhafte Transaktionen/Audit, Zugriffsgrenzen und Backup/Wiederherstellung müssen gesondert implementiert und geprüft werden. Diese README meldet sie nicht als fertig und erteilt keine Freigabe zur Migration produktiver Daten. Optionale Integrationen und weitere Module bleiben spätere Aufgaben.
+MVP-02A implementiert relationales Modell, Initialmigration, ausdrückliche Providerwahl, transaktionale Umzuordnung und optimistische Versionsprüfung. Das PostgreSQL-18.6-Live-Gate ist lokal bestanden. MVP-02B sollte dauerhafte Dateiablage, Backup/Wiederherstellung und Authentifizierung/Berechtigungen vor einem Echtdatenpilot absichern. Keine produktive Datenmigration ist freigegeben.
 
 ## Lizenz
 

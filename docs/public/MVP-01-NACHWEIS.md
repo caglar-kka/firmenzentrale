@@ -825,3 +825,115 @@ UX-Abnahmedelta (19.10.2026): Von/Bis als gemeinsame kompakte Gruppe; fachliche 
 
 
 Letztes Abnahmedelta (19.10.2026): Registertypografie zentral über Tokens: Rechnungsbestand-Titel 20 px, Filter/Sortierauswahl 17 px, Count/Erklärung/Sortierlabel 16 px; keine geänderten Buttonabstände. Erst- und Umzuordnung verwenden dieselbe aus der Erstzuordnung extrahierte Zuordnungsziel-Komponente: Kategorie, vorhandene Akte per nativer Auswahl oder neue Akte mit Betreff/Firma. Keine separate Zielsuche mit zweitem Dropdown. Aktuelle Zuordnung ist reine Information; nur aktuelle Akte ausgeschlossen. Erweiterung der vorhandenen Umzuordnung erlaubt neue Akte unter derselben Versionsprüfung, bestehender Dublettenfreigabe sowie Quellen-/Ziel-/Firmenrechten; Historie und Original bleiben erhalten. 6 gezielte Frontendtests, 3 gekoppelte Backendtests und Frontendbuild erfolgreich. Browser ohne Screenshot: 20/17/16 px tatsächlich gerendert, kein fachlicher Textbeschnitt (nur vorgesehene Screenreader-Beschriftung verborgen), kein Seitenüberlauf; Verschieben und Rückverschieben mit identischer Auswahl erfolgreich. Keine Vollregression, kein Commit/Push.
+
+
+## MVP-02A continuation — 19 October 2026
+
+Baseline remains `e588f3c58ce0004a38b04ed231d84019f5aad6d4`, branch `main`; all work is uncommitted. The interrupted run already contained the EF/Npgsql packages, relational model, initial migration, storage abstraction, initial provider/API adapter and 17 passing relational tests. Those files were retained. This continuation completed missing workflow adapters, contact-value concurrency/history, shared HTTP guards, bounded list/query/selector contracts, relationship-aware search, direct detail navigation, PostgreSQL environment feedback, negative tests and the existing documentation. No UI redesign or financial-rule change.
+
+The initial migration contains 17 tables and 40 explicit indexes, including relationship/uniqueness indexes. PostgreSQL model/snapshot consistency, generated idempotent migration SQL, restrictive foreign keys and query LIMIT/OFFSET were checked without connecting to a database. No migration was applied to PostgreSQL and no database was installed or configured.
+
+Executed evidence:
+
+- Existing 17 MVP-02A tests were first re-run successfully to establish the continuation baseline.
+- One broad backend regression (`dotnet test src/backend/Betriebsplattform.slnx --no-restore --verbosity quiet`): 238 passed, 0 failed. Subsequent changes were confined to the new persistence read adapters, an optional contact DTO field and their tests; no second complete regression was run.
+- Final targeted `FullyQualifiedName~Mvp02A`: 33 passed, 0 failed. Relational SQLite tests cover create/read/update/archive, FK/delete/PK/check protection, category validation, real separate-context optimistic concurrency, contact-value-only version changes, synchronous saves, notes/revisions, correspondence/document references, bounded pages/counts, financial confirmations/allocations, exact-file duplicate protection, controlled IDs/provider errors, startup failure without fallback, and A→B→A / A→B→C without copying documents. A new invoice-reference search test initially failed for `RE-07`; the mismatch between normalized input and raw reference was reproduced, corrected with bounded tolerant matching, and re-tested successfully.
+- Frontend regression once: 80 passed. Added persistent-mode tests then passed separately; final coupled run: 10 passed (6 MVP-02A cases plus contact consumers). Tests verify server page/filter requests, whole-stock counts/sums, deep detail routes, shared paged destination selection, return destinations and no automatically loaded preview. These use jsdom/mocked contracts, not a live PostgreSQL browser session.
+- Final backend Release build: passed, zero warnings/errors. Final TypeScript/Vite build: passed. A later metadata-only list-query optimization was re-tested through the targeted persistence suite and rebuilt separately.
+- Repository checks: 7 passed after correcting a new documentation link unsupported by the existing link checker. Public inventory explicitly includes the reviewed new source and migration files.
+- NuGet vulnerability checks for Web and test projects, including transitive packages: no known vulnerable packages reported by the configured NuGet sources. Direct additions: EF Core/Design 10.0.11, Npgsql EF provider 10.0.3; SQLite 10.0.11 is test-only. No frontend package changes.
+- Changed/new public text was scanned locally for obvious private keys, GitHub/AWS tokens and literal password/API-secret assignments: no matches. Repository checks also cover private/temporary/build/database exclusions and personal absolute paths. These checks are not a guarantee of absence of all possible secrets.
+
+External gate: no installed/reachable local PostgreSQL instance was available; no `psql`/`pg_isready`, installation/service or listener at 127.0.0.1:5432 was found. The prior check was reused, not repeatedly rerun. Therefore PostgreSQL-18 migration application, real-provider CRUD/FKs/concurrency/rollback, restart persistence and PostgreSQL-backed browser workflows are NOT claimed as passed. SQLite is test-only and cannot replace those checks. Startup-unavailable behavior is automated and sanitized.
+
+Current limits: explicit Demo remains in memory (including restricted XLSX import and scan-folder intake); PostgreSQL does not seed or silently fall back. Those two adapters are deliberately unavailable in PostgreSQL mode. Financial persistence is exercised through the existing domain adapter, not a newly exposed payment-write API. Production storage/backup/restore, database-level permissions/authenticated actors, deployment and large-data/detail-history pagination remain gates. Case details and fuzzy candidates have documented bounds; no 100,000-record performance claim. The local development file adapter may leave an orphan after failed metadata commit; it is not a production archive. Original bytes remain separate from relational data. No real data, screenshots, commits, pushes or releases.
+
+Changed/new public files (including the interrupted work):
+
+- `README.de.md`
+- `README.md`
+- `docs/public/ARCHITEKTUR.md`
+- `docs/public/MVP-01-NACHWEIS.md`
+- `docs/public/adr/0001-rechnungs-und-zahlungskern.md`
+- `src/backend/Betriebsplattform.Web/Akten/Aktenmodell.cs`
+- `src/backend/Betriebsplattform.Web/Akten/Kontaktpflege.cs`
+- `src/backend/Betriebsplattform.Web/ApiAnwendung.cs`
+- `src/backend/Betriebsplattform.Web/ApiModelle.cs`
+- `src/backend/Betriebsplattform.Web/Betriebsplattform.Web.csproj`
+- `src/backend/Betriebsplattform.Web/Persistenz/Arbeitsaktionen.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/Datensaetze.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/DokumentDaten.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/Dokumentdateien.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/FinanzDaten.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/FirmenAbfragen.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/FirmenDaten.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/FirmenDbContext.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/Migrationen/20261019001700_InitialRelational.Designer.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/Migrationen/20261019001700_InitialRelational.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/Migrationen/FirmenDbContextModelSnapshot.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/Persistenzkonfiguration.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/Persistenzverwaltung.cs`
+- `src/backend/Betriebsplattform.Web/Persistenz/PostgreSqlHost.cs`
+- `src/backend/Betriebsplattform.Web/Program.cs`
+- `src/backend/Betriebsplattform.Web/Webschutz.cs`
+- `src/frontend/src/Aktenansichten.tsx`
+- `src/frontend/src/Aktenbereich.tsx`
+- `src/frontend/src/App.tsx`
+- `src/frontend/src/Arbeitskontext.tsx`
+- `src/frontend/src/Buero.tsx`
+- `src/frontend/src/Kontakte.tsx`
+- `src/frontend/src/Rechnungen.tsx`
+- `src/frontend/src/akte-api.ts`
+- `src/frontend/src/api.ts`
+- `src/frontend/tests/produktreife.test.mjs`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/Betriebsplattform.Rechnungen.Tests.csproj`
+- `tests/backend/Betriebsplattform.Rechnungen.Tests/Mvp02APersistenzTests.cs`
+- `tests/repository/test_public_layout.py`
+
+### PostgreSQL live-gate availability check — 19 October 2026
+
+POSTGRESQL-LIVE-GATE: NICHT BESTANDEN
+
+Reason: a real PostgreSQL 18 runtime is not available on this machine. Targeted checks found no psql/pg_isready/postgres/docker commands in PATH, no PostgreSQL or Docker service, no matching installation in the standard directories or checked Windows uninstall registrations, and no successful connection to 127.0.0.1:5432 within 1.5 seconds. The standard Docker Desktop executable locations were also absent. This is an environment prerequisite, not a demonstrated persistence-code failure.
+
+No installation, download, database creation, migration application or credentials change was performed. Consequently live schema inspection, CRUD/FK/constraint checks, real PostgreSQL concurrency/rollback/reassignment/restart persistence and PostgreSQL-backed API/frontend smoke checks remain unexecuted. Existing tests/builds were not repeated solely for this availability check; no product code changed.
+
+Next user action: install PostgreSQL 18 for Windows x86-64 using the installer linked from the official PostgreSQL Windows download page (the project-recommended installer is hosted by EDB). Select PostgreSQL Server and Command Line Tools; pgAdmin is optional and Stack Builder/additional packages are unnecessary. Keep the instance local-only, retain credentials privately and do not add firewall/router access. A separate synthetic firmenzentrale_dev database and secure application configuration will be prepared when this gate resumes. Do not put passwords in the repository or chat. No commit, push or release.
+
+### PostgreSQL live-gate resume: local authentication prerequisite
+
+POSTGRESQL-LIVE-GATE: NICHT BESTANDEN
+
+The native PostgreSQL 18.6 client is installed under the PostgreSQL 18 installation, service postgresql-x64-18 is Running and 127.0.0.1:5432 is reachable. Branch main and the existing uncommitted MVP-02A work were preserved. A noninteractive local connection to database postgres as the installer role postgres was rejected because no password was supplied. No application connection-string environment variable, password environment variable or project User Secrets file is configured. No credentials were printed, guessed or stored; authentication rules were not changed.
+
+Database creation, migration and all real-provider live tests remain unexecuted until the user provides local configuration through User Secrets or environment variables. This is an authentication prerequisite, not a demonstrated EF/Npgsql failure. No application/test code changed and no tests/builds were repeated without a usable connection. The next action is to configure ConnectionStrings:FirmenZentrale locally for firmenzentrale_dev, with credentials entered privately; then resume this same live gate. No commit, push or release.
+
+
+### PostgreSQL 18 live gate completed — 19 October 2026
+
+**POSTGRESQL-LIVE-GATE: BESTANDEN**
+
+This result supersedes the earlier availability/authentication blocker entries above. Native PostgreSQL server/client 18.6 (server version number180006), local service running, loopback127.0.0.1:5432. Created the separate synthetic database `firmenzentrale_dev` after checking it did not exist; existing databases were not reset or dropped. Credentials were read privately from the configured project User Secrets and passed only in process environment/configuration, never printed or committed. No authentication, firewall, router or public exposure settings were changed.
+
+The existing initial migration `20261019001700_InitialRelational` was applied successfully and reapplication was idempotent. No migration was regenerated or added. Actual PostgreSQL catalog/information_schema metadata was matched to the EF relational design model:17 business tables plus EF history,17 primary keys,40 explicit indexes (unique flags checked),30 foreign keys with RESTRICT delete rules,26 CHECK constraints, column NOT NULL declarations and integer concurrency columns/tokens. Pending migrations/model changes: none.
+
+Added one explicit opt-in PostgreSQL integration scenario in the existing `Mvp02APersistenzTests.cs`; it requires `FZ_POSTGRES_LIVE=1` and a privately configured `ConnectionStrings__FirmenZentrale`. The test refuses a database other than `firmenzentrale_dev`, a non-loopback host, nonstandard port or a server outside major18. It is skipped in ordinary runs, not silently passed without a server. No public test needs local private helper files.
+
+Real-provider evidence, successful scenario (1 integration test, several asserted phases):
+
+- Created/reloaded company, person/company relationship, separate address fields and contact values, category, cases, invoice, payment/confirmation/allocation, document metadata/current relationship, note/revisions/archive and external correspondence with central attachment references. Separate DbContexts verified persisted results. Invoice retained120 EUR total,40 EUR confirmed allocation,80 EUR open.
+- PostgreSQL rejected nonexistent foreign IDs (23503), missing required name (23502), overlong varchar (22001), negative amount/self-parent CHECK (23514), duplicate normalized category/current document assignment (23505) and deletion of a referenced contact (23001). Historical rows remained. Schema unique/index protections were inspected in addition to behavioral negatives.
+- Two independent real PostgreSQL contexts read versionX; B savedX+1; stale A received `DbUpdateConcurrencyException`; B's state was retained. Real HTTP stale status update returned409 without SQL/provider/connection details.
+- Reassignment A→B→A→B→C kept one current relationship, one unchanged original document/hash/storage key, incremented versions and old/new case history with UTC timestamps. Invalid/duplicate relationships remained protected.
+- Injected an execution failure at the document-history INSERT after a new case had already been inserted inside the same operation. A fresh context verified full transaction rollback: no new case, no changed current relationship/version and no extra history.
+- Started a real PostgreSQL-backed ASP.NET host; contacted metadata/list/count/detail, financial, note and reassignment endpoints. Compared pre-/post-start row counts: no implicit seeds. Restricted demo import remained blocked. Stopped/disposed the host completely and created a new host; records, saved note and status persisted.
+- SQL command-shape interception (no parameter values) verified actual LIMIT/OFFSET and WHERE/ORDER BY in the exercised PostgreSQL queries. No obvious per-row N+1 loop was observed in the bounded list/read paths. This small synthetic dataset is not a performance benchmark or production-scale query-plan approval.
+- An unreachable loopback PostgreSQL connection (port1) caused the registered startup readiness check to fail with a sanitized error and no Demo/InMemory fallback.
+
+Real Edge browser smoke on127.0.0.1:5180: PostgreSQL environment indicator; invoice overview/detail and partial-payment amounts; central company/person details and company-work counts/links; target case with a closed-by-default document preview; deliberate original text preview; shared destination selection and actual saved C→B reassignment; inbox detail with current relationship and full history. Created `PostgreSQL-Browserprüfung` through the real note dialog. Then terminated the host process, confirmed no listener remained on5180, started a fresh host process and reloaded the invoice: the browser-created note and earlier host-restart note were still present. No screenshots, UI changes, console-injection scripts or browser permission changes.
+
+Necessary product correction: real RESTRICT deletion returned SQLSTATE23001, which was not included in the existing generic FK-conflict mapping. Added `PostgresErrorCodes.RestrictViolation` to the controlled409 mapping and its regression case. No other product/mapping/schema/SQL correction was required. Two initial assertions in the new live test were corrected before the successful run: historical revision-version fields are not concurrency tokens, and RESTRICT deletion's expected code is23001. No protection was weakened to make a test pass.
+
+Final checks: PostgreSQL live integration scenario1/1 passed; directly coupled non-live MVP-02A tests34/34 passed; backend Release build passed with0 warnings/0 errors. No full backend/frontend regression or frontend build was repeated because the only product change was this backend error-code mapping. Existing frontend build was served and checked live. `git diff --check` passed; repository checks cover updated Markdown/inventory. Current-step files: `Persistenzkonfiguration.cs`, existing `Mvp02APersistenzTests.cs`, this evidence, existing architecture/ADR and EN/DE README status, plus the existing private development plan. Local runtime originals and a credential-free local execution helper remain under ignored backend `private/`.
+
+Synthetic live-test records remain intentionally in `firmenzentrale_dev`; failed test attempts also left only synthetically named records. No cleanup, reset or deletion of business records was performed. The temporary smoke host is stopped at completion; the installed database service remains untouched. Productive file storage, backup with restore test, authenticated actors/database-level permissions, deployment and realistic-load/detail-history pagination remain future pilot gates. No real data, commit, push, tag or release.

@@ -28,7 +28,7 @@ internal sealed partial class Kontaktpflege
    var id=Guid.NewGuid().ToString("N");vorschlaege[id]=new(id,firma,doc,art,string.Join(" · ",Aktuell(k,art)),wert,titel,"Zur Prüfung",k.Version,k.Firma);
   }
  }
- private static bool Gueltig(string art,string wert)=>art switch{
+ internal static bool Gueltig(string art,string wert)=>art switch{
   "E-Mail"=>Regex.IsMatch(wert,@"\A[A-Za-z0-9_+.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\z")&&!wert.Contains("..")&&wert.Length<=254,
   "Website"=>Uri.TryCreate(wert,UriKind.Absolute,out var uri)&&uri.Scheme is "https" or "http"&&uri.UserInfo.Length==0&&!string.IsNullOrWhiteSpace(uri.Host),
   "Telefon"=>Regex.IsMatch(wert,@"\A(?:\+[1-9]|0)[0-9 ()/-]{5,25}\z"),_=>wert.Length is >0 and <=200&&!wert.Any(char.IsControl)
