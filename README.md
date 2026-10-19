@@ -14,7 +14,7 @@ The application currently focuses on German. Repository documentation is primari
 
 ## Current Status
 
-Development-stage, local-first prototype. MVP-02A adds an explicit PostgreSQL persistence foundation alongside the existing Demo mode. Only fictional/synthetic data is supported. Demo records are temporary; PostgreSQL is never silently replaced by Demo mode. Local PostgreSQL 18.6 migration, schema, CRUD, constraints, concurrency, transactional rollback, restart persistence and API/browser smoke checks have passed with synthetic data. Production authentication, storage operations and deployment are not approved.
+Development-stage, local-first prototype. MVP-02A adds an explicit PostgreSQL persistence foundation alongside the existing Demo mode. Only fictional/synthetic data is supported. Demo records are temporary; PostgreSQL is never silently replaced by Demo mode. Local PostgreSQL 18.6 migration, schema, CRUD, constraints, concurrency, transactional rollback, restart persistence and API/browser smoke checks have passed with synthetic data. Local offline backup/restore, framework cookie authentication and resource grants are now implemented and tested. Production pilot approval is still withheld; see the current security gates below.
 
 ## Core Capabilities
 
@@ -80,11 +80,11 @@ The structured importer supports only the synthetic, macro-free MVP-02 XLSX temp
 
 ## Current Limitations
 
-- No production authentication, tenant isolation or production deployment approval. Local PostgreSQL 18.6 checks passed with synthetic data; they do not constitute production pilot approval.
-- Demo records, imports and histories remain temporary. PostgreSQL starts without demo seeds; the restricted XLSX importer and scan-folder adapter remain Demo-only. The development file adapter is not a production archive or backup solution.
+- Individual cookie authentication and resource authorization are implemented; production deployment, operating controls and multi-tenant isolation are not approved. The current security/pilot gate is NOT PASSED.
+- Demo records, imports and histories remain temporary. PostgreSQL starts without demo seeds; the restricted XLSX importer and scan-folder adapter remain Demo-only. Local durable storage and coordinated offline backup/restore are implemented; operator access controls, independent backup media/retention and production approval remain open.
 - No production email integration or sending, direct scanner integration, general OCR or AI classification.
 - No complete accounting system, automated financial posting, general Excel migration or country-specific tax implementation.
-- Production backup/restore, access control, operational monitoring and further accessibility/security validation remain pilot gates. Existing checks do not establish production readiness.
+- Trusted HTTPS, operating-system/backup permissions, malware integration, network restriction, independent security review and operational monitoring remain pilot gates. Pilot uploads fail closed until scanning is configured. Existing checks do not establish production readiness.
 
 ## Documentation
 
@@ -96,7 +96,7 @@ The structured importer supports only the synthetic, macro-free MVP-02 XLSX temp
 
 ## Roadmap / Next Milestone
 
-MVP-02A implements the relational model, initial migration, explicit provider selection, transactional reassignment and optimistic version checks. The PostgreSQL 18.6 live gate has passed locally. MVP-02B should verify durable file storage and backup/restore and implement authentication/authorization before any real-data pilot. No productive data migration is authorized.
+MVP-02B2–02B4 adds real isolated backup/restore, restart inventory, individual cookie authentication, resource grants, restricted database runtime and a local publish foundation. Synthetic PostgreSQL/auth/restore checks passed; no real-data pilot is approved. The existing PostgreSQL wildcard listener must be reviewed/restricted, and trusted HTTPS, OS/backup access controls, malware scanning and final human security approval remain open. Follow the existing architecture/operations instructions; no productive data migration is authorized.
 
 ## License
 

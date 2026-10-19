@@ -1,0 +1,11 @@
+import{useEffect,useState,type ReactNode}from'react';
+import{apiFetch,token}from'./auth.js';
+type Session={aktiv:boolean;angemeldet?:boolean;benutzer?:string;admin?:boolean;csrf?:string};
+export function Anmeldung({children}:{children:ReactNode}){
+ const[s,S]=useState<Session|null>(null),[fehler,F]=useState(''),[busy,B]=useState(false);
+ async function laden(){const r=await fetch('/api/auth/session',{cache:'no-store',credentials:'same-origin'});if(!r.ok)throw new Error('Anmeldung nicht erreichbar. Bitte erneut versuchen.');const v=await r.json() as Session;if(typeof v.aktiv!=='boolean')throw new Error('Anmeldestatus konnte nicht geprüft werden.');token(v.csrf??'');S(v);}
+ useEffect(()=>{void laden().catch(e=>F(e.message));const expired=()=>{S(null);void laden().catch(e=>F(e.message));};window.addEventListener('fz-anmeldung',expired);return()=>window.removeEventListener('fz-anmeldung',expired);},[]);
+ if(s&&(!s.aktiv||s.angemeldet))return <>{children}</>;
+ return <main className="p-anmeldung"><h1>FirmenZentrale</h1><h2>Anmelden</h2>{fehler&&<p role="alert">{fehler}</p>}{!s?<button onClick={()=>void laden().catch(e=>F(e.message))}>Verbindung erneut prüfen</button>:<form onSubmit={e=>{e.preventDefault();const d=new FormData(e.currentTarget);B(true);F('');void apiFetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json','X-Arbeitsaktion':'1'},body:JSON.stringify({login:d.get('login'),passwort:d.get('passwort')})}).then(async r=>{if(!r.ok)throw new Error('Anmeldung nicht möglich. Angaben prüfen oder später erneut versuchen.');await laden();}).catch(e=>F(e.message)).finally(()=>B(false));}}><p>* Pflichtfeld</p><label>Login *<input name="login" required aria-required="true" autoComplete="username" maxLength={80}/></label><label>Passwort *<input name="passwort" type="password" required aria-required="true" autoComplete="current-password" maxLength={128}/></label><button disabled={busy}>Anmelden</button></form>}</main>;
+}
+export function Abmelden(){return <button className="p-button-leise" onClick={()=>void apiFetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json','X-Arbeitsaktion':'1'},body:'{}'}).then(r=>{if(r.ok)window.dispatchEvent(new window.Event('fz-anmeldung'));})}>Abmelden</button>;}

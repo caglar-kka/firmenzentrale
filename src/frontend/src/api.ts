@@ -1,3 +1,4 @@
+import{apiFetch as fetch}from'./auth.js';
 export interface Zahlung {
   datum: string; zahler: string; empfaenger: string; betrag: string; zugeordnet: string;
   status: string; beleg: string; quellenort: string; id?: string | null;

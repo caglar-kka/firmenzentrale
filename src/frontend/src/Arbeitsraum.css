@@ -416,3 +416,5 @@
 .studio .p-registerkopf h2{font-size:var(--schrift-registertitel)}
 .studio .p-registerkopf p,.studio .p-anzahl,.studio .p-sortierung label,.studio .p-ergebnis{font-size:var(--schrift-listenkopf)}
 .studio .p-filter button,.studio .p-sortierung select{font-size:var(--schrift-liste)}
+
+.p-anmeldung{max-inline-size:28rem;margin:8vh auto;padding:1.5rem}.p-anmeldung form,.p-anmeldung label{display:grid;gap:.6rem}.p-anmeldung form{gap:1rem}

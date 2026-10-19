@@ -116,7 +116,7 @@ public sealed class Mvp02APersistenzTests
         Assert.Empty((Vorgang[])await d.AktenSuchen("Mobilfunk",null,null,"titel",false,0,false,new VerboteneDokumente()));
         var zahlen=await d.Arbeitszahlen("firma",new LokalerDemozugriff(),new Arbeitsmodule());Assert.Equal(3,zahlen["akten"]);Assert.Equal(1,zahlen["dokumente"]);Assert.Equal(0,zahlen["notizen"]);
     }
-    private sealed class Dateien:IDokumentdateien{public int Gespeichert;public Task Speichern(string key,byte[] bytes,CancellationToken ct){Gespeichert++;return Task.CompletedTask;}public Task<byte[]> Lesen(string key,CancellationToken ct)=>Task.FromResult(Array.Empty<byte>());}
+    private sealed class Dateien:IDokumentdateien{public Task Entfernen(string key,CancellationToken ct)=>Task.CompletedTask;public Task<Stream> Oeffnen(string key,long groesse,string hash,CancellationToken ct)=>throw new NotSupportedException();public int Gespeichert;public Task Speichern(string key,byte[] bytes,CancellationToken ct){Gespeichert++;return Task.CompletedTask;}public Task<byte[]> Lesen(string key,CancellationToken ct)=>Task.FromResult(Array.Empty<byte>());}
     [Fact] public async Task Mvp02AUploadIstIdempotentUndUngueltigeZieleErzeugenKeineDateikopie(){
         await using var f=await Daten.Neu();var storage=new Dateien();var bytes=System.Text.Encoding.UTF8.GetBytes("Beispieltext für eine eigene Akte.");string id;
         await using(var db=f.Context())id=(await new FirmenDaten(db).DokumentHinzufuegen(bytes,"Beispiel.txt","text/plain","b",storage)).Id;
@@ -143,7 +143,7 @@ public sealed class Mvp02APersistenzTests
 
     [Fact] public async Task Mvp02ADatenbankausfallStopptOhneFallbackUndOhneVerbindungsdetails(){
         var options=new DbContextOptionsBuilder<FirmenDbContext>().UseNpgsql("Host=127.0.0.1;Port=1;Database=synthetic_unavailable;Timeout=1;Command Timeout=1").Options;
-        var factory=new Microsoft.EntityFrameworkCore.Infrastructure.PooledDbContextFactory<FirmenDbContext>(options);var dienst=new DatenbankStartpruefung(factory);
+        var factory=new TestContextFactory(options);var dienst=new DatenbankStartpruefung(factory);
         var e=await Assert.ThrowsAsync<InvalidOperationException>(()=>dienst.StartAsync(default));Assert.Contains("Kein Demo-Fallback",e.Message);Assert.Null(e.InnerException);Assert.DoesNotContain("Host=",e.Message);
     }
 
@@ -209,7 +209,7 @@ public sealed class PostgreSqlLiveTests(Xunit.Abstractions.ITestOutputHelper out
     {
         await using var db=Context();Assert.Empty(await db.Database.GetPendingMigrationsAsync());Assert.False(db.Database.HasPendingModelChanges());
         await using var c=new Npgsql.NpgsqlConnection(Verbindung());await c.OpenAsync();var server=int.Parse((await Lesen(c,"SELECT current_setting('server_version_num')"))[0][0]);Assert.InRange(server,180000,189999);
-        var modell=db.GetService<Microsoft.EntityFrameworkCore.Metadata.IDesignTimeModel>().Model.GetRelationalModel();var tables=modell.Tables.ToArray();Assert.Equal(17,tables.Length);
+        var modell=db.GetService<Microsoft.EntityFrameworkCore.Metadata.IDesignTimeModel>().Model.GetRelationalModel();var tables=modell.Tables.ToArray();Assert.Equal(20,tables.Length);
         var actualTables=(await Lesen(c,"SELECT tablename FROM pg_tables WHERE schemaname='public'")).Select(x=>x[0]).ToHashSet();
         Assert.Equal(tables.Select(t=>t.Name).Append("__EFMigrationsHistory").OrderBy(x=>x),actualTables.OrderBy(x=>x));
         var cols=await Lesen(c,"SELECT table_name,column_name,is_nullable,data_type FROM information_schema.columns WHERE table_schema='public'");
@@ -245,7 +245,7 @@ public sealed class PostgreSqlLiveTests(Xunit.Abstractions.ITestOutputHelper out
             var z=new FinanzDaten(db);var nachweis=new Nachweis("Synthetischer Prüfbeleg","Lokaler PostgreSQL-Livetest");
             await z.RechnungErfassen(new(invoice,"LIVE-"+run[..8],firma,person,new(2026,10,19),120,nachweis),a,"Ausgang");
             await z.ZahlungErfassen(new(payment,person,firma,new(2026,10,19),40,nachweis));await z.Bestaetigen(payment.ToString("N"),1,nachweis,"Synthetischer Prüfbenutzer");await z.Zuordnen(invoice.ToString("N"),payment.ToString("N"),1,2,40,nachweis,"Synthetischer Prüfbenutzer");
-            var storage=new LokaleDokumentdateien(Path.Combine(Repo(),"src","backend","private","postgres-live-dateien"));
+            var storage=new LokaleDokumentdateien(Path.Combine(Path.GetTempPath(),"FirmenZentrale-Mvp02A-Live"));
             var dokument=await d.DokumentHinzufuegen(System.Text.Encoding.UTF8.GetBytes("Livebeleg "+run+"\nTelefon: +49 30 23125 073"),"Livebeleg.txt","text/plain",null,storage);doc=dokument.Id;
             await d.Erstzuordnen(doc,new(a,null,kat,null,1));
             await d.KorrespondenzSpeichern(a,new("Externe Prüfantwort","Synthetische dokumentierte Antwort","Brief",DokumentIds:[doc],Richtung:"Empfangen",KontaktId:person,KommuniziertAm:DateTimeOffset.UtcNow));
@@ -293,7 +293,7 @@ public sealed class PostgreSqlLiveTests(Xunit.Abstractions.ITestOutputHelper out
             Assert.Contains(probe.Sql,s=>s.Contains("LIMIT",StringComparison.Ordinal));Assert.Contains(probe.Sql,s=>s.Contains("OFFSET",StringComparison.Ordinal));Assert.Contains(probe.Sql,s=>s.Contains("WHERE",StringComparison.Ordinal)&&s.Contains("ORDER BY",StringComparison.Ordinal));
         }
         var unavailable=new Npgsql.NpgsqlConnectionStringBuilder(Verbindung()){Port=1,Timeout=1,CommandTimeout=1};
-        var factory=new PooledDbContextFactory<FirmenDbContext>(new DbContextOptionsBuilder<FirmenDbContext>().UseNpgsql(unavailable.ConnectionString).Options);var error=await Assert.ThrowsAsync<InvalidOperationException>(()=>new DatenbankStartpruefung(factory).StartAsync(default));Assert.Contains("Kein Demo-Fallback",error.Message);Assert.Null(error.InnerException);
+        var factory=new TestContextFactory(new DbContextOptionsBuilder<FirmenDbContext>().UseNpgsql(unavailable.ConnectionString).Options);var error=await Assert.ThrowsAsync<InvalidOperationException>(()=>new DatenbankStartpruefung(factory).StartAsync(default));Assert.Contains("Kein Demo-Fallback",error.Message);Assert.Null(error.InnerException);
         output.WriteLine("Query sanity: bounded SQL LIMIT/OFFSET, WHERE/ORDER BY. Unreachable PostgreSQL startup fails without fallback or connection details.");
     }
     private static string Repo(){var d=new DirectoryInfo(AppContext.BaseDirectory);while(d is not null&&!File.Exists(Path.Combine(d.FullName,"AGENTS.md")))d=d.Parent;return d?.FullName??throw new InvalidOperationException("Repository root not found.");}
@@ -302,7 +302,7 @@ public sealed class PostgreSqlLiveTests(Xunit.Abstractions.ITestOutputHelper out
         long[] vor;
         await using(var db=Context())vor=[await db.Kontakte.LongCountAsync(),await db.Kategorien.LongCountAsync(),await db.Akten.LongCountAsync(),await db.Dokumente.LongCountAsync()];
         async Task<(Microsoft.AspNetCore.Builder.WebApplication App,HttpClient Client)> Start(){
-            var app=ApiAnwendung.Erstellen(["--FirmenZentrale:Persistence:Provider=PostgreSql"],0,Path.Combine(Repo(),"src","frontend","dist"));await app.StartAsync();
+            var app=ApiAnwendung.Erstellen(["--FirmenZentrale:Persistence:Provider=PostgreSql","--FirmenZentrale:Persistence:DocumentRoot="+Path.Combine(Path.GetTempPath(),"FirmenZentrale-Mvp02A-Live")],0,Path.Combine(Repo(),"src","frontend","dist"));await app.StartAsync();
             var addresses=Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.AspNetCore.Hosting.Server.IServer>(app.Services).Features.Get<Microsoft.AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
             var client=new HttpClient{BaseAddress=new Uri(addresses!.Addresses.Single()),Timeout=TimeSpan.FromSeconds(15)};client.DefaultRequestHeaders.Add("Origin",client.BaseAddress.GetLeftPart(UriPartial.Authority));client.DefaultRequestHeaders.Add("X-Arbeitsaktion","1");return(app,client);
         }
@@ -330,3 +330,155 @@ public sealed class PostgreSqlLiveTests(Xunit.Abstractions.ITestOutputHelper out
         output.WriteLine("HTTP/API: contacts, cases, invoice, inbox, assignment, reassignment, notes, pages/counts, stale update 409, frontend HTML/assets and disabled demo-import checked. Host stopped/disposed and freshly started; PostgreSQL records and note retained; no startup seed.");
     }
 }
+
+
+public sealed class Mvp02B1StorageTests
+{
+    [Theory]
+    [InlineData("CON.txt")][InlineData("brief?.txt")][InlineData("brief.txt ")]
+    public void ReservierteUndManipulierteDateinamenWerdenAbgelehnt(string name)
+        =>Assert.Throws<Arbeitsfehler>(()=>new Dokumentpruefung().Pruefen(System.Text.Encoding.UTF8.GetBytes("Beispiel"),name,"text/plain"));
+
+    private static string Root()=>Path.Combine(Path.GetTempPath(),"FirmenZentrale-StorageTests",Guid.NewGuid().ToString("N"));
+    private static byte[] Bytes(string text="Nur synthetischer Brief")=>System.Text.Encoding.UTF8.GetBytes(text);
+    private static string Hash(byte[] b)=>Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(b));
+    [Fact] public async Task AtomareAblageNeustartIntegritaetUndKeinUeberschreiben(){
+        var root=Root();var key=Guid.NewGuid().ToString("N");var bytes=Bytes();var f=new LokaleDokumentdateien(root);await f.StartAsync(default);
+        Assert.Empty(Directory.GetFiles(root));await f.Speichern(key,bytes,default);
+        var erneut=new LokaleDokumentdateien(root);await erneut.StartAsync(default);
+        await using(var stream=await erneut.Oeffnen(key,bytes.Length,Hash(bytes),default)){using var result=new MemoryStream();await stream.CopyToAsync(result);Assert.Equal(bytes,result.ToArray());}
+        await Assert.ThrowsAsync<IOException>(()=>f.Speichern(key,Bytes("Andere Datei"),default));Assert.Equal(bytes,await f.Lesen(key,default));
+        Assert.Single(Directory.GetFiles(root));Assert.Empty(Directory.GetFiles(root,"*.pending"));
+        await File.WriteAllBytesAsync(Path.Combine(root,key+".bin"),Bytes("Manipuliert"));
+        Assert.Equal(409,(await Assert.ThrowsAsync<Arbeitsfehler>(()=>f.Oeffnen(key,bytes.Length,Hash(bytes),default))).Status);
+        await f.Entfernen(key,default);Assert.Equal(404,(await Assert.ThrowsAsync<Arbeitsfehler>(()=>f.Lesen(key,default))).Status);Directory.Delete(root);
+    }
+    [Theory][InlineData("../../datei")][InlineData(@"..\..\datei")][InlineData(@"C:\datei")][InlineData(@"\\server\share")][InlineData("CON")][InlineData("")]
+    public async Task StorageKeysSindKeineDateipfade(string key){var f=new LokaleDokumentdateien(Root());await Assert.ThrowsAsync<Arbeitsfehler>(()=>f.Speichern(key,Bytes(),default));await Assert.ThrowsAsync<Arbeitsfehler>(()=>f.Lesen(key,default));await Assert.ThrowsAsync<Arbeitsfehler>(()=>f.Entfernen(key,default));}
+    [Theory][InlineData("../../datei.txt")][InlineData(@"..\..\datei.txt")][InlineData(@"C:\datei.txt")][InlineData(@"\\server\datei.txt")][InlineData("datei.txt.exe")][InlineData("datei.xlsm")][InlineData("datei.docm")]
+    public void UngeeigneteUploadsWerdenAbgelehnt(string name)=>Assert.Throws<Arbeitsfehler>(()=>new Dokumentpruefung().Pruefen(Bytes(),name,"text/plain"));
+    [Fact] public void InhaltUndGroesseWerdenGeprueft(){var p=new Dokumentpruefung();Assert.Throws<Arbeitsfehler>(()=>p.Pruefen([],"Leer.txt","text/plain"));Assert.Throws<Arbeitsfehler>(()=>p.Pruefen(new byte[Dokumentpruefung.MaxBytes+1],"Gross.pdf","application/pdf"));Assert.Throws<Arbeitsfehler>(()=>p.Pruefen(Bytes(),"Falsch.pdf","application/pdf"));Assert.Throws<Arbeitsfehler>(()=>p.Pruefen(Bytes(),"Falsch.txt","image/png"));Assert.Equal("text",p.Pruefen(Bytes(),"Brief.txt","text/plain").Vorschau);}
+    [Fact] public async Task UnbrauchbarerSpeicherStartetNichtUndHatKeinenFallback(){
+        var root=Root();Directory.CreateDirectory(root);var block=Path.Combine(root,"blockiert");await File.WriteAllTextAsync(block,"synthetisch");
+        foreach(var path in new string?[]{null,"relativ",block,Path.Combine(AppContext.BaseDirectory,"dateien")}){
+            var e=await Assert.ThrowsAsync<InvalidOperationException>(()=>new LokaleDokumentdateien(path).StartAsync(default));Assert.Null(e.InnerException);Assert.DoesNotContain(root,e.Message);
+        }
+        await Assert.ThrowsAsync<InvalidOperationException>(()=>new LokaleDokumentdateien(Path.Combine(root,"web","uploads"),Path.Combine(root,"web")).StartAsync(default));
+        File.Delete(block);Directory.Delete(root);
+    }
+
+    private static byte[] Png(string? run=null){
+        var png=Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRz0AAAAASUVORK5CYII=");
+        uint crc=0xffffffff;var pos=33;var len=System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(pos,4));
+        foreach(var v in png.AsSpan(pos+4,len+4)){crc^=v;for(int i=0;i<8;i++)crc=(crc&1)!=0?(crc>>1)^0xedb88320:crc>>1;}
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(png.AsSpan(pos+8+len,4),~crc);
+        if(run is null)return png;
+        var text=System.Text.Encoding.ASCII.GetBytes("Run\0"+run);var chunk=new byte[text.Length+12];System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(chunk.AsSpan(0,4),text.Length);
+        System.Text.Encoding.ASCII.GetBytes("tEXt").CopyTo(chunk,4);text.CopyTo(chunk,8);crc=0xffffffff;
+        foreach(var v in chunk.AsSpan(4,text.Length+4)){crc^=v;for(int i=0;i<8;i++)crc=(crc&1)!=0?(crc>>1)^0xedb88320:crc>>1;}
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(chunk.AsSpan(chunk.Length-4,4),~crc);
+        return png[..^12].Concat(chunk).Concat(png[^12..]).ToArray();
+    }
+    [Fact] public async Task PdfBildUndTextBleibenUnveraendertUndAbbruchHinterlaesstKeineTeildatei(){
+        var root=Root();var f=new LokaleDokumentdateien(root);await f.StartAsync(default);
+        var pdf=DemoDokumente.Datei("demo-nord-rechnung-002","original-002-v1")!;
+        foreach(var (bytes,name,mime) in new[]{(pdf,"Brief.pdf","application/pdf"),(Png(),"Scan.png","image/png"),(Bytes(),"Brief.txt","text/plain")}){
+            new Dokumentpruefung().Pruefen(bytes,name,mime);var key=Guid.NewGuid().ToString("N");await f.Speichern(key,bytes,default);
+            await using(var stream=await new LokaleDokumentdateien(root).Oeffnen(key,bytes.Length,Hash(bytes),default)){using var m=new MemoryStream();await stream.CopyToAsync(m);Assert.Equal(bytes,m.ToArray());}await f.Entfernen(key,default);
+        }
+        using var cancel=new CancellationTokenSource();cancel.Cancel();await Assert.ThrowsAnyAsync<OperationCanceledException>(()=>f.Speichern(Guid.NewGuid().ToString("N"),Bytes(),cancel.Token));Assert.Empty(Directory.GetFiles(root));Directory.Delete(root);
+    }
+    private sealed class CommitAntwortFehler : Microsoft.EntityFrameworkCore.Diagnostics.DbTransactionInterceptor{
+        public override Task TransactionCommittedAsync(System.Data.Common.DbTransaction transaction,Microsoft.EntityFrameworkCore.Diagnostics.TransactionEndEventData eventData,CancellationToken ct=default)=>throw new IOException("Synthetisch verlorene Commitantwort");
+    }
+    [Fact] public async Task VerloreneCommitBestaetigungLoeschtKeinGespeichertesOriginal(){
+        await using var connection=new SqliteConnection("Data Source=:memory:");await connection.OpenAsync();
+        var normal=new DbContextOptionsBuilder<FirmenDbContext>().UseSqlite(connection).Options;
+        await using(var db=new FirmenDbContext(normal)){await db.Database.EnsureCreatedAsync();await Faelle(db,"");}
+        var root=Root();var storage=new LokaleDokumentdateien(root);await storage.StartAsync(default);
+        var fehler=new DbContextOptionsBuilder<FirmenDbContext>().UseSqlite(connection).AddInterceptors(new CommitAntwortFehler()).Options;
+        await using(var db=new FirmenDbContext(fehler))Assert.Equal(409,(await Assert.ThrowsAsync<Arbeitsfehler>(()=>new FirmenDaten(db).DokumentHinzufuegen(Bytes(),"Brief.txt","text/plain","a",storage))).Status);
+        await using(var db=new FirmenDbContext(normal)){var d=await db.Dokumente.SingleAsync();Assert.Equal(Bytes(),await storage.Lesen(d.StorageKey,default));await storage.Entfernen(d.StorageKey,default);}
+        Directory.Delete(root);
+    }
+    private sealed class Schreibfehler : Microsoft.EntityFrameworkCore.Diagnostics.DbCommandInterceptor{
+        public override ValueTask<Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<System.Data.Common.DbDataReader>> ReaderExecutingAsync(System.Data.Common.DbCommand command,Microsoft.EntityFrameworkCore.Diagnostics.CommandEventData data,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<System.Data.Common.DbDataReader> result,CancellationToken ct=default){
+            if(command.CommandText.Contains("INSERT INTO \"Dokumentaktivitaeten\"",StringComparison.Ordinal))throw new IOException("Synthetischer Fehler nach Dateischreiben");return ValueTask.FromResult(result);
+        }
+    }
+    private static async Task Faelle(FirmenDbContext db,string run){
+        var k=new KategorieDatensatz{Id="kat"+run,Name="Storageprüfung "+run,Suchname="storage"+run};db.Kategorien.Add(k);
+        foreach(var id in new[]{"a","b","c"})db.Akten.Add(new(){Id=id+run,Titel="Storageakte "+id+run,Suchtext="storageakte",KategorieId=k.Id});await db.SaveChangesAsync();
+    }
+    private static async Task<string> Umordnungen(Func<FirmenDbContext> context,LokaleDokumentdateien storage,string root,string run){
+        string id,key;var bytes=Bytes("Brief "+run);
+        await using(var db=context()){var d=await new FirmenDaten(db).DokumentHinzufuegen(bytes,"Brief.txt","text/plain","a"+run,storage);id=d.Id;key=d.StorageKey;}
+        var version=1;var vorher="a";
+        foreach(var ziel in new[]{"b","a","b","c"}){
+            await using var db=context();var d=await new FirmenDaten(db).Umordnen(id,new(vorher+run,ziel+run,version));version++;
+            Assert.Equal(version,d.Version);Assert.Equal(key,d.StorageKey);Assert.Equal(ziel+run,(await db.Dokumentzuordnungen.SingleAsync(z=>z.DokumentId==id)).AkteId);
+            Assert.Equal(version,await db.Dokumentaktivitaeten.CountAsync(h=>h.DokumentId==id));Assert.Equal(bytes,await storage.Lesen(key,default));vorher=ziel;
+        }
+        await using(var db=context())Assert.Equal(409,(await Assert.ThrowsAsync<Arbeitsfehler>(()=>new FirmenDaten(db).Umordnen(id,new("c"+run,"a"+run,1)))).Status);
+        await using(var db=context())await Assert.ThrowsAsync<Arbeitsfehler>(()=>new FirmenDaten(db).Umordnen(id,new("c"+run,"fehlt",version)));
+        await using(var db=context()){var d=await new FirmenDaten(db).DokumentHinzufuegen(bytes,"Duplikat.txt","text/plain","c"+run,storage);Assert.Equal(id,d.Id);}
+        Assert.Single(Directory.GetFiles(root,"*.bin"));return id;
+    }
+    [Fact] public async Task DateifehlerKeinMetadatensatzDbFehlerKeineVerwaisteDateiUndUmordnung(){
+        await using var connection=new SqliteConnection("Data Source=:memory:");await connection.OpenAsync();
+        FirmenDbContext Context(bool fehler=false){var b=new DbContextOptionsBuilder<FirmenDbContext>().UseSqlite(connection);if(fehler)b.AddInterceptors(new Schreibfehler());return new(b.Options);}
+        await using(var db=Context()){await db.Database.EnsureCreatedAsync();await Faelle(db,"");}
+        var root=Root();var storage=new LokaleDokumentdateien(root);await storage.StartAsync(default);
+        await using(var db=Context(true))await Assert.ThrowsAsync<DbUpdateException>(()=>new FirmenDaten(db).DokumentHinzufuegen(Bytes(),"Brief.txt","text/plain","a",storage));
+        Assert.Empty(Directory.GetFiles(root));await using(var db=Context()){Assert.Empty(await db.Dokumente.ToArrayAsync());Assert.Empty(await db.Dokumentaktivitaeten.ToArrayAsync());}
+        var block=Path.Combine(root,"keinOrdner");await File.WriteAllTextAsync(block,"synthetisch");
+        await using(var db=Context())await Assert.ThrowsAnyAsync<IOException>(()=>new FirmenDaten(db).DokumentHinzufuegen(Bytes(),"Brief.txt","text/plain","a",new LokaleDokumentdateien(block)));
+        await using(var db=Context())Assert.Empty(await db.Dokumente.ToArrayAsync());File.Delete(block);
+        await Umordnungen(()=>Context(),storage,root,"");
+        foreach(var path in Directory.GetFiles(root))File.Delete(path);Directory.Delete(root);
+    }
+    [PostgreSqlLiveFact] public async Task PostgreSql18StorageLiveUploadNeustartUmordnungUndKompensation(){
+        var value=Environment.GetEnvironmentVariable("ConnectionStrings__FirmenZentrale")??throw new InvalidOperationException("Local live configuration required.");
+        var cs=new Npgsql.NpgsqlConnectionStringBuilder(value);Assert.Equal("firmenzentrale_dev",cs.Database);Assert.Contains(cs.Host,new[]{"127.0.0.1","localhost"});Assert.Equal(5432,cs.Port);
+        FirmenDbContext Context(bool fehler=false){var b=new DbContextOptionsBuilder<FirmenDbContext>().UseNpgsql(value,p=>p.SetPostgresVersion(18,0));if(fehler)b.AddInterceptors(new Schreibfehler());return new(b.Options);}
+        var run=Guid.NewGuid().ToString("N");var root=Environment.GetEnvironmentVariable("FZ_STORAGE_LIVE_ROOT")??throw new InvalidOperationException("Explicit external test storage required.");
+        var storage=new LokaleDokumentdateien(Path.Combine(root,run));var currentRoot=Path.Combine(root,run);await storage.StartAsync(default);
+        await using(var db=Context()){Assert.Empty(await db.Database.GetPendingMigrationsAsync());await Faelle(db,run);}
+        await using(var db=Context(true))await Assert.ThrowsAsync<DbUpdateException>(()=>new FirmenDaten(db).DokumentHinzufuegen(Bytes(run),"Rollback.txt","text/plain","a"+run,storage));
+        Assert.Empty(Directory.GetFiles(currentRoot));await using(var db=Context())Assert.False(await db.Dokumente.AnyAsync(d=>d.Hash==Hash(Bytes(run))));
+        var id=await Umordnungen(()=>Context(),storage,currentRoot,run);
+        var args=new[]{"--FirmenZentrale:Persistence:Provider=PostgreSql","--FirmenZentrale:Persistence:DocumentRoot="+currentRoot};
+        async Task<(Microsoft.AspNetCore.Builder.WebApplication App,HttpClient Client)> Start(){
+            var app=ApiAnwendung.Erstellen(args,0);await app.StartAsync();
+            var server=Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.AspNetCore.Hosting.Server.IServer>(app.Services);
+            var addr=server.Features.Get<Microsoft.AspNetCore.Hosting.Server.Features.IServerAddressesFeature>()!.Addresses.Single();
+            var client=new HttpClient{BaseAddress=new Uri(addr)};client.DefaultRequestHeaders.Add("Origin",addr);client.DefaultRequestHeaders.Add("X-Arbeitsaktion","1");return(app,client);
+        }
+        string uploaded;
+        var first=await Start();try{
+            using var request=new HttpRequestMessage(HttpMethod.Post,"/api/dokumenteingang?akte=a"+run){Content=new ByteArrayContent(Bytes("API "+run))};request.Content.Headers.ContentType=new("application/octet-stream");request.Headers.Add("X-Dateiname","API-Brief.txt");request.Headers.Add("X-Dateityp","text/plain");
+            using var response=await first.Client.SendAsync(request);Assert.Equal(System.Net.HttpStatusCode.OK,response.StatusCode);var text=await response.Content.ReadAsStringAsync();Assert.DoesNotContain(currentRoot,text);Assert.DoesNotContain("storageKey",text);uploaded=System.Text.Json.JsonDocument.Parse(text).RootElement.GetProperty("id").GetString()!;
+
+            foreach(var (bytes,name,mime) in new[]{(System.Text.Encoding.ASCII.GetBytes(System.Text.Encoding.ASCII.GetString(DemoDokumente.Datei("demo-nord-rechnung-002","original-002-v1")!).Replace("startxref","% Run "+run+"\nstartxref")),"Originalrechnung.pdf","application/pdf"),(Png(run),"Scan.png","image/png")}){
+                using var req=new HttpRequestMessage(HttpMethod.Post,"/api/dokumenteingang?akte=a"+run){Content=new ByteArrayContent(bytes)};req.Content.Headers.ContentType=new("application/octet-stream");req.Headers.Add("X-Dateiname",name);req.Headers.Add("X-Dateityp",mime);
+                using var res=await first.Client.SendAsync(req);Assert.Equal(System.Net.HttpStatusCode.OK,res.StatusCode);var meta=System.Text.Json.JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;var fid=meta.GetProperty("id").GetString();
+                using var original=await first.Client.GetAsync("/api/dokumente/"+fid+"/datei");Assert.Equal(bytes,await original.Content.ReadAsByteArrayAsync());
+                Assert.Equal(name.EndsWith("png")?"inline":"attachment",original.Content.Headers.ContentDisposition!.DispositionType);
+                if(name.EndsWith("png"))Assert.Equal("image/png",original.Content.Headers.ContentType!.MediaType);
+            }
+            using var invalid=await first.Client.GetAsync("/api/dokumente/nichtvorhanden/datei");Assert.Equal(System.Net.HttpStatusCode.NotFound,invalid.StatusCode);
+            using var manip=await first.Client.GetAsync("/api/dokumente/C%3A%5CWindows/datei");Assert.Equal(System.Net.HttpStatusCode.BadRequest,manip.StatusCode);
+        }finally{first.Client.Dispose();await first.App.StopAsync();await first.App.DisposeAsync();}
+        var second=await Start();try{
+            Assert.Equal(Bytes("API "+run),await second.Client.GetByteArrayAsync("/api/dokumente/"+uploaded+"/datei"));
+            using var doc=await second.Client.GetAsync("/api/dokumente/"+id+"/datei");Assert.Equal(System.Net.HttpStatusCode.OK,doc.StatusCode);Assert.Contains("inline",doc.Content.Headers.ContentDisposition!.ToString());
+            await using var db=Context();var meta=await db.Dokumente.SingleAsync(d=>d.Id==uploaded);Assert.Equal(Hash(Bytes("API "+run)),meta.Hash);Assert.True(File.Exists(Path.Combine(currentRoot,meta.StorageKey+".bin")));
+            var moved=await new FirmenDaten(db).Umordnen(uploaded,new("a"+run,"b"+run,meta.Version));Assert.Equal(meta.StorageKey,moved.StorageKey);
+            Assert.Equal(Bytes("API "+run),await second.Client.GetByteArrayAsync("/api/dokumente/"+uploaded+"/datei"));
+            File.Delete(Path.Combine(currentRoot,meta.StorageKey+".bin"));using var missing=await second.Client.GetAsync("/api/dokumente/"+uploaded+"/datei");Assert.Equal(System.Net.HttpStatusCode.NotFound,missing.StatusCode);Assert.DoesNotContain(currentRoot,await missing.Content.ReadAsStringAsync());
+            await storage.Speichern(meta.StorageKey,Bytes("API "+run),default);
+        }finally{second.Client.Dispose();await second.App.StopAsync();await second.App.DisposeAsync();}
+    }
+}
+
+internal sealed class TestContextFactory(DbContextOptions<FirmenDbContext> options):IDbContextFactory<FirmenDbContext>{public FirmenDbContext CreateDbContext()=>new(options);}

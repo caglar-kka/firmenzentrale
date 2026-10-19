@@ -3,22 +3,36 @@ using System.Text.Json.Serialization;
 using Betriebsplattform.Web.Akten;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Betriebsplattform.Web.Sicherheit;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Betriebsplattform.Web.Persistenz;
 
 public static class PostgreSqlHost
 {
-    public static WebApplication Erstellen(WebApplicationBuilder builder,Persistenzkonfiguration config,int port,string? frontend,Arbeitsmodule? module,ILesezugriff? rechte,IArbeitsrechte? schreibrechte)
+    public static WebApplication Erstellen(WebApplicationBuilder builder,Persistenzkonfiguration config,int port,string? frontend,Arbeitsmodule? module,ILesezugriff? rechte,IArbeitsrechte? schreibrechte,X509Certificate2? testZertifikat=null)
     {
         var aktiv=module??new Arbeitsmodule();var lesen=rechte??new LokalerDemozugriff();var schreiben=schreibrechte??new LokaleArbeitsrechte();
         builder.Logging.ClearProviders();builder.Logging.AddSimpleConsole();builder.Logging.AddFilter("Microsoft.EntityFrameworkCore",LogLevel.None);builder.Logging.AddFilter("Npgsql",LogLevel.None);
-        builder.WebHost.ConfigureKestrel(o=>{o.Configure(new ConfigurationBuilder().Build());o.Listen(IPAddress.Loopback,port);o.Limits.MaxRequestBodySize=Dokumentpruefung.MaxBytes;});
+        builder.Logging.AddFilter("Microsoft.AspNetCore",LogLevel.Warning);builder.Logging.AddFilter("Microsoft.AspNetCore.DataProtection",LogLevel.Warning);
+        var pilot=Pilotoptionen.Lesen(builder.Configuration);Anmeldung.Dienste(builder,pilot,config.Dateiablage);
+        if(builder.Configuration["FirmenZentrale:Network:Address"] is string address&&address!="127.0.0.1")throw new InvalidOperationException("LAN binding requires a separately approved deployment gate. Loopback only.");
+        port=builder.Configuration.GetValue<int?>("FirmenZentrale:Network:Port")??port;if(port is <0 or >65535)throw new InvalidOperationException("Invalid local application port.");
+        builder.Services.AddSingleton(config);
+        builder.Services.AddSingleton<IMalwarepruefung,NichtKonfigurierterScanner>();
+        builder.WebHost.ConfigureKestrel(o=>{o.Configure(new ConfigurationBuilder().Build());o.Listen(IPAddress.Loopback,port,l=>{if(pilot.Aktiv){var cert=testZertifikat??(pilot.Zertifikat is not null?X509CertificateLoader.LoadPkcs12FromFile(pilot.Zertifikat,pilot.Zertifikatpasswort):throw new InvalidOperationException("Pilot requires an explicitly provisioned HTTPS certificate."));l.UseHttps(cert);}});o.Limits.MaxRequestBodySize=Dokumentpruefung.MaxBytes;});
         builder.Services.ConfigureHttpJsonOptions(o=>{o.SerializerOptions.Converters.Add(new JsonStringEnumConverter());o.SerializerOptions.MaxDepth=16;o.SerializerOptions.UnmappedMemberHandling=JsonUnmappedMemberHandling.Disallow;});
         builder.Services.AddDbContextFactory<FirmenDbContext>(o=>o.UseNpgsql(config.Verbindung!,n=>n.SetPostgresVersion(18,0)).EnableSensitiveDataLogging(false));
-        builder.Services.AddScoped<FirmenDaten>();builder.Services.AddScoped<FinanzDaten>();builder.Services.AddSingleton<IDokumentdateien>(new LokaleDokumentdateien(config.Dateiablage));builder.Services.AddHostedService<DatenbankStartpruefung>();
-        var app=builder.Build();Webschutz.Konfigurieren(app,aktiv);
+        builder.Services.AddScoped<FirmenDaten>();builder.Services.AddScoped<FinanzDaten>();
+        builder.Services.AddSingleton(new LokaleDokumentdateien(config.Dateiablage,builder.Environment.ContentRootPath,builder.Environment.WebRootPath??Path.Combine(builder.Environment.ContentRootPath,"wwwroot"),frontend??Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"../../../../../frontend/dist"))));
+        builder.Services.AddSingleton<IDokumentdateien>(s=>s.GetRequiredService<LokaleDokumentdateien>());
+        builder.Services.AddHostedService<DatenbankStartpruefung>();builder.Services.AddHostedService<Betriebsplattform.Web.Betrieb.Betriebssperre>();
+        builder.Services.AddSingleton<IHostedService>(s=>s.GetRequiredService<LokaleDokumentdateien>());builder.Services.AddHostedService<Betriebsplattform.Web.Betrieb.PilotStartpruefung>();
+        var app=builder.Build();Webschutz.Konfigurieren(app,aktiv);Anmeldung.Pipeline(app,pilot);Anmeldung.Endpunkte(app,pilot);
         var api=app.MapGroup("/api");
-        void Darf(string aktion){if(!schreiben.Darf(aktion))throw new Arbeitsfehler("Für diese Aktion fehlt die Berechtigung.",403);}
+        if(pilot.Aktiv)api.RequireAuthorization();
+        bool DarfVerwalten(string aktion)=>schreiben.Darf(aktion)&&(!pilot.Aktiv||aktion is not ("Kategorien.Verwalten" or "Diagnose.Lesen")||app.Services.GetRequiredService<IHttpContextAccessor>().HttpContext!.User.IsInRole("Administrator"));
+        void Darf(string aktion){if(!DarfVerwalten(aktion))throw new Arbeitsfehler("Für diese Aktion fehlt die Berechtigung.",403);}
         void Zugriff(string art,string? id){if(id is null)return;FirmenDaten.Id(id);if(!lesen.Erlaubt(art,id))throw new Arbeitsfehler("Für diesen Eintrag fehlt die Berechtigung.",403);}
         async Task AkteZugriff(FirmenDaten d,string? id,CancellationToken ct){
             if(id is null)return;Zugriff("Vorgang",id);var a=await d.Db.Akten.AsNoTracking().SingleOrDefaultAsync(a=>a.Id==id,ct)??throw new Arbeitsfehler("Akte nicht gefunden.",404);Zugriff("Firma",a.FirmaId);
@@ -42,8 +56,8 @@ public static class PostgreSqlHost
             }catch(Arbeitsfehler e){return Results.Json(new{meldung=e.Message,hinweise=e.Hinweise.Where(h=>lesen.Erlaubt(h.Art=="Akte"?"Vorgang":"Firma",h.Id)).ToArray()},statusCode:e.Status);}
             catch(Exception e) when(e is DbUpdateException or NpgsqlException or TimeoutException or IOException or UnauthorizedAccessException){var f=Persistenzfehler.Beschreiben(e);return Results.Json(new ApiFehler(f.Meldung),statusCode:f.Status);}
         });
-        api.MapGet("/persistenz",()=>new{provider="PostgreSQL",fluechtig=false,authentifizierung="Keine produktive Authentifizierung",seeding="Nicht aktiviert"});
-        api.MapGet("/arbeitsumgebung",()=>new{beispielkennzeichnung=true,diagnose=false,benutzer=Arbeitskontext.Benutzer,fluechtigeDaten=false,kategorienVerwalten=schreiben.Darf("Kategorien.Verwalten"),kontakteVerwalten=schreiben.Darf("Kontakte.Verwalten"),aktenVerwalten=schreiben.Darf("Akten.Verwalten")});
+        api.MapGet("/persistenz",()=>new{provider="PostgreSQL",fluechtig=false,authentifizierung=pilot.Aktiv?"Individuelle Cookie-Anmeldung":"Keine produktive Authentifizierung",seeding="Nicht aktiviert"});
+        api.MapGet("/arbeitsumgebung",(HttpContext c)=>new{beispielkennzeichnung=!pilot.Aktiv||app.Environment.IsDevelopment(),diagnose=false,benutzer=pilot.Aktiv?c.User.Identity!.Name:Arbeitskontext.Benutzer,authentifiziert=pilot.Aktiv,administrator=pilot.Aktiv&&c.User.IsInRole("Administrator"),fluechtigeDaten=false,kategorienVerwalten=DarfVerwalten("Kategorien.Verwalten"),kontakteVerwalten=DarfVerwalten("Kontakte.Verwalten"),aktenVerwalten=DarfVerwalten("Akten.Verwalten")});
         api.MapGet("/module",()=>new{module=aktiv.Liste,umgebung="Lokale Entwicklungsgrundlage",persistenz="PostgreSQL"});
         api.MapGet("/akten-status",()=>Vorgangsbearbeitung.Werte);
         api.MapGet("/kategorien",async(FirmenDaten d,CancellationToken ct)=>(await d.Db.Kategorien.AsNoTracking().OrderBy(k=>k.ElternId).ThenBy(k=>k.Reihenfolge).ThenBy(k=>k.Name).Take(100).ToArrayAsync(ct)).Select(FirmenDaten.KategorieAnsicht));
@@ -96,9 +110,9 @@ public static class PostgreSqlHost
         async Task<IResult> Originaldatei(string id,HttpContext c,FirmenDaten d,IDokumentdateien dateien,CancellationToken ct){
             var meta=await d.Db.Dokumente.AsNoTracking().SingleOrDefaultAsync(x=>x.Id==FirmenDaten.Id(id),ct)??throw new Arbeitsfehler("Dokument nicht gefunden.",404);
             if(c.Request.RouteValues["vorgangId"]?.ToString() is string akte){await AkteZugriff(d,akte,ct);if(!await d.Db.Dokumentzuordnungen.AnyAsync(z=>z.DokumentId==id&&z.AkteId==akte,ct))throw new Arbeitsfehler("Dokument gehört nicht zu dieser Akte.",404);}
-            var bytes=await dateien.Lesen(meta.StorageKey,ct);if(bytes.LongLength!=meta.Groesse||Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes))!=meta.Hash)throw new Arbeitsfehler("Das Originaldokument konnte nicht verifiziert werden.",409);
+            var stream=await dateien.Oeffnen(meta.StorageKey,meta.Groesse,meta.Hash,ct);
             var inline=meta.Vorschau is "pdf" or "bild" or "text";c.Response.Headers.ContentSecurityPolicy="default-src 'none'; sandbox; frame-ancestors 'self'; object-src 'none'";c.Response.Headers.ContentDisposition=$"{(inline?"inline":"attachment")}; filename*=UTF-8''{Uri.EscapeDataString(meta.Dateiname)}";
-            return Results.Bytes(bytes,inline?meta.Inhaltstyp:"application/octet-stream");
+            return Results.Stream(stream,inline?meta.Inhaltstyp:"application/octet-stream");
         }
         api.MapGet("/dokumente/{id}/datei",Originaldatei).WithMetadata(new Ressource("Dokument","id"));
         api.MapGet("/vorgaenge/{vorgangId}/dokumente/{id}",Originaldatei).WithMetadata(new Ressource("Dokument","id"));

@@ -20,7 +20,8 @@ public static class Webschutz
             context.Response.Headers["Referrer-Policy"] = "no-referrer";
             context.Response.Headers.ContentSecurityPolicy = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'";
             var origin = context.Request.Headers.Origin.ToString();
-            var eigen = $"http://127.0.0.1:{context.Connection.LocalPort}";
+            var eigen = $"{context.Request.Scheme}://127.0.0.1:{context.Connection.LocalPort}";
+            if(context.Request.IsHttps)context.Response.Headers.StrictTransportSecurity="max-age=31536000";
             if (context.Request.Host.Host != "127.0.0.1" || context.Request.Host.Port != context.Connection.LocalPort
                 || (origin.Length > 0 && origin != eigen && !(app.Environment.IsDevelopment() && origin == "http://127.0.0.1:5173")))
             {
@@ -59,9 +60,9 @@ public static class Webschutz
     }
     public static void Oberflaeche(WebApplication app,string? frontendVerzeichnis)
     {
-        var frontend = frontendVerzeichnis ?? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../frontend/dist"));
+        var frontend = frontendVerzeichnis ?? (File.Exists(Path.Combine(AppContext.BaseDirectory,"wwwroot","index.html"))?Path.Combine(AppContext.BaseDirectory,"wwwroot"):Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../frontend/dist")));
         var index = Path.Combine(frontend, "index.html");
-        if (Directory.Exists(frontend))
+        if (Directory.Exists(frontend)&&File.Exists(index))
         {
             var dateien = new PhysicalFileProvider(Path.GetFullPath(frontend));
             app.Lifetime.ApplicationStopped.Register(dateien.Dispose);

@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <UserSecretsId>FirmenZentrale.LocalDevelopment</UserSecretsId>
+    <!-- Vite assets are served explicitly by Webschutz; no SDK manifest with source-machine paths. -->
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
@@ -13,4 +15,13 @@
     <ProjectReference Include="../Betriebsplattform.Rechnungen/Betriebsplattform.Rechnungen.csproj" />
     <ProjectReference Include="../Betriebsplattform.Import/Betriebsplattform.Import.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../frontend/dist/**/*" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="RequireFrontendForPublish" BeforeTargets="Publish">
+    <Error Condition="!Exists('../../frontend/dist/index.html')" Text="Build the frontend before publishing the local host." />
+  </Target>
+  <Target Name="RemoveObsoleteStaticAssetsManifest" BeforeTargets="CopyFilesToOutputDirectory">
+    <Delete Files="$(TargetDir)$(AssemblyName).staticwebassets.runtime.json;$(TargetDir)$(AssemblyName).staticwebassets.endpoints.json" />
+  </Target>
 </Project>

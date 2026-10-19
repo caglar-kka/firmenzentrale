@@ -1,4 +1,5 @@
 import { useEffect, useState, type KeyboardEvent } from 'react';
+import{useAktualisierung}from'./Arbeitskontext.js';
 import { Icon, type Iconname } from './Icon.js';
 import type { Meldung } from './api.js';
 import type { Statusdarstellung } from './darstellung.js';
@@ -8,14 +9,15 @@ export function useDaten<T>(laden: (signal: AbortSignal) => Promise<T>) {
   const [fehler, setFehler] = useState<string | null>(null);
   const [laedt, setLaedt] = useState(true);
   const [versuch, setVersuch] = useState(0);
+  useAktualisierung(()=>setVersuch(v=>v+1));
   useEffect(() => {
     const controller = new AbortController();
-    setLaedt(true); setFehler(null); setDaten(null);
+    setFehler(null);
     laden(controller.signal).then(ergebnis => {
       if (!controller.signal.aborted) { setDaten(ergebnis); setLaedt(false); }
     }).catch(error => {
       if (!controller.signal.aborted) {
-        setFehler(error instanceof Error ? error.message : 'Die Ansicht konnte nicht geladen werden.'); setLaedt(false);
+        setDaten(null); setFehler(error instanceof Error ? error.message : 'Die Ansicht konnte nicht geladen werden.'); setLaedt(false);
       }
     });
     return () => controller.abort();

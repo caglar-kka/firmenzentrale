@@ -10,7 +10,7 @@ internal sealed class Notizablage
     {
         var betreff=Arbeitsregeln.Text(eingabe.Betreff,"Betreff",160);
         var inhalt=Arbeitsregeln.Text(eingabe.Inhalt,"Inhalt",10000);
-        var zeit=DateTimeOffset.UtcNow;const string autor=Arbeitskontext.Benutzer;
+        var zeit=DateTimeOffset.UtcNow;var autor=Arbeitskontext.Benutzer;
         if(daten.Values.Sum(n=>n.Historie.Sum(h=>(long)h.Inhalt.Length+h.Betreff.Length))+inhalt.Length+betreff.Length>8*1024*1024)
             throw new Arbeitsfehler("Der lokale Notizspeicher ist voll. Es wurde nichts überschrieben.");
         if(id is null){

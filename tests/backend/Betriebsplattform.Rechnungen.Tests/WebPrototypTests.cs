@@ -12,6 +12,27 @@ namespace Betriebsplattform.Rechnungen.Tests;
 public sealed class WebPrototypTests
 {
     [Fact]
+    public async Task StartOhneWebrootLiefertGebautesFrontendUndAssets()
+    {
+        var root=Path.Combine(Path.GetTempPath(),"fz-start-"+Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        await File.WriteAllTextAsync(Path.Combine(root,"index.html"),"<!doctype html><title>FirmenZentrale Startprobe</title><script src='/app.js'></script>");
+        await File.WriteAllTextAsync(Path.Combine(root,"app.js"),"console.log('Startprobe');");
+        Assert.False(Directory.Exists(Path.Combine(root,"wwwroot")));
+        await using var app=ApiAnwendung.Erstellen(["--contentRoot",root,"--FirmenZentrale:Persistence:Provider","Demo","--FirmenZentrale:Security:Enabled","false"],0,root);
+        await app.StartAsync();
+        try{
+            var address=app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+            using var client=new HttpClient{BaseAddress=new Uri(address)};
+            var html=await client.GetStringAsync("/");Assert.Contains("FirmenZentrale Startprobe",html);
+            Assert.Contains("Startprobe",await client.GetStringAsync("/app.js"));
+            Assert.Contains("FirmenZentrale Startprobe",await client.GetStringAsync("/akten/beispiel"));
+            Assert.Equal(HttpStatusCode.NotFound,(await client.GetAsync("/api/fehlt")).StatusCode);
+            Assert.False(Directory.Exists(Path.Combine(root,"wwwroot")));
+        }finally{await app.StopAsync();Directory.Delete(root,true);}
+    }
+
+    [Fact]
     public void AnzeigeBerechnetSaldenImKernUndZeigtIsdMitVerschiedenenRollen()
     {
         var daten = DemoDaten.UebersichtErstellen();

@@ -44,7 +44,7 @@ public sealed class DemoImportbestand
     {
         if (bytes.Length is 0 or > MaxDateiBytes || string.IsNullOrWhiteSpace(dateiname) || dateiname.Length > 180
             || dateiname.Any(c => char.IsControl(c) || c is '/' or '\\') || !dateiname.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Bitte eine makrofreie synthetische XLSX-Datei bis 2 MiB auswählen.");
+            throw new InvalidOperationException("Bitte eine makrofreie XLSX-Testdatei bis 2,1 MB auswählen.");
         lock (sperre)
         {
             var hash = Convert.ToHexString(SHA256.HashData(bytes));

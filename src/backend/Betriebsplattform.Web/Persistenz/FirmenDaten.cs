@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 namespace Betriebsplattform.Web.Persistenz;
 
 // Request-scoped unit of work. Never caches a full database or survives a request.
-public sealed partial class FirmenDaten(FirmenDbContext db)
+public sealed partial class FirmenDaten(FirmenDbContext db,Betriebsplattform.Web.Sicherheit.Pilotoptionen? pilot=null,Betriebsplattform.Web.Sicherheit.IMalwarepruefung? scanner=null)
 {
     public FirmenDbContext Db=>db;
     public const int Seitengroesse=20;

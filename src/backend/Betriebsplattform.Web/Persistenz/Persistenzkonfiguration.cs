@@ -45,6 +45,7 @@ public static class Persistenzfehler
 {
     public static (int Status,string Meldung) Beschreiben(Exception e)=>e switch{
         DbUpdateConcurrencyException=>(409,"Dieser Eintrag wurde zwischenzeitlich geändert. Bitte prüfen Sie den aktuellen Stand."),
+        PostgresException{SqlState:PostgresErrorCodes.SerializationFailure or PostgresErrorCodes.DeadlockDetected}=>(409,"Eine gleichzeitige Änderung wurde erkannt. Bitte den aktuellen Stand laden und erneut prüfen."),
         DbUpdateException{InnerException:PostgresException{SqlState:PostgresErrorCodes.ForeignKeyViolation or PostgresErrorCodes.RestrictViolation}}=>(409,"Die Zuordnung ist nicht mehr gültig. Bitte die beteiligten Einträge prüfen."),
         DbUpdateException{InnerException:PostgresException{SqlState:PostgresErrorCodes.UniqueViolation}}=>(409,"Dieser Eintrag oder diese Zuordnung ist bereits vorhanden."),
         DbUpdateException{InnerException:PostgresException{SqlState:PostgresErrorCodes.CheckViolation or PostgresErrorCodes.NotNullViolation or PostgresErrorCodes.StringDataRightTruncation}}=>(400,"Bitte Pflichtfelder, Längen und Zuordnungen prüfen."),

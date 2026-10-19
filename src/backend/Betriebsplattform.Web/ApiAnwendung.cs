@@ -8,11 +8,12 @@ namespace Betriebsplattform.Web;
 public static class ApiAnwendung
 {
     public static WebApplication Erstellen(string[] args, int port = 5180, string? frontendVerzeichnis = null,
-        Arbeitsmodule? module = null, ILesezugriff? leserechte = null, Arbeitsumgebung? umgebung = null, IArbeitsrechte? arbeitsrechte = null)
+        Arbeitsmodule? module = null, ILesezugriff? leserechte = null, Arbeitsumgebung? umgebung = null, IArbeitsrechte? arbeitsrechte = null,System.Security.Cryptography.X509Certificates.X509Certificate2? testZertifikat=null)
     {
         var builder = WebApplication.CreateBuilder(args.Where(a => a is not ("--scan-demo" or "--diagnose")).ToArray());
         var persistenz=Persistenz.Persistenzkonfiguration.Lesen(builder.Configuration);
-        if(persistenz.Provider=="PostgreSql")return Persistenz.PostgreSqlHost.Erstellen(builder,persistenz,port,frontendVerzeichnis,module,leserechte,arbeitsrechte);
+        if(persistenz.Provider=="PostgreSql")return Persistenz.PostgreSqlHost.Erstellen(builder,persistenz,port,frontendVerzeichnis,module,leserechte,arbeitsrechte,testZertifikat);
+        if(builder.Configuration.GetValue<bool>("FirmenZentrale:Security:Enabled"))throw new InvalidOperationException("Pilot authentication requires PostgreSQL; no Demo fallback.");
         var akten = new Aktenbestand(beispielszenario:true);
         var arbeitsumgebung=umgebung??new Arbeitsumgebung(Diagnose:args.Contains("--diagnose"));
         var aktionsrechte=arbeitsrechte??new LokaleArbeitsrechte();
@@ -40,6 +41,7 @@ public static class ApiAnwendung
         });
         builder.Services.ConfigureHttpJsonOptions(o => {o.SerializerOptions.Converters.Add(new JsonStringEnumConverter());o.SerializerOptions.MaxDepth=16;o.SerializerOptions.UnmappedMemberHandling=JsonUnmappedMemberHandling.Disallow;});
         var app = builder.Build();
+        app.MapGet("/api/auth/session",()=>new{aktiv=false});
         var bestand = new DemoImportbestand();
         Webschutz.Konfigurieren(app,aktiveModule);
         Uebersicht Uebersicht() => akten.KontakteAnwenden(bestand.Uebersicht());
@@ -62,7 +64,7 @@ public static class ApiAnwendung
             Aktendokument? meta = null; byte[]? bytes = null;
             try { meta = akten.Dokument(id); bytes = akten.Bytes(id, vorgangId); } catch (Arbeitsfehler) { }
             if (meta is null || bytes is null)
-                return Results.Content("<!doctype html><html lang=\"de\"><meta charset=\"utf-8\"><title>PDF nicht verfügbar</title><main><h1>PDF nicht verfügbar</h1><p>Dieses synthetische Dokument ist nicht vorhanden oder gehört nicht zu dieser Rechnung.</p><p>Schließen Sie diesen Tab. Die zuvor geöffnete Rechnung bleibt im anderen Tab erhalten.</p></main></html>", "text/html; charset=utf-8", statusCode: 404);
+                return Results.Content("<!doctype html><html lang=\"de\"><meta charset=\"utf-8\"><title>PDF nicht verfügbar</title><main><h1>PDF nicht verfügbar</h1><p>Dieses Dokument ist nicht vorhanden oder gehört nicht zu dieser Rechnung.</p><p>Schließen Sie diesen Tab. Die zuvor geöffnete Rechnung bleibt im anderen Tab erhalten.</p></main></html>", "text/html; charset=utf-8", statusCode: 404);
             var inline = meta.Vorschau is "pdf" or "bild" or "text";
             context.Response.Headers.ContentDisposition = $"{(inline ? "inline" : "attachment")}; filename*=UTF-8''{Uri.EscapeDataString(meta.Dateiname)}";
             // Nur feste, selbst erzeugte PDF-Testbytes dürfen im eigenen Arbeitsraum erscheinen.
@@ -103,7 +105,7 @@ public static class ApiAnwendung
         app.MapPost("/api/importe/vorschau", async (HttpContext context) =>
         {
             if (context.Request.ContentType is not "application/octet-stream")
-                return Results.BadRequest(new ApiFehler("Bitte eine synthetische XLSX-Datei über die Dateiauswahl übertragen."));
+                return Results.BadRequest(new ApiFehler("Bitte eine XLSX-Testdatei über die Dateiauswahl übertragen."));
             try
             {
                 using var bytes = new MemoryStream();

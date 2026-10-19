@@ -431,7 +431,7 @@ test('Echte Dateiauswahl führt über Mapping und ausdrückliche Zeilenauswahl z
     await act(async()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Datei prüfen').click());
     assert.equal(aufrufe[0][0],'/api/importe/vorschau');
     assert.equal(aufrufe[0][1].body,file);
-    assert.equal(aufrufe[0][1].headers['X-Dateiname'],'SYNTH-test.xlsx');
+    assert.equal(new Headers(aufrufe[0][1].headers).get('X-Dateiname'),'SYNTH-test.xlsx');
     for(const [index,wert] of [[0,'DEMO-NORD'],[1,'DEMO-ISD']]) await act(async()=>{
       const select=document.getElementById(`firma-${index}`);select.value=wert;select.dispatchEvent(new window.Event('change',{bubbles:true}));
     });

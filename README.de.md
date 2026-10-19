@@ -14,7 +14,7 @@ Die Anwendung ist derzeit auf Deutsch ausgerichtet. Der Einstieg in die Reposito
 
 ## Aktueller Stand
 
-Lokaler Prototyp in Entwicklung. MVP-02A ergänzt eine ausdrücklich aktivierbare PostgreSQL-Persistenzgrundlage neben dem bisherigen Demo-Modus. Ausschließlich erfundene/synthetische Daten werden unterstützt. Demo-Daten bleiben flüchtig; ein stiller Rückfall von PostgreSQL auf Demo ist ausgeschlossen. Migration, Schema, CRUD, Constraints, Concurrency, Transaktions-Rollback, Neustartpersistenz und API-/Browser-Smoke wurden lokal mit PostgreSQL 18.6 und synthetischen Daten erfolgreich geprüft. Produktive Authentifizierung, Speicherbetrieb und Bereitstellung sind nicht freigegeben.
+Lokaler Prototyp in Entwicklung. MVP-02A ergänzt eine ausdrücklich aktivierbare PostgreSQL-Persistenzgrundlage neben dem bisherigen Demo-Modus. Ausschließlich erfundene/synthetische Daten werden unterstützt. Demo-Daten bleiben flüchtig; ein stiller Rückfall von PostgreSQL auf Demo ist ausgeschlossen. Migration, Schema, CRUD, Constraints, Concurrency, Transaktions-Rollback, Neustartpersistenz und API-/Browser-Smoke wurden lokal mit PostgreSQL 18.6 und synthetischen Daten erfolgreich geprüft. Lokales Backup/Restore, Framework-Cookie-Anmeldung und Ressourcenfreigaben sind inzwischen implementiert und getestet. Eine produktive Pilotfreigabe besteht weiterhin nicht; maßgeblich sind die aktuellen Sicherheitsgates.
 
 ## Kernfunktionen
 
@@ -80,11 +80,11 @@ Der strukturierte Import unterstützt ausschließlich die synthetische, makrofre
 
 ## Aktuelle Grenzen
 
-- Keine produktive Authentifizierung, Mandantentrennung oder Bereitstellungsfreigabe. Die lokalen PostgreSQL-18.6-Prüfungen mit synthetischen Daten sind bestanden; dies ist keine produktive Pilotfreigabe.
-- Demo-Datensätze, Importe und Historien bleiben flüchtig. PostgreSQL startet ohne Beispieldaten; begrenzter XLSX-Import und Scan-Ordner bleiben im Demo-Modus. Der lokale Entwicklungs-Dateiadapter ist kein produktives Archiv oder Backup.
+- Individuelle Cookie-Anmeldung und Ressourcenrechte sind implementiert; produktive Bereitstellung, Betriebskontrollen und Mandantentrennung sind nicht freigegeben. Das aktuelle Security-/Pilot-Gate ist NICHT BESTANDEN.
+- Demo-Datensätze, Importe und Historien bleiben flüchtig. PostgreSQL startet ohne Beispieldaten; begrenzter XLSX-Import und Scan-Ordner bleiben im Demo-Modus. Dauerhafte lokale Dateiablage und koordiniertes Offline-Backup/Restore sind implementiert; Betreiberrechte, unabhängige Sicherungsmedien/Aufbewahrung und Produktivfreigabe bleiben offen.
 - Keine produktive E-Mail-Integration oder Versandfunktion, direkte Scannerintegration, allgemeine OCR oder KI-Klassifikation.
 - Keine vollständige Buchhaltung, automatischen Finanzbuchungen, allgemeine Excel-Migration oder länderspezifische Steuerimplementierung.
-- Produktive Backups/Wiederherstellung, Rechteverwaltung, Betriebsüberwachung sowie weitere Barrierefreiheits-/Sicherheitsprüfungen bleiben Pilot-Gates. Bestehende Prüfungen belegen keine Produktivreife.
+- Vertrauenswürdiges HTTPS, Betriebssystem-/Backuprechte, Malware-Anbindung, Netzwerkeinschränkung, unabhängige Sicherheitsprüfung und Betriebsüberwachung bleiben Pilot-Gates. Pilotuploads bleiben ohne eingerichtete Prüfung gesperrt. Bestehende Nachweise belegen keine Produktivreife.
 
 ## Dokumentation
 
@@ -96,7 +96,7 @@ Der strukturierte Import unterstützt ausschließlich die synthetische, makrofre
 
 ## Roadmap / Nächster Meilenstein
 
-MVP-02A implementiert relationales Modell, Initialmigration, ausdrückliche Providerwahl, transaktionale Umzuordnung und optimistische Versionsprüfung. Das PostgreSQL-18.6-Live-Gate ist lokal bestanden. MVP-02B sollte dauerhafte Dateiablage, Backup/Wiederherstellung und Authentifizierung/Berechtigungen vor einem Echtdatenpilot absichern. Keine produktive Datenmigration ist freigegeben.
+MVP-02B2–02B4 ergänzt echtes isoliertes Backup/Restore, Bestandsprüfung beim Wiederanlauf, individuelle Cookie-Anmeldung, Ressourcenfreigaben, eingeschränkte Datenbank-Laufzeitrechte und eine lokale Publish-Grundlage. Die PostgreSQL-/Auth-/Restore-Prüfungen mit Beispieldaten sind bestanden; ein Echtdatenpilot ist nicht freigegeben. Die bestehende PostgreSQL-Wildcardbindung muss geprüft/eingeschränkt werden; vertrauenswürdiges HTTPS, Betriebssystem-/Backuprechte, Malware-Prüfung und abschließende menschliche Sicherheitsfreigabe bleiben offen. Vorgehen siehe bestehende Architektur-/Betriebsdokumentation. Keine produktive Datenmigration ist freigegeben.
 
 ## Lizenz
 

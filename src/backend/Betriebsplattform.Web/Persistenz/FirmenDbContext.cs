@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Betriebsplattform.Web.Persistenz;
 
-public sealed class FirmenDbContext(DbContextOptions<FirmenDbContext> options) : DbContext(options)
+public sealed partial class FirmenDbContext(DbContextOptions<FirmenDbContext> options,Betriebsplattform.Web.Sicherheit.Ressourcenbereich? sicherheit=null) : DbContext(options)
 {
     public DbSet<KontaktDatensatz> Kontakte => Set<KontaktDatensatz>();
     public DbSet<KontaktwertDatensatz> Kontaktwerte => Set<KontaktwertDatensatz>();
@@ -61,6 +61,7 @@ public sealed class FirmenDbContext(DbContextOptions<FirmenDbContext> options) :
         var zb=b.Entity<ZahlungsbestaetigungDatensatz>();zb.ToTable("Zahlungsbestaetigungen");zb.HasKey(x=>x.ZahlungId);Fk<ZahlungsbestaetigungDatensatz,ZahlungDatensatz>(zb,"ZahlungId");
         var zz=Eintrag<ZahlungszuordnungDatensatz>(b,"Zahlungszuordnungen");Fk<ZahlungszuordnungDatensatz,RechnungDatensatz>(zz,"RechnungId");Fk<ZahlungszuordnungDatensatz,ZahlungsbestaetigungDatensatz>(zz,"ZahlungId");zz.Property(x=>x.Betrag).HasPrecision(18,2);zz.HasIndex(x=>new{x.RechnungId,x.ZahlungId}).IsUnique();Check(zz,"Zahlungszuordnung_Betrag","\"Betrag\" > 0");
         foreach(var e in b.Model.GetEntityTypes())foreach(var prop in e.GetProperties().Where(p=>p.ClrType==typeof(string))){if(prop.GetMaxLength() is null)prop.SetMaxLength(prop.Name.EndsWith("Id",StringComparison.Ordinal)||prop.Name=="Id"?64:200);}
+        Pilotmodell(b);
         // SQLite is test-only; its timestamp ordering needs a UTC conversion. PostgreSQL
         // uses native timestamptz and is independently checked through its generated SQL.
         if(Database.ProviderName=="Microsoft.EntityFrameworkCore.Sqlite")
@@ -75,6 +76,7 @@ public sealed class FirmenDbContext(DbContextOptions<FirmenDbContext> options) :
     private static void Fk<T,P>(EntityTypeBuilder<T> e,string property) where T:class where P:class => e.HasOne<P>().WithMany().HasForeignKey(property).OnDelete(DeleteBehavior.Restrict);
     private void VersionenAktualisieren()
     {
+        NeueFreigaben();
         foreach(var e in ChangeTracker.Entries<VersionierterDatensatz>().Where(x=>x.State==EntityState.Modified))
         {e.Entity.Version=checked(e.Property(x=>x.Version).OriginalValue+1);e.Entity.GeaendertAm=DateTimeOffset.UtcNow;}
         }

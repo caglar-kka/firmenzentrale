@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Betriebsplattform.Web.Akten;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Betriebsplattform.Web.Persistenz;
 
@@ -9,6 +10,7 @@ public sealed partial class FirmenDaten
     public async Task<DokumentDatensatz> DokumentHinzufuegen(byte[] bytes,string name,string mime,string? akte,IDokumentdateien dateien,CancellationToken ct=default)
     {
         var gelesen=new Dokumentpruefung().Pruefen(bytes,name,mime);var hash=Convert.ToHexString(SHA256.HashData(bytes));
+        if(pilot?.Aktiv==true)await (scanner??new Betriebsplattform.Web.Sicherheit.NichtKonfigurierterScanner()).Freigeben(bytes,ct);
         if(akte is not null){var a=await Finden<AkteDatensatz>(akte,ct);if(a.Status=="Archiviert")throw new Arbeitsfehler("Bitte eine aktive Akte wählen.");}
         var alt=await db.Dokumente.SingleOrDefaultAsync(d=>d.Hash==hash,ct);
         if(alt is not null){
@@ -20,10 +22,25 @@ public sealed partial class FirmenDaten
         var d=new DokumentDatensatz{Titel=Path.GetFileNameWithoutExtension(name).Replace('_',' '),Dateiname=name,StorageKey=Guid.NewGuid().ToString("N"),Inhaltstyp=gelesen.Inhaltstyp,Groesse=bytes.Length,Hash=hash,Vorschau=gelesen.Vorschau,Text=gelesen.Text,Textmethode=gelesen.Textmethode,Status=akte is null?"Zur Prüfung":"Zugeordnet"};
         d.Suchtext=Normal(d.Titel+" "+d.Dateiname);if(d.Suchtext.Length>1000)d.Suchtext=d.Suchtext[..1000];
         d.Titel=Arbeitsregeln.Text(d.Titel,"Dokumenttitel",160);await dateien.Speichern(d.StorageKey,bytes,ct);
+        var commitBegonnen=false;
+        try{
         await using var tx=await db.Database.BeginTransactionAsync(ct);
         db.Dokumente.Add(d);if(akte is not null)db.Dokumentzuordnungen.Add(new(){DokumentId=d.Id,AkteId=akte});
         db.Dokumentaktivitaeten.Add(new(){DokumentId=d.Id,AkteId=akte,Text="Dokument eingegangen",Kanal="Upload",Benutzer=Arbeitskontext.Benutzer});
-        await db.SaveChangesAsync(ct);if(akte is not null){await KontaktangabenErkennen(d,akte,ct);await db.SaveChangesAsync(ct);}await tx.CommitAsync(ct);return d;
+        await db.SaveChangesAsync(ct);if(akte is not null){await KontaktangabenErkennen(d,akte,ct);await db.SaveChangesAsync(ct);}commitBegonnen=true;await tx.CommitAsync(ct);return d;
+        }catch{
+            // Transaction disposal/rollback precedes compensation, including cancellation.
+            if(commitBegonnen){
+                // A lost commit acknowledgement must never delete a potentially committed original.
+                await using var pruefung=new FirmenDbContext((DbContextOptions<FirmenDbContext>)db.GetService<Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptions>());
+                try{if(await pruefung.Dokumente.AsNoTracking().AnyAsync(x=>x.StorageKey==d.StorageKey,CancellationToken.None))throw new Arbeitsfehler("Bitte den Dokumenteingang aktualisieren und den gespeicherten Stand prüfen.",409);}
+                catch(Arbeitsfehler){throw;}
+                catch(Exception){throw new Arbeitsfehler("Der Speicherabschluss konnte nicht bestätigt werden. Bitte die Dokumentablage prüfen, bevor Sie die Datei erneut hochladen.",503);}
+            }
+            try{await dateien.Entfernen(d.StorageKey,CancellationToken.None);}
+            catch(Exception){throw new Arbeitsfehler("Das Dokument wurde nicht übernommen. Die Dokumentablage muss vor einem erneuten Versuch geprüft werden.",503);}
+            throw;
+        }
     }
     public async Task<DokumentDatensatz> Erstzuordnen(string id,Zuordnung e,CancellationToken ct=default)
     {

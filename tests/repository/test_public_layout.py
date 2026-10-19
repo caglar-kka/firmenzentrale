@@ -9,6 +9,20 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 PUBLIC_FILES = {
+    'src/backend/Betriebsplattform.Web/Betrieb/Betriebsverwaltung.cs',
+    'src/backend/Betriebsplattform.Web/Betrieb/Dokumentbestand.cs',
+    'src/backend/Betriebsplattform.Web/Betrieb/Sicherung.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/Migrationen/20261019114242_PilotSecurity.Designer.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/Migrationen/20261019114242_PilotSecurity.cs',
+    'src/backend/Betriebsplattform.Web/Persistenz/Pilotmodell.cs',
+    'src/backend/Betriebsplattform.Web/Sicherheit/Anmeldung.cs',
+    'src/backend/Betriebsplattform.Web/Sicherheit/Malwarepruefung.cs',
+    'src/backend/Betriebsplattform.Web/Sicherheit/Pilotzugriff.cs',
+    'src/frontend/src/Anmeldung.tsx',
+    'src/frontend/src/Benutzerverwaltung.tsx',
+    'src/frontend/src/auth.ts',
+    'src/frontend/tests/anmeldung.test.mjs',
+    'tests/backend/Betriebsplattform.Rechnungen.Tests/Mvp02BSicherheitTests.cs',
     'src/backend/Betriebsplattform.Web/Persistenz/Arbeitsaktionen.cs',
     'src/backend/Betriebsplattform.Web/Persistenz/Datensaetze.cs',
     'src/backend/Betriebsplattform.Web/Persistenz/Dokumentdateien.cs',
@@ -187,6 +201,7 @@ class PublicLayoutTests(unittest.TestCase):
             for target in re.findall(r'\[[^\]]+\]\(([^)]+)\)', text):
                 # Reviewed primary-source citations are references, never build dependencies.
                 if target in {
+                    'https://learn.microsoft.com/en-us/defender-endpoint/command-line-arguments-microsoft-defender-antivirus',
                     'https://github.com/advisories/GHSA-68fv-2mgg-jv7q',
                     'https://github.com/vitejs/vite/security/advisories/GHSA-rq7h-c2jc-7f22',
                     'https://www.bundesnetzagentur.de/DE/Fachthemen/Telekommunikation/Nummerierung/DramaNumbers/artikel.html',

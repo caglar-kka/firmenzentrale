@@ -15,7 +15,9 @@ public sealed class Dokumentpruefung : IDocumentTextExtractor
     public Dateiergebnis Pruefen(byte[] bytes, string dateiname, string mime)
     {
         if (bytes.Length is 0 or > MaxBytes) throw new Arbeitsfehler("Bitte eine Datei bis 20 MB auswählen.");
-        if (dateiname.Length is 0 or > 180 || dateiname.Any(c => char.IsControl(c) || c is '/' or '\\' or ':'))
+        if (dateiname.Length is 0 or > 180 || dateiname.EndsWith(' ') || dateiname.EndsWith('.')
+            || dateiname.Any(c => char.IsControl(c) || "<>:\"/\\|?*".Contains(c))
+            || Regex.IsMatch(dateiname.Split('.')[0], @"\A(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])\z",RegexOptions.IgnoreCase|RegexOptions.CultureInvariant))
             throw new Arbeitsfehler("Der Dateiname ist nicht zulässig.");
         var ext = Path.GetExtension(dateiname).ToLowerInvariant();
         var erwartet = ext switch {
