@@ -11,6 +11,7 @@ public static class ApiAnwendung
         Arbeitsmodule? module = null, ILesezugriff? leserechte = null, Arbeitsumgebung? umgebung = null, IArbeitsrechte? arbeitsrechte = null,System.Security.Cryptography.X509Certificates.X509Certificate2? testZertifikat=null)
     {
         var builder = WebApplication.CreateBuilder(args.Where(a => a is not ("--scan-demo" or "--diagnose")).ToArray());
+        if(Startmodus.Vorbereiten(builder,port,frontendVerzeichnis) is {} einrichtung)return einrichtung;
         var persistenz=Persistenz.Persistenzkonfiguration.Lesen(builder.Configuration);
         if(persistenz.Provider=="PostgreSql")return Persistenz.PostgreSqlHost.Erstellen(builder,persistenz,port,frontendVerzeichnis,module,leserechte,arbeitsrechte,testZertifikat);
         if(builder.Configuration.GetValue<bool>("FirmenZentrale:Security:Enabled"))throw new InvalidOperationException("Pilot authentication requires PostgreSQL; no Demo fallback.");
@@ -41,7 +42,20 @@ public static class ApiAnwendung
         });
         builder.Services.ConfigureHttpJsonOptions(o => {o.SerializerOptions.Converters.Add(new JsonStringEnumConverter());o.SerializerOptions.MaxDepth=16;o.SerializerOptions.UnmappedMemberHandling=JsonUnmappedMemberHandling.Disallow;});
         var app = builder.Build();
-        app.MapGet("/api/auth/session",()=>new{aktiv=false});
+        var vorschau=builder.Configuration["FirmenZentrale:Startmodus"]=="Vorschau";
+        app.Use(async(c,next)=>{
+            if(vorschau){
+                if(c.Connection.RemoteIpAddress is not {} ip||!IPAddress.IsLoopback(ip)||c.Request.Host.Host is not ("127.0.0.1" or "localhost" or "[::1]")){c.Response.StatusCode=403;return;}
+                if((c.Request.Path.StartsWithSegments("/api/auth")&&c.Request.Path!="/api/auth/session")||c.Request.Path.StartsWithSegments("/api/admin")||c.Request.Path.StartsWithSegments("/api/aufgaben")){c.Response.StatusCode=403;await c.Response.WriteAsJsonAsync(new ApiFehler("Nur Vorschau: echte Konten- und Aufgaben-APIs sind hier gesperrt."));return;}
+            }
+            await next();
+        });
+        app.MapGet("/api/auth/session",()=>new{aktiv=false,vorschau});
+        app.MapGet("/api/organisation",()=>Organisation.Lesen(builder.Configuration));
+        if(vorschau){
+            app.MapGet("/api/posteingang/beispiele",()=>SynthetischeEingaenge.Schluessel);
+            app.MapGet("/api/posteingang/beispiele/{fall}",(string fall)=>{try{var f=SynthetischeEingaenge.Datei(fall);return Results.File(f.Bytes,f.Name.EndsWith(".pdf")?"application/pdf":"text/plain",f.Name);}catch(Arbeitsfehler){return Results.NotFound();}});
+        }
         var bestand = new DemoImportbestand();
         Webschutz.Konfigurieren(app,aktiveModule);
         Uebersicht Uebersicht() => akten.KontakteAnwenden(bestand.Uebersicht());

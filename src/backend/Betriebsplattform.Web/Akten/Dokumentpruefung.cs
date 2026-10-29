@@ -100,6 +100,14 @@ public sealed class Dokumentpruefung : IDocumentTextExtractor
         if(!dimension)throw new InvalidDataException();return new("image/jpeg","bild","","Scanbild; OCR nicht eingerichtet");
     }
     private static void Dimension(uint w,uint h){if(w is 0 or >10000||h is 0 or >10000||(ulong)w*h>20000000)throw new Arbeitsfehler("Das Bild überschreitet die erlaubten Abmessungen.");}
+    private static bool UnerlaubtesOfficeZiel(string ziel,ZipArchive paket)
+    {
+        if(ziel.Contains(':'))return true;
+        if(!ziel.StartsWith('/'))return false; // Existing relative parts are not executed or opened as filesystem paths.
+        var teil=ziel[1..];
+        return teil.Contains('\\')||teil.Contains('%')||teil.Contains('?')||teil.Contains('#')
+            ||teil.Split('/').Any(s=>s is "" or "." or "..")||paket.GetEntry(teil) is null;
+    }
     private static Dateiergebnis Office(byte[] b,string ext,string mime)
     {
         using var zip=new ZipArchive(new MemoryStream(b),ZipArchiveMode.Read);
@@ -116,7 +124,7 @@ public sealed class Dokumentpruefung : IDocumentTextExtractor
             using var xml=e.Open();using var reader=XmlReader.Create(xml,settings);
             var doc=XDocument.Load(reader);
             if(doc.Descendants().Attributes().Any(a=>(a.Name.LocalName=="TargetMode"&&a.Value.Equals("External",StringComparison.OrdinalIgnoreCase))
-                ||(a.Name.LocalName=="Target"&&(a.Value.Contains(':')||a.Value.StartsWith('/')))
+                ||(a.Name.LocalName=="Target"&&UnerlaubtesOfficeZiel(a.Value,zip))
                 ||a.Value.Contains("macroEnabled",StringComparison.OrdinalIgnoreCase)||a.Value.Contains("vbaProject",StringComparison.OrdinalIgnoreCase)))throw new InvalidDataException();
             if(e.FullName==(ext==".docx"?"word/document.xml":"xl/workbook.xml"))inhalt=doc;
         }

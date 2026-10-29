@@ -8,6 +8,7 @@
     <!-- Vite assets are served explicitly by Webschutz; no SDK manifest with source-machine paths. -->
     <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
+  <ItemGroup><InternalsVisibleTo Include="Betriebsplattform.Rechnungen.Tests" /></ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11" PrivateAssets="all" />
@@ -16,10 +17,26 @@
     <ProjectReference Include="../Betriebsplattform.Import/Betriebsplattform.Import.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="../../frontend/dist/**/*" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <FrontendInput Include="../../frontend/src/**/*;../../frontend/public/**/*;../../frontend/index.html;../../frontend/package*.json;../../frontend/tsconfig*.json;../../frontend/vite.config.*" />
+    <UpToDateCheckInput Include="@(FrontendInput)" />
+    <UpToDateCheckOutput Include="../../frontend/dist/index.html" />
   </ItemGroup>
+  <Target Name="BuildCurrentFrontend" BeforeTargets="AssignTargetPaths" Condition="'$(DesignTimeBuild)' != 'true' and '$(BuildFrontend)' != 'false'"
+          Inputs="@(FrontendInput)" Outputs="../../frontend/dist/index.html">
+    <Error Condition="!Exists('../../frontend/node_modules/typescript/bin/tsc')" Text="Frontend dependencies missing. Follow CONTRIBUTING.md; no automatic downloads are performed." />
+    <Exec WorkingDirectory="../../frontend" Command="npm run build" />
+  </Target>
+  <Target Name="IncludeCurrentFrontend" BeforeTargets="AssignTargetPaths" DependsOnTargets="BuildCurrentFrontend" Condition="'$(DesignTimeBuild)' != 'true'">
+    <ItemGroup>
+      <_FrontendAsset Include="../../frontend/dist/**/*" />
+      <Content Include="@(_FrontendAsset)" Link="wwwroot/%(_FrontendAsset.RecursiveDir)%(_FrontendAsset.Filename)%(_FrontendAsset.Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
   <Target Name="RequireFrontendForPublish" BeforeTargets="Publish">
     <Error Condition="!Exists('../../frontend/dist/index.html')" Text="Build the frontend before publishing the local host." />
+  </Target>
+  <Target Name="CreateLocalLaunchProfiles" BeforeTargets="Build" Condition="!Exists('Properties/launchSettings.json')">
+    <Copy SourceFiles="Properties/launchSettings.template.json" DestinationFiles="Properties/launchSettings.json" />
   </Target>
   <Target Name="RemoveObsoleteStaticAssetsManifest" BeforeTargets="CopyFilesToOutputDirectory">
     <Delete Files="$(TargetDir)$(AssemblyName).staticwebassets.runtime.json;$(TargetDir)$(AssemblyName).staticwebassets.endpoints.json" />

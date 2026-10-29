@@ -1,4 +1,24 @@
-.studio {
+:root, .studio {
+  --schrift-registertitel: 1.25rem; --schrift-liste: 1rem; --schrift-listenkopf: .9375rem; --schrift-listenneben: .875rem; --zeilenhoehe-liste: 1.6;
+  --text: #12243d; --leise: #526780; --grund: #f2f6fc; --flaeche: #ffffff; --weich: #eaf2fc;
+  --akzent: #1463df; --akzent-dunkel: #104cac; --akzent-hell: #e9f1ff; --fokus: #1463df;
+  --rand: #d9e4f1; --eingaberand: #778ba5; --rail: #0f1b2d; --rail-text: #ffffff; --rail-leise: #bed0e7;
+  --rail-active: #12518a; --rail-hover: #1b3655; --rail-fokus: #76dcff; --rail-kante: #29d2ed; --rail-rand: #49627e;
+  --nachweis-bg: #edf4fc; --neutral-text: #405b78; --neutral-bg: #edf3f9;
+  --erfolg-text: #12644f; --erfolg-bg: #e5f5ee; --arbeit-text: #805017; --arbeit-bg: #fff3e2;
+  --warnung-text: #745810; --warnung-bg: #fff7e3; --fehler-text: #b42338; --fehler-bg: #fcecef;
+  --kopf-bg: #ffffff; --kopf-text: #12243d; --kopf-leise: #526780; --kopf-badge: #eaf2fc;
+  --tabellenkopf: #f4f8fd; --tabellentext: #405b78; --detail: #edf4fc; --zeile-alternativ: #f7faff;
+  --zweite-text: #075f70; --zweite-farbe: #087f93; --zweite-hell: #e2f7fa;
+  --cyan: #29d2ed; --teal: #076f80; --teal-hell: #e2f7fa; --ki: #7042c2; --ki-hell: #f1eafd;
+  --hero: #0c2246; --hero-linie: #398af2; --hero-text: #d9eaff; --chart-blau: #1463df; --chart-teal: #087f93;
+  --schatten: 0 4px 20px rgb(17 54 100 / 5%); --schatten-dialog: 0 20px 80px rgb(15 27 45 / 22%);
+  --szene-nacht: #061328; --szene-himmel: #142d56; --szene-horizont: #697aa5; --szene-stahl: #233d60; --szene-ville: #0d2241; --szene-fenster: #9bbddb; --szene-globus: #55a8ff; --szene-licht: #e1fbff;
+  --disabled-bg: #edf2f8; --disabled-text: #526780;
+}
+
+/* R?ckkehr: data-theme="legacy" an .studio setzen. Nur Palette, keine zweite Oberfl?che. */
+.studio[data-theme="legacy"] {
   --schrift-registertitel: 1.25rem; --schrift-liste: 1.0625rem; --schrift-listenkopf: 1rem; --schrift-listenneben: .9375rem; --zeilenhoehe-liste: 1.6;
   --text: #242631; --leise: #5d626f; --grund: #f6f6f3; --flaeche: #ffffff; --weich: #f0f0f5;
   --akzent: #5745c5; --akzent-dunkel: #423292; --akzent-hell: #efedfb; --fokus: #5745c5;

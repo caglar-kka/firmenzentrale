@@ -70,6 +70,20 @@ public sealed class Mvp02APersistenzTests
         await using(var db=f.Context()){var n=await new FirmenDaten(db).NotizSpeichern("a",id,new("Rückruf geändert","Noch intern",1));Assert.Equal(2,n.Version);}
         await using(var db=f.Context()){var s=new FirmenDaten(db);await Assert.ThrowsAsync<Arbeitsfehler>(()=>s.NotizSpeichern("a",id,new("Veraltet","Text",1)));var n=await s.NotizSpeichern("a",id,new(null,null,2),true);Assert.True(n.Archiviert);Assert.Equal(3,await db.Notizrevisionen.CountAsync());}
     }
+    [Fact] public async Task NeueFirmaBrauchtStrukturiertePflichtadresse()
+    {
+        await using var f=await Daten.Neu();await using var db=f.Context();
+        var e=new Kontakteingabe("Synthetische Pflichtfirma","Firma",null,"","","",[new("Telefon","+49 30 123456",true),new("E-Mail","intern@pflicht.invalid",true)]);
+        var error=await Assert.ThrowsAsync<Arbeitsfehler>(()=>new FirmenDaten(db).KontaktSpeichern(null,e));
+        Assert.Contains("Straße",error.Message);Assert.Empty(await db.Kontakte.Where(k=>k.Name==e.Name).ToArrayAsync());
+    }
+
+    [Theory]
+    [InlineData("+49 (0)30 123-456",true)][InlineData("+1 202.555.0123",true)][InlineData("0044 20 1234 5678",true)][InlineData("030/123456",true)][InlineData("123abc",false)][InlineData("mail@test.invalid",false)][InlineData("++49 123456",false)]
+    public void InternationaleTelefonwerteOhneBuchstaben(string wert,bool erwartet)=>Assert.Equal(erwartet,Kontaktvalidierung.Telefon(wert));
+    [Theory]
+    [InlineData("12345","DE",true)][InlineData("AB123","DE",false)][InlineData("1234","AT",true)][InlineData("8001","CH",true)][InlineData("SW1A 1AA","GB",true)][InlineData("K1A 0B1","CA",true)]
+    public void PostleitzahlenFolgenDemLand(string plz,string land,bool erwartet)=>Assert.Equal(erwartet,Kontaktvalidierung.Postleitzahl(plz,land));
     [Fact] public async Task Mvp02AKontakteBleibenStrukturiertUndDublettenWerdenNichtGemergt(){
         await using var f=await Daten.Neu();var eingabe=new Kontakteingabe("Fennquarz Büro","Firma",null,"","","",[new("Telefon","+49 30 23125 099",true),new("E-Mail","buero@fennquarz.invalid",true)],Strasse:"Musterweg",Hausnummer:"8",Plz:"12345",Ort:"Beispielort",Land:"DE");
         string id;await using(var db=f.Context()){var k=await new FirmenDaten(db).KontaktSpeichern(null,eingabe);id=k.Id;Assert.Equal("8",k.Hausnummer);Assert.Equal("Musterweg",k.Strasse);Assert.Equal(2,k.Werte.Count);}
@@ -88,7 +102,7 @@ public sealed class Mvp02APersistenzTests
     [Fact] public async Task Mvp02ADateispeicherLehntUngeeigneteKeysVorDateizugriffAb(){var f=new LokaleDokumentdateien(null);await Assert.ThrowsAsync<Arbeitsfehler>(()=>f.Lesen("../fremd",default));}
 
     [Fact] public async Task Mvp02AKontaktwertAenderungErhoehtVersionUndVerhindertVeralteteBearbeitung(){
-        await using var f=await Daten.Neu();var e=new Kontakteingabe("Fennwelle Büro","Firma",null,"","","",[new("Telefon","+49 30 23125 077",true),new("E-Mail","post@fennwelle.invalid",true)],Strasse:"Prüfweg",Hausnummer:"9",Ort:"Beispielort");
+        await using var f=await Daten.Neu();var e=new Kontakteingabe("Fennwelle Büro","Firma",null,"","","",[new("Telefon","+49 30 23125 077",true),new("E-Mail","post@fennwelle.invalid",true)],Strasse:"Prüfweg",Hausnummer:"9",Plz:"12345",Ort:"Beispielort",Land:"DE");
         string id;await using(var db=f.Context())id=(await new FirmenDaten(db).KontaktSpeichern(null,e)).Id;
         var neu=e with{Version=1,Werte=[new("Telefon","+49 30 23125 078",true),new("E-Mail","post@fennwelle.invalid",true)]};
         await using(var db=f.Context()){var k=await new FirmenDaten(db).KontaktSpeichern(id,neu);Assert.Equal(2,k.Version);Assert.Contains("Prüfweg",k.Anschrift);Assert.Contains(k.Werte,w=>!w.Aktiv&&w.Wert.EndsWith("077"));}
@@ -96,6 +110,24 @@ public sealed class Mvp02APersistenzTests
     }
     [Fact] public async Task Mvp02ASynchronesSaveVerwendetEbenfallsConcurrency(){
         await using var f=await Daten.Neu();await using var a=f.Context();await using var b=f.Context();var alt=await a.Akten.SingleAsync(x=>x.Id=="a");var neu=await b.Akten.SingleAsync(x=>x.Id=="a");neu.Status="Erledigt";b.SaveChanges();Assert.Equal(2,neu.Version);alt.Status="Archiviert";Assert.Throws<DbUpdateConcurrencyException>(()=>a.SaveChanges());
+    }
+    [Fact] public async Task SucheErhaeltTrefferUndLetzteSeiteJenseitsVon200Kandidaten(){
+        await using var f=await Daten.Neu();await using var db=f.Context();await Suchgrenze(db);
+    }
+    internal static async Task Suchgrenze(FirmenDbContext db){
+        var prefix=Guid.NewGuid().ToString("N");var kunde=prefix+"k";var anbieter=prefix+"a";var kat=prefix+"c";
+        db.Kontakte.AddRange(new KontaktDatensatz{Id=kunde,Name="Pruefkunde",Suchname="pruefkunde"},new KontaktDatensatz{Id=anbieter,Name="Pruefanbieter",Suchname="pruefanbieter"});
+        db.Kategorien.Add(new(){Id=kat,Name="Pruefkategorie",Suchname="pruefkategorie"});
+        for(var i=0;i<225;i++){
+            var suffix=i.ToString("D3");var id=prefix+suffix;
+            db.Kontakte.Add(new(){Id=id,Name="Suchgrenze "+suffix,Suchname="suchgrenze "+suffix});
+            db.Akten.Add(new(){Id=id,Titel="Suchgrenze "+suffix,Suchtext="suchgrenze "+suffix,FirmaId=kunde,KategorieId=kat});
+            db.Rechnungen.Add(new(){Id=Guid.NewGuid().ToString("N"),AkteId=id,AusstellerId=anbieter,EmpfaengerId=kunde,Nummer="SUCHGRENZE-"+suffix,Datum=new(2026,10,20),Betrag=1,Beleg="Synthetischer Suchtest",Quelle="Suchgrenze",Richtung="Ausgang"});
+        }
+        await db.SaveChangesAsync();var d=new FirmenDaten(db);
+        var kontakte=await d.KontakteSuchen(new(Text:"Suchgrenze"),11);Assert.Equal(225,kontakte.Anzahl);Assert.Equal(5,kontakte.Eintraege.Length);
+        var akten=System.Text.Json.JsonSerializer.SerializeToElement(await d.AktenSuchen("Suchgrenze",null,null,"titel",false,11,true,new LokalerDemozugriff()));Assert.Equal(225,akten.GetProperty("anzahl").GetInt32());Assert.Equal(5,akten.GetProperty("eintraege").GetArrayLength());
+        var rechnungen=await d.Rechnungsuebersicht(11,new LokalerDemozugriff(),filter:new(Text:"Suchgrenze"));Assert.Equal(225,rechnungen.Anzahl);Assert.Equal(5,rechnungen.Rechnungen.Count);
     }
     [Fact] public async Task Mvp02AKontaktlistenPaginierenSuchenUndZaehlenServerseitig(){
         await using var f=await Daten.Neu();await using var db=f.Context();for(var i=0;i<45;i++)db.Kontakte.Add(new(){Id="kontakt"+i,Name="Prüffirma "+i.ToString("D2"),Suchname="prueffirma "+i.ToString("D2")});await db.SaveChangesAsync();var d=new FirmenDaten(db);
@@ -479,6 +511,8 @@ public sealed class Mvp02B1StorageTests
             await storage.Speichern(meta.StorageKey,Bytes("API "+run),default);
         }finally{second.Client.Dispose();await second.App.StopAsync();await second.App.DisposeAsync();}
     }
+
+
 }
 
 internal sealed class TestContextFactory(DbContextOptions<FirmenDbContext> options):IDbContextFactory<FirmenDbContext>{public FirmenDbContext CreateDbContext()=>new(options);}

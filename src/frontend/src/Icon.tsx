@@ -2,6 +2,17 @@ import type { ReactNode } from 'react';
 
 // Eigene einfache Geometrien; keine externen Assets, Fonts oder Iconpakete.
 const formen = {
+  flagge: <><path d="M5 22V3m0 1c5-4 8 4 15 0v10c-7 4-10-4-15 0"/><path d="M6 5c4-2 8 4 13 1v6c-5 3-9-3-13-1Z" fill="currentColor" stroke="none"/></>,
+  kalender: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6m10-6v6M3 11h18M7 15h2m3 0h2m3 0h1"/></>,
+  uhr: <><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></>,
+  prozess: <><circle cx="12" cy="4" r="2"/><circle cx="4" cy="19" r="2"/><circle cx="20" cy="19" r="2"/><circle cx="12" cy="12" r="2"/><path d="M12 6v4m-2 3-5 4m9-4 5 4"/></>,
+  bericht: <><path d="M5 3h11l4 4v14H5Z"/><path d="M8 17v-4m4 4V9m4 8v-6"/></>,
+  dashboard: <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="11" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 18h7m-7 3h7"/></>,
+  personen: <><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5v2"/></>,
+  aufgaben: <><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M9 3h6v3H9zm-2 10 3 3 7-7"/></>,
+  akte: <path d="M3 7V4h6l3 3h9v13H3V7Z"/>,
+  einstellungen: <><path d="m9 3-1 3-3 1v4l-2 1 2 2v4l3 1 1 2h5l1-2 3-1v-4l2-2-2-1V7l-3-1-1-3Z"/><circle cx="11.5" cy="12" r="3"/></>,
+  ki: <><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/></>,
   profil: <><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></>,
   firma: <><path d="M4 21V3h12v18M16 10h4v11H2M8 7h4M8 11h4M8 15h4M9 21v-3h2v3"/></>,
   notiz: <><path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h5" /></>,

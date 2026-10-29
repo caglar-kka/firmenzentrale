@@ -1,0 +1,40 @@
+{
+  "profiles": {
+    "MBOP – dauerhaft isoliert": {
+      "commandName": "Project",
+      "commandLineArgs": "--isoliert=private/arbeitsumgebung/ready.json",
+      "launchBrowser": true,
+      "applicationUrl": "https://127.0.0.1:5181",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "Betriebsplattform.Web": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "applicationUrl": "http://127.0.0.1:5180",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "commandLineArgs": "--FirmenZentrale:Startmodus=Vorschau --FirmenZentrale:Persistence:Provider=Demo --FirmenZentrale:Security:Enabled=false"
+    },
+    "Demo (nur Beispieldaten)": {
+      "commandName": "Project",
+      "commandLineArgs": "--FirmenZentrale:Startmodus=Demo --FirmenZentrale:Persistence:Provider=Demo --FirmenZentrale:Security:Enabled=false",
+      "launchBrowser": true,
+      "applicationUrl": "http://127.0.0.1:5180",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "Persoenliche Anmeldung (HTTPS-Konfiguration erforderlich)": {
+      "commandName": "Project",
+      "commandLineArgs": "--FirmenZentrale:Startmodus=Anmeldung",
+      "launchBrowser": true,
+      "applicationUrl": "http://127.0.0.1:5180",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

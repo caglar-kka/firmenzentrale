@@ -1,3 +1,9 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
@@ -23,6 +29,49 @@ public sealed class Mvp02BSicherheitTests
     private static string Root()=>Path.Combine(Path.GetTempPath(),"FirmenZentrale-PilotTests",Guid.NewGuid().ToString("N"));
     private static string Secret()=>Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     private static string Hash(byte[] bytes)=>Convert.ToHexString(SHA256.HashData(bytes));
+    private sealed class WindowsAuthFactAttribute:FactAttribute{public WindowsAuthFactAttribute(){if(!OperatingSystem.IsWindows())Skip="Windows DPAPI authentication host required.";}}
+    [WindowsAuthFact] public async Task EigenesPasswortHttpBehaeltAktuelleUndWiderruftAndereSitzung(){
+        await using var cn=new SqliteConnection("Data Source=:memory:");await cn.OpenAsync();var dbOptions=new DbContextOptionsBuilder<FirmenDbContext>().UseSqlite(cn).Options;var alt=Secret();var neu=Secret();
+        await using(var db=new FirmenDbContext(dbOptions)){await db.Database.EnsureCreatedAsync();await Anmeldung.Anlegen(db,Anmeldung.Passwortdienst(),new("muster","Musterperson",alt,"Mitarbeiter"));}
+        using var rsa=RSA.Create(2048);var req=new CertificateRequest("CN=localhost",rsa,HashAlgorithmName.SHA256,RSASignaturePadding.Pkcs1);var san=new SubjectAlternativeNameBuilder();san.AddIpAddress(IPAddress.Loopback);req.CertificateExtensions.Add(san.Build());
+        using var generated=req.CreateSelfSigned(DateTimeOffset.UtcNow.AddMinutes(-1),DateTimeOffset.UtcNow.AddHours(1));using var cert=X509CertificateLoader.LoadPkcs12(generated.Export(X509ContentType.Pkcs12),null,X509KeyStorageFlags.UserKeySet);
+        var builder=WebApplication.CreateBuilder();builder.Logging.ClearProviders();builder.WebHost.ConfigureKestrel(o=>o.Listen(IPAddress.Loopback,0,l=>l.UseHttps(cert)));
+        builder.Services.AddDbContext<FirmenDbContext>(o=>o.UseSqlite(cn));builder.Services.ConfigureHttpJsonOptions(o=>o.SerializerOptions.UnmappedMemberHandling=System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow);
+        var root=Root();Directory.CreateDirectory(root);var pilot=new Pilotoptionen(true,null,null);Anmeldung.Dienste(builder,pilot,root);
+        await using var app=builder.Build();Webschutz.Konfigurieren(app,new Arbeitsmodule());Anmeldung.Pipeline(app,pilot);Anmeldung.Endpunkte(app,pilot);app.MapGet("/api/passwort-probe",()=>Results.Ok()).RequireAuthorization();await app.StartAsync();
+        try{
+            var url=new Uri(app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single());
+            HttpClient Client(){var h=new HttpClientHandler{ServerCertificateCustomValidationCallback=(_,c,_,_)=>c?.GetCertHashString()==cert.GetCertHashString()};var c=new HttpClient(h){BaseAddress=url};c.DefaultRequestHeaders.Add("Origin",url.GetLeftPart(UriPartial.Authority));c.DefaultRequestHeaders.Add("X-Arbeitsaktion","1");return c;}
+            async Task Csrf(HttpClient c){var v=await c.GetFromJsonAsync<JsonElement>("/api/auth/session");c.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");c.DefaultRequestHeaders.Add("X-CSRF-TOKEN",v.GetProperty("csrf").GetString());}
+            async Task Login(HttpClient c,string pass){await Csrf(c);Assert.Equal(HttpStatusCode.OK,(await c.PostAsJsonAsync("/api/auth/login",new{login="muster",passwort=pass})).StatusCode);await Csrf(c);}
+            using var a=Client();using var b=Client();using var anon=Client();await Csrf(anon);Assert.Equal(HttpStatusCode.Unauthorized,(await anon.PostAsJsonAsync("/api/auth/passwort",new{bisherigesPasswort=alt,neuesPasswort=neu})).StatusCode);
+            await Login(a,alt);await Login(b,alt);a.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");Assert.Equal(HttpStatusCode.BadRequest,(await a.PostAsJsonAsync("/api/auth/passwort",new{bisherigesPasswort=alt,neuesPasswort=neu})).StatusCode);await Csrf(a);
+            Assert.Equal(HttpStatusCode.BadRequest,(await a.PostAsJsonAsync("/api/auth/passwort",new{bisherigesPasswort=alt,neuesPasswort=neu,id="fremd"})).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest,(await a.PostAsJsonAsync("/api/auth/passwort",new{bisherigesPasswort=Secret(),neuesPasswort=neu})).StatusCode);Assert.Equal(HttpStatusCode.OK,(await b.GetAsync("/api/passwort-probe")).StatusCode);
+            Assert.Equal(HttpStatusCode.OK,(await a.PostAsJsonAsync("/api/auth/passwort",new{bisherigesPasswort=alt,neuesPasswort=neu})).StatusCode);Assert.Equal(HttpStatusCode.OK,(await a.GetAsync("/api/passwort-probe")).StatusCode);Assert.Equal(HttpStatusCode.Unauthorized,(await b.GetAsync("/api/passwort-probe")).StatusCode);
+            await Csrf(b);Assert.Equal(HttpStatusCode.Unauthorized,(await b.PostAsJsonAsync("/api/auth/login",new{login="muster",passwort=alt})).StatusCode);await Login(b,neu);
+        }finally{await app.StopAsync();}
+    }
+
+    [Fact] public async Task EigenesPasswortPrueftBisherigesUndWiderruftAlteSitzungen(){
+        await using var cn=new SqliteConnection("Data Source=:memory:");await cn.OpenAsync();var options=new DbContextOptionsBuilder<FirmenDbContext>().UseSqlite(cn).Options;
+        await using var db=new FirmenDbContext(options);await db.Database.EnsureCreatedAsync();var hasher=Anmeldung.Passwortdienst();var alt=Secret();var neu=Secret();
+        var u=await Anmeldung.Anlegen(db,hasher,new("muster","Musterperson",alt,"Mitarbeiter"));var hash=u.PasswortHash;var stamp=u.Sicherheitskennung;var version=u.Version;
+        var wrong=await Assert.ThrowsAsync<Arbeitsfehler>(()=>Anmeldung.PasswortAendern(db,hasher,u.Id,new(Secret(),neu)));Assert.Equal(400,wrong.Status);
+        foreach(var bad in new[]{"kurz",new string(' ',20),new string('x',129),alt})await Assert.ThrowsAsync<Arbeitsfehler>(()=>Anmeldung.PasswortAendern(db,hasher,u.Id,new(alt,bad)));
+        Assert.Equal(hash,u.PasswortHash);Assert.Equal(stamp,u.Sicherheitskennung);Assert.Empty(await db.Sicherheitsereignisse.ToArrayAsync());
+        await Anmeldung.PasswortAendern(db,hasher,u.Id,new(alt,neu));Assert.Equal(version+1,u.Version);Assert.NotEqual(stamp,u.Sicherheitskennung);
+        Assert.NotEqual(PasswordVerificationResult.Failed,hasher.VerifyHashedPassword(u,u.PasswortHash,neu));Assert.Equal(PasswordVerificationResult.Failed,hasher.VerifyHashedPassword(u,u.PasswortHash,alt));
+        Assert.False(await db.Benutzer.AnyAsync(x=>x.Id==u.Id&&x.Aktiv&&x.Sicherheitskennung==stamp));Assert.True(await db.Benutzer.AnyAsync(x=>x.Id==u.Id&&x.Aktiv&&x.Sicherheitskennung==u.Sicherheitskennung));
+        var audit=Assert.Single(await db.Sicherheitsereignisse.ToArrayAsync());Assert.Equal(u.Id,audit.BenutzerId);Assert.DoesNotContain(neu,audit.Aktion);Assert.DoesNotContain(neu,new Passwortwechsel(alt,neu).ToString());Assert.Equal("Mitarbeiter",u.Rolle);
+        await using var a=new FirmenDbContext(options);await using var b=new FirmenDbContext(options);await b.Benutzer.SingleAsync(x=>x.Id==u.Id);
+        await Anmeldung.PasswortAendern(a,hasher,u.Id,new(neu,Secret()));await Assert.ThrowsAsync<DbUpdateConcurrencyException>(()=>Anmeldung.PasswortAendern(b,hasher,u.Id,new(neu,Secret())));
+        Assert.Equal(409,Persistenzfehler.Beschreiben(new DbUpdateConcurrencyException()).Status);
+        u.Aktiv=false;db.Entry(u).State=EntityState.Detached;
+        await using var final=new FirmenDbContext(options);var stored=await final.Benutzer.SingleAsync(x=>x.Id==u.Id);stored.Aktiv=false;stored.Version++;await final.SaveChangesAsync();
+        Assert.Equal(401,(await Assert.ThrowsAsync<Arbeitsfehler>(()=>Anmeldung.PasswortAendern(final,hasher,u.Id,new(neu,Secret())))).Status);
+    }
+
     [Fact] public async Task FrameworkPasswortHashUndBenutzervalidierung(){
         await using var cn=new SqliteConnection("Data Source=:memory:");await cn.OpenAsync();await using var db=new FirmenDbContext(new DbContextOptionsBuilder<FirmenDbContext>().UseSqlite(cn).Options);await db.Database.EnsureCreatedAsync();
         var hasher=new PasswordHasher<Benutzerkonto>();var password=Secret();var u=await Anmeldung.Anlegen(db,hasher,new("mitarbeiter","Beispiel Benutzer",password,"Mitarbeiter"));Assert.NotEqual(password,u.PasswortHash);Assert.NotEqual(PasswordVerificationResult.Failed,hasher.VerifyHashedPassword(u,u.PasswortHash,password));Assert.Equal(PasswordVerificationResult.Failed,hasher.VerifyHashedPassword(u,u.PasswortHash,Secret()));
@@ -74,6 +123,7 @@ public sealed class Mvp02BSicherheitTests
     [PilotLive]public async Task PostgreSql18BackupRestoreAuthRechteUndNegativfaelle(){
         // Normal application configuration provider: no secret values are emitted or written by this test.
         var cfg=new ConfigurationBuilder().AddUserSecrets(typeof(ApiAnwendung).Assembly,optional:true).AddEnvironmentVariables().Build();var admin=cfg.GetConnectionString("FirmenZentrale")??throw new InvalidOperationException("Local administrator configuration required.");var master=new Npgsql.NpgsqlConnectionStringBuilder(admin);Assert.Contains(master.Host,new[]{"127.0.0.1","localhost"});Assert.Equal(5432,master.Port);Assert.Equal("firmenzentrale_dev",master.Database);
+        master.Database="postgres";master.Pooling=false;master.IncludeErrorDetail=false;master.LogParameters=false;admin=master.ConnectionString; // Administration only; never open the configured main database.
         var run=Guid.NewGuid().ToString("N")[..12];var source="firmenzentrale_b2_"+run;var restored="firmenzentrale_restore_"+run;var dbRole="fz_app_"+run;var roleSecret=Secret().ToLowerInvariant();
         await using(var c=new Npgsql.NpgsqlConnection(admin)){await c.OpenAsync();await using var create=new Npgsql.NpgsqlCommand("CREATE DATABASE "+new Npgsql.NpgsqlCommandBuilder().QuoteIdentifier(source),c);await create.ExecuteNonQueryAsync();}
         master.Database=source;var sourceAdmin=master.ConnectionString;var baseRoot=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"FirmenZentrale","Development","pilot-gate",run);var storage=Path.Combine(baseRoot,"source");var backupRoot=Path.Combine(baseRoot,"backups");var restoreRoot=Path.Combine(baseRoot,"restored");var fs=new LokaleDokumentdateien(storage);await fs.StartAsync(default);
@@ -101,10 +151,19 @@ public sealed class Mvp02BSicherheitTests
 
             Assert.Equal(HttpStatusCode.NotFound,(await a.GetAsync("/api/dokumente/"+docb+"/datei")).StatusCode);
             Assert.Equal(HttpStatusCode.BadRequest,(await ac.PostAsJsonAsync("/api/admin/benutzer",new{login="unzulässig",anzeigename="Muster",passwort=Secret(),rolle="Mitarbeiter",securityStamp="einschleusen"})).StatusCode);
+            async Task<string> Aktenstand(){
+                await using var db=Db(sourceAdmin);
+                return System.Text.Json.JsonSerializer.Serialize(new{
+                    akten=await db.Akten.AsNoTracking().OrderBy(x=>x.Id).Select(x=>new{x.Id,x.Status,x.Version}).ToArrayAsync(),
+                    notizen=await db.Notizen.AsNoTracking().OrderBy(x=>x.Id).Select(x=>new{x.Id,x.AkteId,x.Betreff,x.Inhalt,x.Version}).ToArrayAsync()
+                });
+            }
+            var vorAbgewiesenenAktionen=await Aktenstand();
             Assert.Equal(HttpStatusCode.NotFound,(await a.PostAsJsonAsync("/api/akten/b/notizen",new{betreff="Unzulässig",inhalt="Keine Freigabe"})).StatusCode);
             using(var cross=Client(host.Url)){cross.DefaultRequestHeaders.Remove("Origin");cross.DefaultRequestHeaders.Add("Origin","https://example.invalid");Assert.Equal(HttpStatusCode.Forbidden,(await cross.GetAsync("/api/auth/session")).StatusCode);}
             a.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");Assert.Equal(HttpStatusCode.BadRequest,(await a.PostAsJsonAsync("/api/akten/a/bearbeitungsstatus",new{status="Erledigt",version=1})).StatusCode);await Csrf(a);
             Assert.Equal(HttpStatusCode.BadRequest,(await a.PostAsJsonAsync("/api/akten/a/bearbeitungsstatus",new{status="Erledigt",version=1,rolle="Administrator"})).StatusCode);
+            Assert.Equal(vorAbgewiesenenAktionen,await Aktenstand());
             Assert.Equal(HttpStatusCode.OK,(await b.PostAsJsonAsync("/api/akten/a/bearbeitungsstatus",new{status="In Bearbeitung",version=1})).StatusCode);Assert.Equal(HttpStatusCode.Conflict,(await a.PostAsJsonAsync("/api/akten/a/bearbeitungsstatus",new{status="Erledigt",version=1})).StatusCode);
             var note=await b.PostAsJsonAsync("/api/akten/a/notizen",new{betreff="Bearbeitung B",inhalt="Musteränderung"});Assert.Equal(HttpStatusCode.OK,note.StatusCode);Assert.Contains("Muster Mitarbeiter B",await note.Content.ReadAsStringAsync());
             Assert.Equal(HttpStatusCode.OK,(await b.PostAsJsonAsync("/api/auth/logout",new{})).StatusCode);Assert.Equal(HttpStatusCode.Unauthorized,(await b.GetAsync("/api/akten/a")).StatusCode);
@@ -119,7 +178,9 @@ public sealed class Mvp02BSicherheitTests
             }
             await using(var restricted=new Npgsql.NpgsqlConnection(appCs.ConnectionString)){await restricted.OpenAsync();await using var cmd=new Npgsql.NpgsqlCommand("CREATE TABLE forbidden_probe(id int)",restricted);var denied=await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>cmd.ExecuteNonQueryAsync());Assert.Equal("42501",denied.SqlState);}
 
-            using(var inactive=Client(host.Url)){await Csrf(inactive);Assert.Equal(HttpStatusCode.Unauthorized,(await inactive.PostAsJsonAsync("/api/auth/login",new{login="team-a",passwort=passwords[1]})).StatusCode);Assert.Equal(HttpStatusCode.TooManyRequests,(await inactive.PostAsJsonAsync("/api/auth/login",new{login="nichtvorhanden",passwort=Secret()})).StatusCode);}
+            // Independent account-revocation scenario gets a fresh limiter; production limits remain unchanged.
+            await host.App.StopAsync();await host.App.DisposeAsync();host=await Start(appCs.ConnectionString,storage);
+            using(var inactive=Client(host.Url)){await Csrf(inactive);Assert.Equal(HttpStatusCode.Unauthorized,(await inactive.PostAsJsonAsync("/api/auth/login",new{login="team-a",passwort=passwords[1]})).StatusCode);for(var attempt=0;attempt<9;attempt++)Assert.Equal(HttpStatusCode.Unauthorized,(await inactive.PostAsJsonAsync("/api/auth/login",new{login="nichtvorhanden",passwort=Secret()})).StatusCode);Assert.Equal(HttpStatusCode.TooManyRequests,(await inactive.PostAsJsonAsync("/api/auth/login",new{login="nichtvorhanden",passwort=Secret()})).StatusCode);}
             var tool=new Sicherung(Environment.GetEnvironmentVariable("FZ_PG_BIN")??@"C:\Program Files\PostgreSQL\18\bin");await using var check=Db(sourceAdmin);await Assert.ThrowsAsync<InvalidOperationException>(()=>tool.Erstellen(check,sourceAdmin,storage,backupRoot));
         }finally{await host.App.StopAsync();await host.App.DisposeAsync();}
         await Assert.ThrowsAsync<InvalidOperationException>(()=>Start(sourceAdmin,storage));

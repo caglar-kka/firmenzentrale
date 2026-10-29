@@ -73,6 +73,7 @@ public sealed class DokumentDatensatz : VersionierterDatensatz
     public string Vorschau { get; set; } = "download";
     public string Text { get; set; } = "";
     public string Textmethode { get; set; } = "Keine Texterkennung verfügbar";
+    public string? AnalyseJson { get; set; }
 }
 // Document PK enforces at most one current case. No copied binary content.
 public sealed class DokumentzuordnungDatensatz
@@ -82,6 +83,10 @@ public sealed class DokumentzuordnungDatensatz
 }
 public sealed class DokumentaktivitaetDatensatz
 {
+    public string? ScanauftragId { get; set; }
+    public string? EingangsId { get; set; }
+    public string? PruefAbsenderId { get; set; }
+    public string? VorherigerAbsenderId { get; set; }
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string DokumentId { get; set; } = "";
     public string? VorherigeAkteId { get; set; }

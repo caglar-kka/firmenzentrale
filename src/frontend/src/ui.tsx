@@ -1,4 +1,5 @@
-import { useEffect, useState, type KeyboardEvent } from 'react';
+import type {ReactNode} from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import{useAktualisierung}from'./Arbeitskontext.js';
 import { Icon, type Iconname } from './Icon.js';
 import type { Meldung } from './api.js';
@@ -9,18 +10,21 @@ export function useDaten<T>(laden: (signal: AbortSignal) => Promise<T>) {
   const [fehler, setFehler] = useState<string | null>(null);
   const [laedt, setLaedt] = useState(true);
   const [versuch, setVersuch] = useState(0);
-  useAktualisierung(()=>setVersuch(v=>v+1));
+  const abgleich=useRef<()=>Promise<void>>(async()=>{});
+  useAktualisierung(()=>abgleich.current());
   useEffect(() => {
     const controller = new AbortController();
-    setFehler(null);
-    laden(controller.signal).then(ergebnis => {
+    let request:Promise<void>|undefined;
+    const aktualisieren=()=>{if(request)return request;setFehler(null);
+    request=laden(controller.signal).then(ergebnis => {
       if (!controller.signal.aborted) { setDaten(ergebnis); setLaedt(false); }
     }).catch(error => {
       if (!controller.signal.aborted) {
         setDaten(null); setFehler(error instanceof Error ? error.message : 'Die Ansicht konnte nicht geladen werden.'); setLaedt(false);
       }
-    });
-    return () => controller.abort();
+    }).finally(()=>{request=undefined;});return request;};
+    abgleich.current=aktualisieren;void aktualisieren();
+    return () => {controller.abort();abgleich.current=async()=>{};};
   }, [laden, versuch]);
   return { daten, fehler, laedt, erneut: () => setVersuch(v => v + 1) };
 }
@@ -50,5 +54,9 @@ export function Titel({ oben, titel, text }: { oben: string; titel: string; text
 
 export function Kennzahlen({ offen, betrag, anzahl,forderungen,verbindlichkeiten }: { offen: string; betrag: string; anzahl: number;forderungen?:string|null;verbindlichkeiten?:string|null }) {
   const getrennt=!!forderungen&&!!verbindlichkeiten;
-  return <dl className="p-bilanz">{getrennt?<><div><dt>Offene Forderungen</dt><dd>{forderungen}</dd><span>Von Kunden noch zu erhalten</span></div><div><dt>Offene Verbindlichkeiten</dt><dd>{verbindlichkeiten}</dd><span>Von uns noch zu bezahlen</span></div></>:<><div><dt>Offene Rechnungsbeträge</dt><dd>{offen}</dd><span>Zahlungsrichtungen nicht vollständig zugeordnet · kein Forderungssaldo</span></div><div><dt>Rechnungsbeträge gesamt</dt><dd>{betrag}</dd></div></>}<div><dt>Rechnungsbestand</dt><dd>{anzahl} {anzahl===1?'Rechnung':'Rechnungen'}</dd></div></dl>;
+  return <dl className="p-bilanz">{getrennt?<><div><dt>Offene Forderungen</dt><dd>{forderungen}</dd><span>Von Kunden noch zu erhalten</span></div><div><dt>Offene Verbindlichkeiten</dt><dd>{verbindlichkeiten}</dd><span>An Lieferanten noch zu zahlen</span></div></>:<><div><dt>Offene Rechnungsbeträge</dt><dd>{offen}</dd><span>Zahlungsrichtungen nicht vollständig zugeordnet · kein Forderungssaldo</span></div><div><dt>Rechnungsbeträge gesamt</dt><dd>{betrag}</dd></div></>}<div><dt>Rechnungsbestand</dt><dd>{anzahl} {anzahl===1?'Rechnung':'Rechnungen'}</dd></div></dl>;
 }
+
+// Gemeinsame Seitenmuster: vorhandene Fachkomponenten behalten ihre eigenen Zustände.
+export function Arbeitsliste({children,titel}:{children:ReactNode;titel:string}){return <section className="p-listenpanel" aria-label={titel}>{children}</section>;}
+export function Prioritaetsflagge({wert}:{wert:string}){return <span className="p-prioritaetsflagge" data-prioritaet={wert}><Icon name="flagge"/><span>{wert}</span></span>;}

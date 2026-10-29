@@ -11,6 +11,7 @@ internal sealed partial class Kontaktpflege
         if(e.Art is not ("Firma" or "Person"))throw new Arbeitsfehler("Bitte Firma oder Person wählen.");
         var alt=id is null?null:kontakte.GetValueOrDefault(id)??throw new Arbeitsfehler("Kontakt nicht gefunden.",404);
         if(alt is not null){Arbeitsregeln.Version(e.Version,alt.Version);if(alt.Archiviert)throw new Arbeitsfehler("Archivierter Kontakt bleibt schreibgeschützt.",409);if(alt.Art!=e.Art)throw new Arbeitsfehler("Firma und Person können nicht ineinander umgewandelt werden.");}
+        Kontaktvalidierung.Pruefen(e,id is null||alt is not null&&new[]{alt.Strasse,alt.Hausnummer,alt.Plz,alt.Ort}.All(x=>!string.IsNullOrWhiteSpace(x)));
         var vorname=e.Art=="Person"?Arbeitsregeln.Text(e.Vorname??alt?.Vorname,"Vorname",80):"";
         var nachname=e.Art=="Person"?Arbeitsregeln.Text(e.Nachname??alt?.Nachname,"Nachname",80):"";
         if(vorname.Any(char.IsControl)||nachname.Any(char.IsControl)||e.Art=="Person"&&(!System.Text.RegularExpressions.Regex.IsMatch(vorname,@"\A[\p{L}\p{M}][\p{L}\p{M} \-’'.]*\z")||!System.Text.RegularExpressions.Regex.IsMatch(nachname,@"\A[\p{L}\p{M}][\p{L}\p{M} \-’'.]*\z")))throw new Arbeitsfehler("Bitte gültige Vor- und Nachnamen eingeben; Telefonnummern gehören ins Telefonfeld.");
@@ -79,4 +80,31 @@ public static class Datenvergleich
   var x=Key(a);var y=Key(b);if(x==y)return true;if(x.Length<4||y.Length<4||Math.Abs(x.Length-y.Length)>2)return false;
   var row=Enumerable.Range(0,y.Length+1).ToArray();for(int i=1;i<=x.Length;i++){var prev=row[0];row[0]=i;for(int j=1;j<=y.Length;j++){var alt=row[j];row[j]=Math.Min(Math.Min(row[j]+1,row[j-1]+1),prev+(x[i-1]==y[j-1]?0:1));prev=alt;}}return row[y.Length]<=2;
  }
+}
+
+
+// Shared by the persistent and preview contact paths; no database migration.
+public static class Kontaktvalidierung
+{
+    public static bool Telefon(string wert)=>wert.Length<=80&&Regex.IsMatch(wert,@"\A\+?[0-9 ()/.-]+\z",RegexOptions.CultureInvariant,TimeSpan.FromMilliseconds(100))&&wert.Count(char.IsDigit) is >=3 and <=32;
+    public static bool Postleitzahl(string plz,string? land)
+    {
+        if(string.IsNullOrWhiteSpace(plz))return true;
+        var code=(land??"").Trim().ToUpperInvariant();
+        return code is "DE" or "DEUTSCHLAND" or "GERMANY"?Regex.IsMatch(plz,@"\A[0-9]{5}\z"):
+            code is "AT" or "ÖSTERREICH" or "AUSTRIA" or "CH" or "SCHWEIZ" or "SWITZERLAND"?Regex.IsMatch(plz,@"\A[0-9]{4}\z"):
+            Regex.IsMatch(plz,@"\A[A-Za-z0-9][A-Za-z0-9 -]{0,19}\z");
+    }
+    public static void Pruefen(Kontakteingabe e,bool adresspflicht)
+    {
+        if(e.Art=="Firma"&&adresspflicht)
+            foreach(var (wert,label) in new[]{(e.Strasse,"Straße"),(e.Hausnummer,"Hausnummer"),(e.Plz,"Postleitzahl"),(e.Ort,"Ort")})
+                if(string.IsNullOrWhiteSpace(wert))throw new Arbeitsfehler("Bitte geben Sie "+(label=="Ort"?"einen ":"eine ")+label+" ein.");
+        if(!Postleitzahl(e.Plz?.Trim()??"",e.Land))throw new Arbeitsfehler("Bitte geben Sie eine gültige Postleitzahl für das ausgewählte Land ein.");
+        foreach(var w in e.Werte??[]){
+            if(w is null)throw new Arbeitsfehler("Kontaktwert fehlt.");
+            if(w.Art=="Telefon"&&!Telefon(w.Wert?.Trim()??""))throw new Arbeitsfehler("Die Telefonnummer enthält unzulässige Zeichen oder zu wenige Ziffern.");
+            if(w.Art=="E-Mail"&&!Kontaktpflege.Gueltig("E-Mail",w.Wert?.Trim()??""))throw new Arbeitsfehler("Bitte geben Sie eine gültige E-Mail-Adresse ein.");
+        }
+    }
 }

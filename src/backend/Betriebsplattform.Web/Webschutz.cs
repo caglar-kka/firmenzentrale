@@ -47,10 +47,10 @@ public static class Webschutz
                 await context.Response.WriteAsJsonAsync(new ApiFehler("Bitte die lokale Arbeitsoberfläche für Änderungen verwenden.")); return;
             }
             if(pfad.StartsWithSegments("/api")&&context.Request.Method is "POST" or "PUT" or "PATCH"
-                &&pfad!="/api/dokumenteingang"&&pfad!="/api/importe/vorschau"
+                  &&pfad!="/api/dokumenteingang"&&pfad!="/api/importe/vorschau"&&!Sicherheit.Bildverwaltung.Bildroute(pfad)
                 &&!(context.Request.ContentType?.Split(';')[0].Trim().Equals("application/json",StringComparison.OrdinalIgnoreCase)??false))
             {context.Response.StatusCode=415;await context.Response.WriteAsJsonAsync(new ApiFehler("Bitte das vorgesehene JSON-Datenformat verwenden."));return;}
-            var requestLimit=context.Request.Path=="/api/dokumenteingang"?Dokumentpruefung.MaxBytes:context.Request.Path.Value?.StartsWith("/api/import",StringComparison.Ordinal)==true?2*1024*1024:128*1024;
+            var requestLimit=Sicherheit.Bildverwaltung.Bildroute(pfad)?Sicherheit.Bildverwaltung.MaxBytes:context.Request.Path=="/api/dokumenteingang"?Dokumentpruefung.MaxBytes:context.Request.Path.Value?.StartsWith("/api/import",StringComparison.Ordinal)==true?2*1024*1024:128*1024;
             var bodyFeature=context.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpMaxRequestBodySizeFeature>();
             if(bodyFeature is {IsReadOnly:false})bodyFeature.MaxRequestBodySize=requestLimit;
             if(context.Request.ContentLength>requestLimit){context.Response.StatusCode=413;await context.Response.WriteAsJsonAsync(new ApiFehler(context.Request.Path=="/api/dokumenteingang"?"Die Datei überschreitet 20 MB.":context.Request.Path.Value?.StartsWith("/api/import",StringComparison.Ordinal)==true?"Die Datei überschreitet 2,1 MB.":"Die Eingabe ist zu umfangreich. Bitte kürzen."));return;}
@@ -76,6 +76,7 @@ public static class Webschutz
                 await context.Response.WriteAsJsonAsync(new ApiFehler("Diese Funktion ist im lokalen Prototyp nicht vorhanden."));
             }
             else if (context.Request.Method != "GET") context.Response.StatusCode = 405;
+            else if(context.Request.Path.StartsWithSegments("/assets")) context.Response.StatusCode=404;
             else if (File.Exists(index))
             {
                 context.Response.ContentType = "text/html; charset=utf-8";

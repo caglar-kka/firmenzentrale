@@ -6,13 +6,26 @@ namespace Betriebsplattform.Web.Persistenz;
 public sealed partial class FirmenDbContext
 {
     public DbSet<Benutzerkonto> Benutzer=>Set<Benutzerkonto>();
+    public DbSet<MfaRegel> MfaRegeln=>Set<MfaRegel>();
+    public DbSet<MfaNotfallfreigabe> MfaNotfaelle=>Set<MfaNotfallfreigabe>();
     public DbSet<Ressourcenfreigabe> Freigaben=>Set<Ressourcenfreigabe>();
     public DbSet<Sicherheitsereignis> Sicherheitsereignisse=>Set<Sicherheitsereignis>();
     public bool RechteFiltern=>sicherheit?.Aktiv==true&&!sicherheit.Admin;
     public string AktuellerBenutzer=>sicherheit?.Benutzer??"";
     private void Pilotmodell(ModelBuilder b)
     {
+        b.Entity<MfaRegel>().ToTable("MfaRegeln");b.Entity<MfaRegel>().Property(x=>x.Version).IsConcurrencyToken();
+        b.Entity<MfaRegel>().ToTable(t=>t.HasCheckConstraint("CK_MfaRegel_Einzel","\"Id\" = 1"));
+        var n=b.Entity<MfaNotfallfreigabe>();n.ToTable("MfaNotfaelle");n.Property(x=>x.Version).IsConcurrencyToken();n.Property(x=>x.Grund).HasMaxLength(400);
+        n.HasOne<Benutzerkonto>().WithMany().HasForeignKey(x=>x.ZielId).OnDelete(DeleteBehavior.Restrict);n.HasOne<Benutzerkonto>().WithMany().HasForeignKey(x=>x.AntragstellerId).OnDelete(DeleteBehavior.Restrict);n.HasOne<Benutzerkonto>().WithMany().HasForeignKey(x=>x.GenehmigerId).OnDelete(DeleteBehavior.Restrict);
         var u=b.Entity<Benutzerkonto>();u.ToTable("Benutzer");u.HasKey(x=>x.Id);u.HasIndex(x=>x.Login).IsUnique();u.Property(x=>x.Login).HasMaxLength(80);u.Property(x=>x.Anzeigename).HasMaxLength(100);u.Property(x=>x.PasswortHash).HasMaxLength(1000);u.Property(x=>x.Version).IsConcurrencyToken();
+        u.Property(x=>x.Eingerichtet).HasDefaultValue(true);u.Property(x=>x.Eingerichtet).HasSentinel(true);
+        u.Property(x=>x.EinladungHash).HasMaxLength(64);
+        u.Property(x=>x.WiederherstellungHash).HasMaxLength(64);
+        u.Property(x=>x.MfaGeheimnis).HasMaxLength(2000);u.Property(x=>x.MfaVorbereitung).HasMaxLength(2000);
+        u.Property(x=>x.MfaRecoveryHashes).HasMaxLength(600);u.Property(x=>x.MfaChallengeHash).HasMaxLength(64);
+        u.Property(x=>x.MfaLetztePeriode).HasDefaultValue(-1L);u.Property(x=>x.MfaFehlversuche).HasDefaultValue(0);
+        u.Property(x=>x.MfaStepupHash).HasMaxLength(64);
         u.ToTable(t=>{t.HasCheckConstraint("CK_Benutzer_Rolle","\"Rolle\" IN ('Administrator','Mitarbeiter')");t.HasCheckConstraint("CK_Benutzer_Pflicht","length(trim(\"Login\")) > 0 AND length(trim(\"Anzeigename\")) > 0 AND length(\"PasswortHash\") > 0");});
         var g=b.Entity<Ressourcenfreigabe>();g.ToTable("Ressourcenfreigaben");g.HasKey(x=>x.Id);g.HasOne<Benutzerkonto>().WithMany().HasForeignKey(x=>x.BenutzerId).OnDelete(DeleteBehavior.Restrict);
         g.HasOne<KontaktDatensatz>().WithMany().HasForeignKey(x=>x.KontaktId).OnDelete(DeleteBehavior.Restrict);g.HasOne<AkteDatensatz>().WithMany().HasForeignKey(x=>x.AkteId).OnDelete(DeleteBehavior.Restrict);g.HasOne<DokumentDatensatz>().WithMany().HasForeignKey(x=>x.DokumentId).OnDelete(DeleteBehavior.Restrict);

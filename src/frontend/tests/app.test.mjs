@@ -57,7 +57,7 @@ test('Rechnungssuche, Statusfilter und Sortierung arbeiten ohne Geldberechnung',
 
 test('Status trennt offene Rechnungen, Bestätigung und Importprüfung', async () => {
   const { zahlungsstatus, importstatus, datumAnzeigen, regionen } = await import('../node_modules/.cache/betriebsplattform-tests/darstellung.js');
-  assert.equal(zahlungsstatus('Offen').ton, 'warnung');
+  assert.equal(zahlungsstatus('Offen').ton, 'neutral');
   assert.equal(zahlungsstatus('Teilzahlung').text, 'Teilweise bezahlt');
   assert.equal(zahlungsstatus('Zur Prüfung').ton, 'warnung');
   assert.equal(zahlungsstatus('Bestätigt (synthetisch)').ton, 'erfolg');
@@ -72,14 +72,14 @@ test('Status trennt offene Rechnungen, Bestätigung und Importprüfung', async (
 });
 
 
-async function mitAnsicht(daten, pruefen, url = 'http://127.0.0.1:5180/', Komponente = App) {
+async function mitAnsicht(daten, pruefen, url = 'http://127.0.0.1:5180/#rechnungen', Komponente = App) {
   const dom = new JSDOM('<!doctype html><div id="root"></div>', { url });
   const originalFetch = globalThis.fetch;
   globalThis.window = dom.window; globalThis.document = dom.window.document; globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   dom.window.scrollTo = () => {};
   // React is imported before jsdom; its legacy focus-event branch needs these test-only no-ops.
   dom.window.HTMLElement.prototype.attachEvent = () => {}; dom.window.HTMLElement.prototype.detachEvent = () => {};
-  globalThis.fetch = async url => antwort(String(url).endsWith('arbeitsumgebung')?{beispielkennzeichnung:true,diagnose:true,benutzer:'Lina Fennbrück',kategorienVerwalten:false,kontakteVerwalten:false}:String(url).endsWith('/kontakte')?[{id:'DEMO-NORD',firma:'Fjordfalter Objektpflege GmbH',version:1,werte:[],historie:[]},{id:'DEMO-ISD',firma:'Elbpfad Büroausstattung GmbH',version:1,werte:[],historie:[]}]:String(url).endsWith('/importe')?[]:String(url).includes('importvorschau')?vorschau:daten);
+  globalThis.fetch = async url => antwort(String(url)==='/api/module'?{module:['Akten','Dokumente','Finanzen','Import','Kommunikation']}:String(url).endsWith('arbeitsumgebung')?{beispielkennzeichnung:true,diagnose:true,benutzer:'Lina Fennbrück',kategorienVerwalten:false,kontakteVerwalten:false}:String(url).endsWith('/kontakte')?[{id:'DEMO-NORD',firma:'Fjordfalter Objektpflege GmbH',version:1,werte:[],historie:[]},{id:'DEMO-ISD',firma:'Elbpfad Büroausstattung GmbH',version:1,werte:[],historie:[]}]:String(url).endsWith('/importe')?[]:String(url).includes('importvorschau')?vorschau:daten);
   const root = createRoot(document.getElementById('root'));
   try {
     await act(async () => root.render(createElement(Komponente)));
@@ -92,8 +92,8 @@ async function mitAnsicht(daten, pruefen, url = 'http://127.0.0.1:5180/', Kompon
 
 test('Semantische CSS-Tokenpaare erfüllen die festgelegten Kontrastgrenzen', () => {
   const css = readFileSync(new URL('../src/design-tokens.css', import.meta.url), 'utf8');
-  const paletten = [...css.matchAll(/^(\.studio)\s*\{([^}]+)\}/gm)];
-  assert.equal(paletten.length,1);
+  const paletten = [...css.matchAll(/^(:root, \.studio|\.studio\[data-theme="legacy"\])\s*\{([^}]+)\}/gm)];
+  assert.equal(paletten.length,2);
   const luminanz = hex => {
     const rgb = [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)/255).map(c => c <= .04045 ? c/12.92 : ((c+.055)/1.055)**2.4);
     return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;
@@ -110,8 +110,9 @@ test('Semantische CSS-Tokenpaare erfüllen die festgelegten Kontrastgrenzen', ()
       return wert.startsWith('var(') ? aufloesen(wert.slice(6,-1),[...besucht,name]) : wert;
     };
     const tokens = Object.fromEntries(Object.keys(werte).map(name => [name,aufloesen(name)]));
+    if(palette[1].startsWith(':root'))for(const [fg,bg] of [['disabled-text','disabled-bg'],['ki','ki-hell'],['teal','teal-hell'],['hero-text','hero']])assert.ok(kontrast(tokens[fg],tokens[bg])>=4.5,fg+'/'+bg);
     for (const [text,hintergrund] of paare) assert.ok(kontrast(tokens[text],tokens[hintergrund]) >= 4.5, palette[1]+': '+text+'/'+hintergrund);
-    if (palette[1] === '.studio') {
+    if (palette[1].includes('.studio')) {
       for (const text of ['rail-text','rail-leise']) assert.ok(kontrast(tokens[text],tokens.rail) >= 4.5);
       for (const bg of ['rail-active','rail-hover']) assert.ok(kontrast(tokens['rail-text'],tokens[bg]) >= 4.5);
       assert.ok(kontrast(tokens['rail-fokus'],tokens.rail) >= 3);
@@ -132,7 +133,7 @@ test('Integrierter Arbeitsraum nutzt Serverwerte, Filter und eigenständige Deta
   await mitAnsicht(uebersicht, async () => {
     assert.ok(document.querySelector('.studio'));
     assert.equal(document.querySelector('[data-design]'),null);
-    assert.equal(document.querySelectorAll('nav a').length,5);
+    assert.equal(document.querySelectorAll('nav[aria-label="Hauptnavigation"] a').length,8);
     assert.match(document.querySelector('.p-bilanz').textContent,/SERVER-SALDO/);
     await act(async () => [...document.querySelectorAll('.p-filter button')].find(b=>b.textContent==='Offen').click());
     assert.match(document.querySelector('.p-leer').textContent,/Keine passenden/);
@@ -146,7 +147,7 @@ test('Integrierter Arbeitsraum nutzt Serverwerte, Filter und eigenständige Deta
     await act(async () => document.querySelector('.p-zurueck').click());
     assert.equal(document.activeElement,oeffnen);
     assert.equal(document.querySelector('.p-filter [aria-pressed="true"]').textContent,'Teilweise bezahlt');
-  },'http://127.0.0.1:5180/?vorschau=arbeitsraum',Designprototyp);
+  },'http://127.0.0.1:5180/?vorschau=arbeitsraum#rechnungen',Designprototyp);
 });
 
 test('Integrierter Import erhält Quellen, escaped Originalwerte, Prüfbericht und echte Filter', async () => {
@@ -174,8 +175,8 @@ test('Integrierte Anwendung zeigt Verbindungsfehler und erlaubt erneuten Versuch
     assert.equal(!!document.querySelector('[role=alert]'),false);
     await act(async () => document.querySelector('.p-collapse').click());
     assert.equal(document.querySelector('.studio').dataset.compact,'true');
-    assert.equal(document.querySelector('nav a').getAttribute('aria-label'),'Rechnungen');
-  },'http://127.0.0.1:5180/?vorschau=arbeitsraum',Designprototyp);
+    assert.equal(document.querySelector('nav a[href="#rechnungen"]').getAttribute('aria-label'),'Rechnungen');
+  },'http://127.0.0.1:5180/?vorschau=arbeitsraum#rechnungen',Designprototyp);
 });
 
 
@@ -187,7 +188,7 @@ test('Regulärer Einstieg und historischer Importpfad verwenden dieselbe Anwendu
     assert.match(document.querySelector('.p-register h2').textContent,/Rechnungsbestand/);
     assert.doesNotMatch(document.body.textContent,/Alle Vorgänge|Mit Variante C vergleichen|Nicht freigegeben/);
     assert.match(document.title,/Arbeitsplatz/);
-    assert.equal(document.querySelectorAll('nav a').length,5);
+    assert.equal(document.querySelectorAll('nav[aria-label="Hauptnavigation"] a').length,8);
     assert.match(document.querySelector('.p-tabelle thead').textContent,/Aussteller.*\/ Empfänger/);
   });
 });
@@ -318,7 +319,7 @@ test('Sofortaktionen zeigen Kontakt und Vorgangsrolle ohne Senden, Anruf oder Sa
     assert.equal(emp.querySelector('a[href^="tel:"]').getAttribute('href'),'tel:+493023125001');
     assert.equal(emp.querySelectorAll('a').length,2);
     assert.ok(emp.querySelector('.icon-email')); assert.ok(emp.querySelector('.icon-telefon'));
-    assert.match(document.querySelector('.p-arbeitskontext').textContent,/Büroarbeitsplatz/);
+    assert.ok(document.querySelector('aside .p-railprofil'));assert.equal(document.querySelector('header .p-benutzer'),null);
     assert.match(document.querySelector('.p-detailbetraege').textContent,/SERVER-ZUORDNUNG/);
     assert.match(document.querySelector('.p-detail .status.warnung').textContent,/Zur Prüfung/);
     await act(async()=>document.querySelector('.p-zurueck').click());
@@ -480,7 +481,7 @@ test('Sidebar Rechnungen öffnet aus der Detailansicht die erhaltene Übersicht'
 });
 
 test('Browserdruck ändert keine Rechnungswerte und ungezielter Datei-Drop wird nicht verarbeitet',async()=>{
- await mitAnsicht(uebersicht,async()=>{let druck=0;window.print=()=>druck++;await act(async()=>document.querySelector('.p-rowlink').click());const vorher=document.querySelector('.p-detailbetraege').textContent;await act(async()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Akte drucken').click());assert.equal(druck,1);assert.equal(document.querySelector('.p-detailbetraege').textContent,vorher);const drop=new window.Event('drop',{bubbles:true,cancelable:true});Object.defineProperty(drop,'dataTransfer',{value:{types:['Files'],files:[new window.File(['Text'],'Brief.txt')]}});await act(async()=>document.querySelector('h1').dispatchEvent(drop));assert.equal(drop.defaultPrevented,true);assert.match(document.querySelector('main>[role=status]').textContent,/Datei nicht abgelegt/);assert.equal(document.querySelector('.p-detailbetraege').textContent,vorher);});
+ await mitAnsicht(uebersicht,async()=>{let druck=0;window.print=()=>druck++;await act(async()=>document.querySelector('.p-rowlink').click());const vorher=document.querySelector('.p-detailbetraege').textContent;await act(async()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Rechnungsansicht drucken').click());assert.equal(druck,1);assert.equal(document.querySelector('.p-detailbetraege').textContent,vorher);const drop=new window.Event('drop',{bubbles:true,cancelable:true});Object.defineProperty(drop,'dataTransfer',{value:{types:['Files'],files:[new window.File(['Text'],'Brief.txt')]}});await act(async()=>document.querySelector('h1').dispatchEvent(drop));assert.equal(drop.defaultPrevented,true);assert.match(document.querySelector('main>[role=status]').textContent,/Datei nicht abgelegt/);assert.equal(document.querySelector('.p-detailbetraege').textContent,vorher);});
 });
 
 test('UX-Delta Kennzahlen zeigen getrennte Serverwerte und natürliche Rechnungsanzahl',async()=>{await mitAnsicht({...uebersicht,offeneForderungen:'450,00 €',offeneVerbindlichkeiten:'460,00 €'},async()=>{const text=document.querySelector('.p-bilanz').textContent;assert.match(text,/Offene Forderungen450,00/);assert.match(text,/Offene Verbindlichkeiten460,00/);assert.match(text,/1 Rechnung/);assert.doesNotMatch(text,/Offene Positionen|SERVER-SALDO/);});});

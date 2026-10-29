@@ -13,7 +13,7 @@ export interface Dublette{id:string;name:string;art:string;anschrift:string;anga
 export class Arbeitsfehler extends Error{constructor(text:string,public hinweise:Dublette[]=[]){super(text);}}
 export async function anfrage<T>(pfad:string,body?:unknown,signal?:AbortSignal):Promise<T>{
  const r=await fetch('/api/'+pfad,{method:body===undefined?'GET':'POST',headers:body===undefined?{Accept:'application/json'}:{'Content-Type':'application/json','X-Arbeitsaktion':'1'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.any([...(signal?[signal]:[]),AbortSignal.timeout(8000)]),cache:'no-store'}).catch(()=>{throw new Error('Lokale Verbindung nicht erreichbar. Bitte erneut versuchen.');});
- if(!r.ok){let hinweise:Dublette[]=[];let text='Aktion fehlgeschlagen. Bitte neu laden.';try{const e:unknown=await r.json();if(e&&typeof e==='object'){if('hinweise'in e&&Array.isArray(e.hinweise))hinweise=e.hinweise.filter(h=>obj(h)&&strs(h,'id','name','art','anschrift')&&arr(h.angaben,x=>typeof x==='string')&&arr(h.gruende,x=>typeof x==='string')) as Dublette[];if('meldung'in e&&typeof e.meldung==='string')text=e.meldung;else if('text'in e&&typeof e.text==='string')text=e.text;}}catch{}throw new Arbeitsfehler(text,hinweise);}const daten:unknown=await r.json();if(!antwortGueltig(pfad,daten,body!==undefined))throw new Error('Die Antwort hat ein unerwartetes Format. Bitte neu laden.');return daten as T;
+ if(!r.ok){let hinweise:Dublette[]=[];let text='Aktion fehlgeschlagen. Bitte neu laden.';try{const e:unknown=await r.json();if(e&&typeof e==='object'){if('hinweise'in e&&Array.isArray(e.hinweise))hinweise=e.hinweise.filter(h=>obj(h)&&strs(h,'id','name','art','anschrift')&&arr(h.angaben,x=>typeof x==='string')&&arr(h.gruende,x=>typeof x==='string')) as Dublette[];if('meldung'in e&&typeof e.meldung==='string')text=e.meldung;else if('text'in e&&typeof e.text==='string')text=e.text;}}catch{}throw new Arbeitsfehler(text,hinweise);}let daten:unknown;try{daten=await r.json();}catch{throw new Error('Die Antwort konnte nicht gelesen werden. Bitte erneut versuchen.');}if(!antwortGueltig(pfad,daten,body!==undefined))throw new Error('Die Antwort hat ein unerwartetes Format. Bitte neu laden.');return daten as T;
 }
 export const adresse=(d:Dokument)=>d.vorschau==='pdf'&&d.vorgaenge[0]?`/api/vorgaenge/${encodeURIComponent(d.vorgaenge[0])}/dokumente/${encodeURIComponent(d.id)}`:`/api/dokumente/${encodeURIComponent(d.id)}/datei`;
 export async function ablegen(file:File,akte?:string,kanal='Dateiauswahl'){
@@ -25,7 +25,14 @@ const strs=(v:Record<string,unknown>,...keys:string[])=>keys.every(k=>typeof v[k
 const arr=(v:unknown,check:(x:unknown)=>boolean)=>Array.isArray(v)&&v.length<=1500&&v.every(check);
 const dok=(v:unknown)=>obj(v)&&strs(v,'id','titel','dateiname','art','erfasstAm','vorschau')&&arr(v.vorgaenge,x=>typeof x==='string');
 const vorgang=(v:unknown)=>obj(v)&&strs(v,'id','titel','kategorie');
+const istTermin=(v:unknown)=>obj(v)&&strs(v,'id','titel','beginn','ende','beschreibung','ort')&&typeof v.ganztaegig==='boolean'&&Number.isSafeInteger(v.version)&&Number(v.version)>0&&['beginn','ende'].every(k=>/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(String(v[k])));
 export function antwortGueltig(pfad:string,v:unknown,schreiben=false):boolean{
+ if(pfad==='bildverwaltung/status')return obj(v)&&v.uploadAktiv===false&&v.status==='Gesperrt'&&v.bildVorhanden===false&&strs(v,'grund')&&typeof v.profilbildVerwalten==='boolean'&&typeof v.firmenlogoVerwalten==='boolean'&&arr(v.vorgeseheneFormate,x=>x==='PNG'||x==='JPEG')&&v.maxBytes===2000000&&v.maxDimension===2048&&v.maxPixel===4000000;
+ if(/^termine\/[^/]+\/quittieren$/.test(pfad))return obj(v)&&v.quittiert===true;
+ if(pfad==='termine/erinnerungen'||pfad.startsWith('termine/erinnerungen?'))return obj(v)&&Number.isSafeInteger(v.anzahl)&&Number(v.anzahl)>=0&&Array.isArray(v.eintraege)&&v.eintraege.length<=20&&v.eintraege.length<=Number(v.anzahl)&&arr(v.eintraege,x=>obj(x)&&strs(x,'id','titel','beginn','erinnerungskennung')&&String(x.erinnerungskennung).length>0&&String(x.erinnerungskennung).length<=64);
+ if(/^termine\/[^/]+\/loeschen$/.test(pfad))return obj(v)&&v.entfernt===true;
+ if(pfad.startsWith('termine/?'))return obj(v)&&Number.isSafeInteger(v.anzahl)&&Number(v.anzahl)>=0&&v.zeitzone==='Europe/Berlin'&&arr(v.eintraege,istTermin);
+ if(pfad.startsWith('termine/'))return istTermin(v);
  if(schreiben&&pfad==='akten')return vorgang(v);
  if(pfad==='akten-status')return arr(v,x=>typeof x==='string');
  if(schreiben&&pfad==='kategorien')return obj(v)&&strs(v,'id','name','beschreibung')&&typeof v.archiviert==='boolean';
@@ -34,8 +41,9 @@ export function antwortGueltig(pfad:string,v:unknown,schreiben=false):boolean{
  if(/^akten\/[^/]+$/.test(pfad))return obj(v)&&vorgang(v.vorgang)&&arr(v.dokumente,dok)&&arr(v.notizen,n=>obj(n)&&strs(n,'id','betreff','inhalt','autor','erstelltAm','geaendertAm')&&typeof n.entfernt==='boolean'&&arr(n.historie,h=>obj(h)&&strs(h,'betreff','inhalt','aktion','autor','zeitpunkt')))&&arr(v.korrespondenz,k=>obj(k)&&strs(k,'id','betreff','inhalt','art','autor','erfasstAm'))&&arr(v.kontaktvorschlaege,k=>obj(k)&&strs(k,'id','firmaId','dokumentId','art','bisher','neu','quelle','status'));
  if((pfad.startsWith('akten?')||pfad.startsWith('kontakte?'))&&pfad.includes('seite='))return obj(v)&&Number.isInteger(v.anzahl)&&arr(v.eintraege,pfad.startsWith('akten?')?vorgang:k=>obj(k)&&strs(k,'id','firma')&&Array.isArray(k.werte)&&Array.isArray(k.historie));
  if(pfad==='akten'||pfad.startsWith('akten?'))return arr(v,vorgang);
- if(/^posteingang\/[^/?]+$/.test(pfad))return dok(v);
- if(pfad==='posteingang'||pfad.startsWith('posteingang?'))return obj(v)&&arr(v.dokumente,dok)&&obj(v.scanner)&&strs(v.scanner,'status');
+ if(pfad==='posteingang/uebersicht')return obj(v)&&[v.neu,v.pruefen,v.meine].every(n=>typeof n==='number'&&Number.isInteger(n)&&n>=0);
+ if(/^posteingang\/[^/?]+$/.test(pfad))return dok(v)||(obj(v)&&obj(v.eingang)&&strs(v.eingang,'id','dokumentId','betreff','status')&&Array.isArray(v.historie));
+ if(pfad==='posteingang'||pfad.startsWith('posteingang?'))return obj(v)&&(('dokumente'in v&&arr(v.dokumente,dok)&&obj(v.scanner)&&(v.anzahl===undefined||Number.isInteger(v.anzahl)))||('eintraege'in v&&Number.isInteger(v.anzahl)&&arr(v.eintraege,e=>obj(e)&&strs(e,'id','dokumentId','betreff','status','eingegangenAm'))));
  if(pfad==='kategorien')return arr(v,k=>obj(k)&&strs(k,'id','name','beschreibung')&&typeof k.archiviert==='boolean');
  if(pfad==='kontakte')return arr(v,k=>obj(k)&&strs(k,'id','firma')&&arr(k.werte,w=>obj(w)&&strs(w,'art','wert')&&typeof w.aktiv==='boolean')&&Array.isArray(k.historie));
  if(pfad.startsWith('suche?'))return arr(v,t=>obj(t)&&strs(t,'id','art','titel','zusatz','ziel')&&['rechnung','vorgang','dokument','eingang','kontakt'].includes(String(t.ziel)));

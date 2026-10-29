@@ -19,8 +19,11 @@ public static class Dokumentbestand
             var seite=await query.OrderBy(d=>d.Id).Select(d=>new{d.Id,d.StorageKey,d.Groesse,d.Hash}).Take(200).ToArrayAsync(ct);if(seite.Length==0)break;
             foreach(var d in seite){anzahl++;try{await using var stream=await f.Oeffnen(d.StorageKey,d.Groesse,d.Hash,ct);}catch(Akten.Arbeitsfehler e){if(e.Status==404)fehlend++;else abweichend++;Meldung("Original prüfen: "+d.Id);}letzte=d.Id;}
         }
+        // Optional new business artifacts share the same private storage and integrity gate.
+        var nachweise=await db.Database.SqlQueryRaw<bool>(db.Database.IsNpgsql()?"SELECT to_regclass('public.\"Leistungsnachweise\"') IS NOT NULL AS \"Value\"":"SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='Leistungsnachweise') AS Value").SingleAsync(ct);
+        if(nachweise){string? ende=null;while(true){var q=db.Leistungsnachweise.AsNoTracking();if(ende!=null)q=q.Where(n=>string.Compare(n.Id,ende)>0);var seite=await q.OrderBy(n=>n.Id).Take(200).ToArrayAsync(ct);if(seite.Length==0)break;foreach(var n in seite){anzahl++;ende=n.Id;if(string.IsNullOrWhiteSpace(n.StorageKey)){fehlend++;Meldung("Nachweis ohne private Speicherreferenz: "+n.Id);continue;}try{var bytes=await f.Lesen(n.StorageKey,ct);if(Betriebsplattform.Web.Leistungen.Leistungsdienst.Hash(bytes)!=n.Hash){abweichend++;Meldung("Nachweisprüfsumme prüfen: "+n.Id);}}catch(Akten.Arbeitsfehler e){if(e.Status==404)fehlend++;else abweichend++;Meldung("Nachweis prüfen: "+n.Id);}}}}
         foreach(var batch in Directory.EnumerateFiles(root,"*.bin").Chunk(200)){
-            var keys=batch.Select(Path.GetFileNameWithoutExtension).ToArray();var bekannt=await db.Dokumente.AsNoTracking().Where(d=>keys.Contains(d.StorageKey)).Select(d=>d.StorageKey).ToArrayAsync(ct);var set=bekannt.ToHashSet();
+            var keys=batch.Select(Path.GetFileNameWithoutExtension).ToArray();var bekannt=await db.Dokumente.AsNoTracking().Where(d=>keys.Contains(d.StorageKey)).Select(d=>d.StorageKey).ToArrayAsync(ct);var set=bekannt.ToHashSet();if(nachweise)foreach(var key in await db.Leistungsnachweise.AsNoTracking().Where(n=>keys.Contains(n.StorageKey)).Select(n=>n.StorageKey).ToArrayAsync(ct))set.Add(key);
             foreach(var key in keys)if(!set.Contains(key!)){verwaist++;Meldung("Datei ohne Metadaten: "+key);}
         }
         foreach(var path in Directory.EnumerateFiles(root,"*.pending")){temp++;Meldung("Unvollständige Datei: "+Path.GetFileName(path));}

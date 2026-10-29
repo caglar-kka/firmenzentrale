@@ -60,10 +60,12 @@ public sealed partial class FirmenDaten(FirmenDbContext db,Betriebsplattform.Web
 
     public async Task<Firmenkontakt> KontaktSpeichern(string? id,Kontakteingabe e,CancellationToken ct=default)
     {
+        await db.KontaktaktionPruefen(id is null?"Erstellen":"Bearbeiten",ct);
         if(e.Art is not ("Firma" or "Person"))throw new Arbeitsfehler("Bitte Firma oder Person wählen.");
         var d=id is null?new KontaktDatensatz():await Finden<KontaktDatensatz>(id,ct);
         if(id is not null){Version(d,e.Version);if(d.Art!=e.Art||d.Archiviert)throw new Arbeitsfehler("Kontaktart ist unveränderlich; archivierte Kontakte sind schreibgeschützt.",409);}
         else if(e.Version!=0)throw new Arbeitsfehler("Ungültige Version für einen neuen Kontakt.");
+        Kontaktvalidierung.Pruefen(e,id is null||new[]{d.Strasse,d.Hausnummer,d.Plz,d.Ort}.All(x=>!string.IsNullOrWhiteSpace(x)));
         var vor=e.Art=="Person"?Arbeitsregeln.Text(e.Vorname,"Vorname",80):"";var nach=e.Art=="Person"?Arbeitsregeln.Text(e.Nachname,"Nachname",80):"";
         if(e.Art=="Person"&&new[]{vor,nach}.Any(n=>!Regex.IsMatch(n,@"\A[\p{L}\p{M}][\p{L}\p{M} \-’'.]*\z")))throw new Arbeitsfehler("Bitte gültige Vor- und Nachnamen eingeben.");
         var name=e.Art=="Person"?vor+" "+nach:Arbeitsregeln.Text(e.Name,"Firmenname",160);
@@ -94,13 +96,14 @@ public sealed partial class FirmenDaten(FirmenDbContext db,Betriebsplattform.Web
     private static string Kontaktstand(KontaktDatensatz d)=>string.Join(" · ",new[]{d.Name,d.Strasse,d.Hausnummer,d.Plz,d.Ort,d.Land,d.Anschrift,d.Abteilung,d.Rolle}.Where(x=>x.Length>0));
     public async Task<Firmenkontakt[]> KontaktAnsichten(KontaktDatensatz[] liste,CancellationToken ct=default,bool mitHistorie=true)
     {
+        await db.KontaktaktionPruefen("Lesen",ct);
         var ids=liste.Select(k=>k.Id).ToArray();var werte=await db.Kontaktwerte.AsNoTracking().Where(w=>ids.Contains(w.KontaktId)&&(mitHistorie||w.Aktiv)).OrderByDescending(w=>w.Aktiv).ThenBy(w=>w.Id).Take(3000).ToArrayAsync(ct);
         var historie=mitHistorie?await db.Kontaktverlauf.AsNoTracking().Where(h=>ids.Contains(h.KontaktId)).OrderByDescending(h=>h.Zeitpunkt).Take(500).ToArrayAsync(ct):[];
         var firmenIds=liste.Select(k=>k.FirmaId).Distinct().ToArray();var firmen=await db.Kontakte.AsNoTracking().Where(k=>firmenIds.Contains(k.Id)).ToDictionaryAsync(k=>k.Id,k=>k.Name,ct);
         return liste.Select(k=>new Firmenkontakt(k.Id,k.Name,k.Version,werte.Where(w=>w.KontaktId==k.Id).Select(w=>new Kontaktwert(w.Id,w.Art,w.Wert,w.Aktiv,w.Primaer,w.Typ)).ToArray(),historie.Where(h=>h.KontaktId==k.Id).Select(h=>new Kontaktentscheidung(h.Aktion,h.Vorher,h.Nachher,h.DokumentId??"",h.Benutzer,h.Zeitpunkt)).ToArray(),k.Art,k.FirmaId,string.IsNullOrEmpty(k.Strasse)&&string.IsNullOrEmpty(k.Ort)?k.Anschrift:string.Join(" ",new[]{k.Strasse,k.Hausnummer,k.Plz,k.Ort,k.Land}.Where(x=>x.Length>0)),k.Abteilung,k.Rolle,k.Archiviert,k.ErstelltAm,k.GeaendertAm,k.Strasse,k.Plz,k.Ort,k.Land,k.Hausnummer,k.Vorname,k.Nachname,k.FirmaId is null?null:firmen.GetValueOrDefault(k.FirmaId))).ToArray();
     }
     public async Task<Firmenkontakt> KontaktArchivieren(string id,int version,CancellationToken ct=default)
-    {var d=await Finden<KontaktDatensatz>(id,ct);Version(d,version);d.Archiviert=true;db.Kontaktverlauf.Add(new(){KontaktId=id,Vorher="Aktiv",Nachher="Archiviert",Aktion="Archiviert",Benutzer=Arbeitskontext.Benutzer});await db.SaveChangesAsync(ct);return (await KontaktAnsichten([d],ct)).Single();}
+    {await db.KontaktaktionPruefen("Archivieren",ct);var d=await Finden<KontaktDatensatz>(id,ct);Version(d,version);d.Archiviert=true;db.Kontaktverlauf.Add(new(){KontaktId=id,Vorher="Aktiv",Nachher="Archiviert",Aktion="Archiviert",Benutzer=Arbeitskontext.Benutzer});await db.SaveChangesAsync(ct);return (await KontaktAnsichten([d],ct)).Single();}
 
     public async Task<NotizDatensatz> NotizSpeichern(string akte,string? id,Notizeingabe e,bool? archivieren=null,CancellationToken ct=default)
     {

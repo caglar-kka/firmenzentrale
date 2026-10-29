@@ -1,3 +1,4 @@
+import{AufgabeAktion}from'./Aufgaben.js';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon.js';
 import { Status } from './ui.js';
@@ -15,12 +16,13 @@ export default function Rechnungsdetails({ rechnung: r, zurueck }: { rechnung: R
   const rolle = eigeneRolle(r);
   const partner = rolle === 'Aussteller' ? r.empfaenger : r.aussteller;
   useEffect(() => { window.scrollTo(0,0); titel.current?.focus({ preventScroll: true }); }, []);
-  return <section className="p-detail" aria-label="Rechnungs- und Zahlungsdetails">
+  return <section className="p-detail p-modulseite p-rechnungsobjekt" aria-label="Rechnungs- und Zahlungsdetails">
     <div className="p-detailnavigation"><nav className="p-breadcrumb" aria-label="Brotkrumennavigation"><ol><li><button onClick={zurueck}>Rechnungen</button></li><li aria-current="page">{r.nummer}</li></ol></nav><button className="p-zurueck" onClick={zurueck}><Icon name="pfeil" />Zurück zur Rechnungsübersicht</button></div>
-    <header className="p-detailkopf"><div><p className="p-eyebrow">{rechnungsart(r)} · {datumAnzeigen(r.datum)}{rolle && <> · Ansicht für {r.perspektive?.unternehmen}</>}</p><h1 ref={titel} tabIndex={-1}>{r.nummer}</h1><p className="p-detailpartner">{partner}</p></div><div><Status wert={zahlungsstatus(r.status)} /><button className="p-button-leise" onClick={()=>window.print()}>Akte drucken</button></div></header>
-    <dl className="p-detailbetraege"><div><dt>Rechnungsbetrag</dt><dd>{r.betrag}</dd></div><div><dt>Bereits bestätigt bezahlt</dt><dd>{r.bestaetigtZugeordnet}</dd></div><div><dt>Noch offen</dt><dd>{r.offenerBetrag}</dd></div></dl>
-    <div className="p-detailraster"><div className="p-vorgang">
-      <dl className="p-kontakte" aria-label="Rechnung von und an"><Kontaktkarte organisation={r.aussteller} rolle="Rechnung von" kontakt={r.ausstellerKontakt} /><Kontaktkarte organisation={r.empfaenger} rolle="Rechnung an" kontakt={r.empfaengerKontakt} /></dl>
+    <header className="p-detailkopf"><div><p className="p-eyebrow">{rechnungsart(r)} · {datumAnzeigen(r.datum)}{rolle && <> · Ansicht für {r.perspektive?.unternehmen}</>}</p><h1 ref={titel} tabIndex={-1}>{r.nummer}</h1><p className="p-detailpartner">{partner}</p></div><div><Status wert={zahlungsstatus(r.status)} />{(r.rechnungId||r.vorgangId)&&<AufgabeAktion art="Rechnung" id={r.rechnungId??r.vorgangId!}/>}<button className="p-button-leise" onClick={()=>window.print()}>Rechnungsansicht drucken</button></div></header>
+    <div className="p-objektfakten">    <div className="p-objektparteien"><dl className="p-kontakte" aria-label="Rechnung von und an"><Kontaktkarte organisation={r.aussteller} rolle="Rechnung von" kontakt={r.ausstellerKontakt} /><Kontaktkarte organisation={r.empfaenger} rolle="Rechnung an" kontakt={r.empfaengerKontakt} /></dl></div>
+    <dl className="p-detailbetraege"><div><dt>Rechnungsbetrag</dt><dd>{r.betrag}</dd></div><div><dt>Bereits bestätigt bezahlt</dt><dd>{r.bestaetigtZugeordnet}</dd></div><div><dt>Noch offen</dt><dd>{r.offenerBetrag}</dd></div></dl></div>
+    <div className="p-detailraster"><aside className="p-nachweise"><Kontaktaktionen rechnung={r} onNotiz={r.vorgangId?()=>setNotizSignal(n=>n+1):undefined} />{r.vorgangId?<Aktenbereich id={r.vorgangId} hinweise={r.zahlungen.filter(z=>z.status==='Zur Prüfung').map(z=>'Zahlung zur Prüfung: '+z.betrag+' vom '+datumAnzeigen(z.datum))} notizSignal={notizSignal} dokumentId={auswahl?.id} onDokumentSchliessen={()=>setAuswahl(null)} legacyKey={`betriebsplattform-demo-notiz:${JSON.stringify([r.aussteller,r.empfaenger,r.nummer])}`}/>:<p>Für diese Rechnung ist keine digitale Akte verfügbar.</p>}</aside><div className="p-vorgang">
+
       <section className="p-abschnitt"><header><h2>Zahlungen</h2><span className="p-anzahl">{r.zahlungen.length}</span></header>
       {r.zahlungen.length === 0 ? <p className="p-notiz">Noch keine Zahlungen vorhanden.</p> : <ol className="p-zahlungsfolge">{r.zahlungen.map((z, i) => {
         const richtung = zahlungsrichtung(r,z);
@@ -31,6 +33,6 @@ export default function Rechnungsdetails({ rechnung: r, zurueck }: { rechnung: R
       })}</ol>}
       </section>
 
-    </div><aside className="p-nachweise"><Kontaktaktionen rechnung={r} onNotiz={r.vorgangId?()=>setNotizSignal(n=>n+1):undefined} />{r.vorgangId?<Aktenbereich id={r.vorgangId} hinweise={r.zahlungen.filter(z=>z.status==='Zur Prüfung').map(z=>'Zahlung zur Prüfung: '+z.betrag+' vom '+datumAnzeigen(z.datum))} notizSignal={notizSignal} dokumentId={auswahl?.id} onDokumentSchliessen={()=>setAuswahl(null)} legacyKey={`betriebsplattform-demo-notiz:${JSON.stringify([r.aussteller,r.empfaenger,r.nummer])}`}/>:<p>Für diese Rechnung ist keine digitale Akte verfügbar.</p>}</aside></div>
+    </div></div>
   </section>;
 }

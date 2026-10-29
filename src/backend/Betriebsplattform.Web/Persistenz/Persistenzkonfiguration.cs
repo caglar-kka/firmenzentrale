@@ -44,6 +44,9 @@ public sealed class DatenbankStartpruefung(IDbContextFactory<FirmenDbContext> fa
 public static class Persistenzfehler
 {
     public static (int Status,string Meldung) Beschreiben(Exception e)=>e switch{
+        // BadHttpRequestException derives from IOException. Invalid JSON/unknown
+        // DTO members are request errors, not a persistence outage (503).
+        BadHttpRequestException b=>(b.StatusCode,"Bitte Eingaben und Datenformat prüfen."),
         DbUpdateConcurrencyException=>(409,"Dieser Eintrag wurde zwischenzeitlich geändert. Bitte prüfen Sie den aktuellen Stand."),
         PostgresException{SqlState:PostgresErrorCodes.SerializationFailure or PostgresErrorCodes.DeadlockDetected}=>(409,"Eine gleichzeitige Änderung wurde erkannt. Bitte den aktuellen Stand laden und erneut prüfen."),
         DbUpdateException{InnerException:PostgresException{SqlState:PostgresErrorCodes.ForeignKeyViolation or PostgresErrorCodes.RestrictViolation}}=>(409,"Die Zuordnung ist nicht mehr gültig. Bitte die beteiligten Einträge prüfen."),

@@ -30,6 +30,7 @@ public sealed partial class FirmenDaten
     }
     public async Task<object> KontaktvorschlagEntscheiden(string id,Kontaktfreigabe e,CancellationToken ct=default)
     {
+        await db.KontaktaktionPruefen("Bearbeiten",ct);
         await using var tx=await db.Database.BeginTransactionAsync(ct);var v=await Finden<KontaktvorschlagDatensatz>(id,ct);var k=await Finden<KontaktDatensatz>(v.KontaktId,ct);Version(k,e.Version);
         if(k.Archiviert||v.Status!="Zur Prüfung")throw new Arbeitsfehler("Vorschlag oder Kontakt wurde zwischenzeitlich geändert. Bitte neu prüfen.",409);
         if(e.Aktion is not ("Übernehmen" or "Zusätzlich speichern" or "Ignorieren"))throw new Arbeitsfehler("Bitte eine gültige Entscheidung wählen.");

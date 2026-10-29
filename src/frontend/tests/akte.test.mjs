@@ -7,7 +7,7 @@ import Aktenbereich,{Vorschlaege} from '../node_modules/.cache/betriebsplattform
 import Dateieingang,{dateiFehler} from '../node_modules/.cache/betriebsplattform-tests/Dateieingang.js';
 import Suche from '../node_modules/.cache/betriebsplattform-tests/Suche.js';
 import {Posteingang} from '../node_modules/.cache/betriebsplattform-tests/Aktenansichten.js';
-import {antwortGueltig} from '../node_modules/.cache/betriebsplattform-tests/akte-api.js';
+import {antwortGueltig,anfrage} from '../node_modules/.cache/betriebsplattform-tests/akte-api.js';
 const zeit='2026-10-18T12:00:00Z',id='versicherung-2026';
 const doc=i=>({id:'datei-'+i,titel:'Brief '+i,dateiname:'Brief-'+i+'.txt',art:'Anhang',kategorie:'Zur Prüfung',erfasstAm:zeit,version:1,vorschau:'text',vorgaenge:[id]});
 const notiz=i=>({id:'notiz-'+i,betreff:'Rückfrage '+i,inhalt:'Kurztext '+i+' '.repeat(2)+'Langtext'.repeat(25),autor:'Demo-Benutzer',erstelltAm:zeit,geaendertAm:zeit,version:1,entfernt:false,historie:[{version:1,betreff:'Rückfrage '+i,inhalt:'Alt',autor:'Demo-Benutzer',zeitpunkt:zeit,aktion:'Erstellt'}]});
@@ -27,3 +27,36 @@ test('Kontaktänderung zeigt Vergleich und sendet nur gewählte Entscheidung mit
 test('Posteingang kategorisiert ausdrücklich und ordnet ohne Kopie zur bestehenden Akte zu',async()=>{const requests=[];const d={...doc(1),vorgaenge:[]};await mount(Posteingang,{},async(url,o)=>{if(o?.method==='POST'){requests.push(JSON.parse(o.body));return ok(d);}return ok(url.endsWith('dokumente')?[]:url.endsWith('posteingang')?{dokumente:[d],scanner:{aktiv:false,status:'Vorbereitet'}}:url.endsWith('akten')?[{id,titel:'Versicherung',kategorie:'Versicherung'}]:url.endsWith('kontakte')?[]:url.endsWith('kategorien')?[{id:'ungeklaert',name:'Ungeklärt',beschreibung:'',archiviert:false},{id:'versicherung',name:'Versicherung',beschreibung:'',archiviert:false}]:{text:'Briefinhalt'});},async()=>{await act(async()=>document.querySelector('.p-rowlink').click());const f=document.querySelector('.p-zuordnung');assert.equal(f.querySelector('[name=kategorie]').value,'ungeklaert');f.querySelector('[name=kategorie]').value='versicherung';f.querySelector('[name=akte]').value=id;await act(async()=>f.dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true})));assert.equal(requests[0].vorgangId,id);assert.equal(requests[0].kategorie,'versicherung');assert.equal(requests[0].version,1);assert.equal(requests[0].neuerTitel,null);});});
 
 test('Datenqualität getrennte Uploadgrenzen und CSV',()=>{assert.equal(dateiFehler({name:'Beleg.pdf',size:3000000,type:'application/pdf'}),null);assert.match(dateiFehler({name:'Import.xlsx',size:3000000,type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},true),/2,1 MB/);assert.equal(dateiFehler({name:'Liste.csv',size:100,type:'text/csv'}),null);assert.match(dateiFehler({name:'Makro.docm',size:100,type:''}),/Dateityp/);});
+
+
+test('Posteingangvertraege validieren Demo und Workflow sowie fehlerhafte Antworten',async()=>{
+ const {antwortGueltig}=await import('../node_modules/.cache/betriebsplattform-tests/akte-api.js');
+ const d={id:'d',titel:'Brief',dateiname:'brief.txt',art:'Sonstiges',erfasstAm:'2026-10-20',vorschau:'text',vorgaenge:[]};
+ const e={id:'e',dokumentId:'d',betreff:'Brief',status:'Neu',eingegangenAm:'2026-10-20'};
+ assert.equal(antwortGueltig('posteingang',{dokumente:[d],scanner:{aktiv:false}}),true);
+ assert.equal(antwortGueltig('posteingang?seite=0',{dokumente:[d],scanner:{aktiv:false},anzahl:1}),true);
+ assert.equal(antwortGueltig('posteingang?seite=0',{eintraege:[e],anzahl:1}),true);
+ assert.equal(antwortGueltig('posteingang/e',{eingang:e,historie:[]}),true);
+ assert.equal(antwortGueltig('posteingang/d',d),true);
+ for(const v of [{eintraege:[d],anzahl:1},{dokumente:[e],scanner:{}},{eintraege:[],anzahl:'1'},{dokumente:[],scanner:null}])assert.equal(antwortGueltig('posteingang',v),false);
+ assert.equal(antwortGueltig('posteingang/e',{eingang:{id:'e'},historie:[]}),false);
+});
+
+
+test('Posteingangszaehler haben einen eigenen Antwortvertrag',async()=>{
+ const {antwortGueltig}=await import('../node_modules/.cache/betriebsplattform-tests/akte-api.js');
+ assert.equal(antwortGueltig('posteingang/uebersicht',{neu:1,pruefen:1,meine:0}),true);
+ for(const v of [{neu:'1',pruefen:1,meine:0},{neu:-1,pruefen:0,meine:0},{neu:1,pruefen:1},{neu:0.5,pruefen:1,meine:0}])assert.equal(antwortGueltig('posteingang/uebersicht',v),false);
+});
+
+
+test('Antwortabbruch nach HTTP-Headern zeigt verständlichen Fehler und wiederholt keine Schreibaktion',async()=>{
+ const oldFetch=globalThis.fetch;const calls=[];
+ try{
+  for(const error of [new DOMException('signal timed out','TimeoutError'),new SyntaxError('Unexpected token: synthetic payload')]){
+   globalThis.fetch=async(input,options)=>{calls.push({input,options});return{ok:true,status:200,json:async()=>{throw error;}};};
+   await assert.rejects(anfrage('aufgaben/',{betreff:'Synthetischer Entwurf'}),{message:'Die Antwort konnte nicht gelesen werden. Bitte erneut versuchen.'});
+  }
+  assert.equal(calls.length,2);assert.ok(calls.every(c=>c.options.method==='POST'));
+ }finally{globalThis.fetch=oldFetch;}
+});

@@ -22,7 +22,7 @@ function Uebungsfaelle() {
   const [beispiel,setBeispiel] = useState<Beispiel>('fehler');
   const laden = useCallback((signal:AbortSignal)=>ladeImport(beispiel,signal),[beispiel]);
   const {daten,laedt,fehler,erneut} = useDaten(laden);
-  return <><section className="p-dateiauswahl" aria-label="Synthetisches Beispiel"><Icon name="import" /><div><label htmlFor="p-beispiel">Synthetisches XLSX-Beispiel</label><select id="p-beispiel" value={beispiel} onChange={e=>setBeispiel(e.target.value as Beispiel)}><option value="fehler">Rechnung, Zahlung und fehlerhafter Betrag</option><option value="gueltig">Rechnung und unbestätigte Zahlung</option><option value="dublette">Widersprüchliche Zahlungsdublette</option></select></div><button disabled={laedt} onClick={erneut}><Icon name="erneut" />Erneut prüfen</button></section><p className="p-fussnote">Lokal erzeugte Testdatei. Kein Upload eigener Dateien, keine Makroausführung.</p><Zustand laedt={laedt} fehler={fehler} erneut={erneut}/>{daten&&<Importergebnis key={beispiel} daten={daten}/>}</>;
+  return <><section className="p-dateiauswahl" aria-label="Beispiel auswählen"><Icon name="import" /><div><label htmlFor="p-beispiel">Beispiel-Arbeitsmappe</label><select id="p-beispiel" value={beispiel} onChange={e=>setBeispiel(e.target.value as Beispiel)}><option value="fehler">Rechnung, Zahlung und fehlerhafter Betrag</option><option value="gueltig">Rechnung und unbestätigte Zahlung</option><option value="dublette">Widersprüchliche Zahlungsdublette</option></select></div><button disabled={laedt} onClick={erneut}><Icon name="erneut" />Erneut prüfen</button></section><p className="p-fussnote">Lokal erzeugte Testdatei. Kein Upload eigener Dateien, keine Makroausführung.</p><Zustand laedt={laedt} fehler={fehler} erneut={erneut}/>{daten&&<Importergebnis key={beispiel} daten={daten}/>}</>;
 }
 
 
@@ -72,6 +72,6 @@ export default function Importvorschau({rueckkehr=0,dateiId}:{rueckkehr?:number;
       {!vorgang.ergebnis && vorgang.mappingBestaetigt && <div className="p-uebernahme"><label className="p-bestaetigung"><input type="checkbox" checked={bestaetigt} disabled={arbeitet} onChange={e=>setBestaetigt(e.target.checked)}/> Ich habe die ausgewählten Rechnungen, Firmenrollen und Hinweise geprüft. Nur in den lokalen Arbeitsbestand übernehmen.</label><button disabled={arbeitet || !bestaetigt || auswahl.length===0} onClick={()=>void aktion(async()=>anzeigen(await importUebernehmen(vorgang,auswahl)))}>{auswahl.length} {auswahl.length===1?'Rechnung':'Rechnungen'} in Arbeitsbestand übernehmen</button></div>}
 
     </section>}
-    {umgebung.diagnose&&<details className="p-uebungen"><summary>Synthetische Prüffälle ohne Dateiübernahme</summary><Uebungsfaelle/></details>}
+    {umgebung.diagnose&&<details className="p-uebungen"><summary>Beispiele ohne Dateiübernahme</summary><Uebungsfaelle/></details>}
   </>;
 }

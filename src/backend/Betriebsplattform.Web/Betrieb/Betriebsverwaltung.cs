@@ -21,7 +21,7 @@ public static class Betriebsverwaltung
                 case "restore":await tool.Wiederherstellen(c["FirmenZentrale:Operations:RestoreSource"]??"",p.Verbindung!,c["FirmenZentrale:Operations:RestoreDatabase"]??"",c["FirmenZentrale:Operations:RestoreRoot"]??"");Console.WriteLine("Wiederherstellung abgeschlossen und Dokumentintegrität geprüft.");return 0;
                 case "bootstrap":
                     if(Console.IsInputRedirected)throw new InvalidOperationException();
-                    Console.Write("Initialer Login: ");var login=Console.ReadLine();Console.Write("Anzeigename: ");var name=Console.ReadLine();Console.Write("Passwort (mindestens 14 Zeichen): ");
+                    Console.Write("Initialer Login: ");var login=Console.ReadLine();Console.Write("Anzeigename: ");var name=Console.ReadLine();Console.Write("Passwort (mindestens 15 Zeichen): ");
                     var chars=new List<char>();ConsoleKeyInfo key;while((key=Console.ReadKey(intercept:true)).Key!=ConsoleKey.Enter){if(key.Key==ConsoleKey.Backspace){if(chars.Count>0)chars.RemoveAt(chars.Count-1);}else if(!char.IsControl(key.KeyChar)&&chars.Count<128)chars.Add(key.KeyChar);}Console.WriteLine();
                     await using(var tx=await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable)){await Anmeldung.Anlegen(db,Anmeldung.Passwortdienst(),new(login,name,new string(chars.ToArray()),"Administrator"),bootstrap:true);await tx.CommitAsync();}chars.Clear();Console.WriteLine("Initialer Administrator angelegt; kein Standardpasswort verwendet.");return 0;
                 case "provision":
@@ -45,6 +45,11 @@ public static class Betriebsverwaltung
     {
         if(!System.Text.RegularExpressions.Regex.IsMatch(name,@"\Afz_app_[a-z0-9_]{1,32}\z"))throw new InvalidOperationException();
         await using var c=new NpgsqlConnection(administration);await c.OpenAsync(ct);await using var tx=await c.BeginTransactionAsync(ct);var identifier=new NpgsqlCommandBuilder().QuoteIdentifier(name);var database=new NpgsqlCommandBuilder().QuoteIdentifier(c.Database);
-        await using(var cmd=new NpgsqlCommand("REVOKE CREATE ON SCHEMA public FROM PUBLIC; GRANT CONNECT ON DATABASE "+database+" TO "+identifier+"; GRANT USAGE ON SCHEMA public TO "+identifier+"; GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO "+identifier+"; REVOKE DELETE ON ALL TABLES IN SCHEMA public FROM "+identifier+"; GRANT DELETE ON TABLE \"Ressourcenfreigaben\" TO "+identifier+"; REVOKE INSERT, UPDATE, DELETE ON TABLE \"__EFMigrationsHistory\" FROM "+identifier+"; REVOKE UPDATE, DELETE ON TABLE \"Sicherheitsereignisse\" FROM "+identifier+"; GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO "+identifier,c,tx))await cmd.ExecuteNonQueryAsync(ct);await tx.CommitAsync(ct);
+        await using(var cmd=new NpgsqlCommand("REVOKE CREATE ON SCHEMA public FROM PUBLIC; GRANT CONNECT ON DATABASE "+database+" TO "+identifier+"; GRANT USAGE ON SCHEMA public TO "+identifier+"; GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO "+identifier+"; REVOKE DELETE ON ALL TABLES IN SCHEMA public FROM "+identifier+"; GRANT DELETE ON TABLE \"Ressourcenfreigaben\" TO "+identifier+"; REVOKE INSERT, UPDATE, DELETE ON TABLE \"__EFMigrationsHistory\" FROM "+identifier+"; REVOKE UPDATE, DELETE ON TABLE \"Sicherheitsereignisse\", \"Aufgabenverlauf\", \"Terminverlauf\", \"Dokumentaktivitaeten\", \"Berechtigungsaenderungen\" FROM "+identifier+"; REVOKE INSERT, UPDATE, DELETE ON TABLE \"Rechtevorlagenversionen\" FROM "+identifier+"; GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO "+identifier,c,tx))await cmd.ExecuteNonQueryAsync(ct);
+        foreach(var t in new[]{"Leistungsplaene","Leistungsnachweise","Leistungsaktionen"}){
+            await using var exists=new NpgsqlCommand("SELECT to_regclass(@table) IS NOT NULL",c,tx);exists.Parameters.AddWithValue("table","public.\""+t+"\"");
+            if(await exists.ExecuteScalarAsync(ct) is true){await using var deny=new NpgsqlCommand("REVOKE UPDATE,DELETE ON TABLE \""+t+"\" FROM "+identifier,c,tx);await deny.ExecuteNonQueryAsync(ct);}
+        }
+        await tx.CommitAsync(ct);
     }
 }

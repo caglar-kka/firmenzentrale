@@ -13,9 +13,14 @@ public static class PostgreSqlHost
     public static WebApplication Erstellen(WebApplicationBuilder builder,Persistenzkonfiguration config,int port,string? frontend,Arbeitsmodule? module,ILesezugriff? rechte,IArbeitsrechte? schreibrechte,X509Certificate2? testZertifikat=null)
     {
         var aktiv=module??new Arbeitsmodule();var lesen=rechte??new LokalerDemozugriff();var schreiben=schreibrechte??new LokaleArbeitsrechte();
+        var pdfExe=builder.Configuration["FirmenZentrale:Dokumentanalyse:Ghostscript"];
+        var ocrExe=builder.Configuration["FirmenZentrale:Dokumentanalyse:Tesseract"];var sprachdaten=builder.Configuration["FirmenZentrale:Dokumentanalyse:Sprachdaten"];
+        IOcrAnalyse? ocr=!string.IsNullOrWhiteSpace(ocrExe)&&!string.IsNullOrWhiteSpace(sprachdaten)?new LokaleOcr(ocrExe,sprachdaten):null;
+        if(!string.IsNullOrWhiteSpace(pdfExe))builder.Services.AddSingleton<IPdfAnalyse>(new LokalerPdfAdapter(pdfExe,ocr));
+        builder.Services.AddSingleton(s=>new Dokumentanalysator(s.GetService<IPdfAnalyse>()));
         builder.Logging.ClearProviders();builder.Logging.AddSimpleConsole();builder.Logging.AddFilter("Microsoft.EntityFrameworkCore",LogLevel.None);builder.Logging.AddFilter("Npgsql",LogLevel.None);
         builder.Logging.AddFilter("Microsoft.AspNetCore",LogLevel.Warning);builder.Logging.AddFilter("Microsoft.AspNetCore.DataProtection",LogLevel.Warning);
-        var pilot=Pilotoptionen.Lesen(builder.Configuration);Anmeldung.Dienste(builder,pilot,config.Dateiablage);
+        var pilot=Pilotoptionen.Lesen(builder.Configuration);var leistungen=pilot.Aktiv&&builder.Configuration.GetValue<bool>("FirmenZentrale:Leistungsnachweise:Enabled");Anmeldung.Dienste(builder,pilot,config.Dateiablage);
         if(builder.Configuration["FirmenZentrale:Network:Address"] is string address&&address!="127.0.0.1")throw new InvalidOperationException("LAN binding requires a separately approved deployment gate. Loopback only.");
         port=builder.Configuration.GetValue<int?>("FirmenZentrale:Network:Port")??port;if(port is <0 or >65535)throw new InvalidOperationException("Invalid local application port.");
         builder.Services.AddSingleton(config);
@@ -24,13 +29,23 @@ public static class PostgreSqlHost
         builder.Services.ConfigureHttpJsonOptions(o=>{o.SerializerOptions.Converters.Add(new JsonStringEnumConverter());o.SerializerOptions.MaxDepth=16;o.SerializerOptions.UnmappedMemberHandling=JsonUnmappedMemberHandling.Disallow;});
         builder.Services.AddDbContextFactory<FirmenDbContext>(o=>o.UseNpgsql(config.Verbindung!,n=>n.SetPostgresVersion(18,0)).EnableSensitiveDataLogging(false));
         builder.Services.AddScoped<FirmenDaten>();builder.Services.AddScoped<FinanzDaten>();
+        if(pilot.Aktiv){builder.Services.AddScoped<Betriebsplattform.Web.Assistenz.Assistenzkontext>();builder.Services.AddSingleton<Betriebsplattform.Web.Assistenz.ILokaleInferenz>(s=>new Betriebsplattform.Web.Assistenz.LokaleInferenz(builder.Configuration));}
+        builder.Services.AddScoped<DokumentmusterDienst>();
+        var scanAktiv=pilot.Aktiv&&aktiv.Aktiv("Akten")&&builder.Configuration.GetValue<bool>("FirmenZentrale:Scanordner:Aktiv");
+        if(scanAktiv){
+            var quelle=new Scanordneroptionen(builder.Configuration["FirmenZentrale:Scanordner:QuelleId"]??"",builder.Configuration["FirmenZentrale:Scanordner:Pfad"]??"",builder.Configuration["FirmenZentrale:Scanordner:BenutzerId"]??"");
+            builder.Services.AddSingleton(new PersistenterScanordner(quelle));
+        }
+        if(pilot.Aktiv){builder.Services.AddSingleton(TimeZoneInfo.FindSystemTimeZoneById(builder.Configuration["FirmenZentrale:ZeitZone"]??"Europe/Berlin"));builder.Services.AddScoped<Betriebsplattform.Web.Aufgaben.AufgabenDienst>();builder.Services.AddScoped<Betriebsplattform.Web.Aufgaben.Termindienst>();builder.Services.AddScoped<Betriebsplattform.Web.Leistungen.Leistungsdienst>();builder.Services.AddScoped<EingangsDienst>();}
         builder.Services.AddSingleton(new LokaleDokumentdateien(config.Dateiablage,builder.Environment.ContentRootPath,builder.Environment.WebRootPath??Path.Combine(builder.Environment.ContentRootPath,"wwwroot"),frontend??Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"../../../../../frontend/dist"))));
         builder.Services.AddSingleton<IDokumentdateien>(s=>s.GetRequiredService<LokaleDokumentdateien>());
         builder.Services.AddHostedService<DatenbankStartpruefung>();builder.Services.AddHostedService<Betriebsplattform.Web.Betrieb.Betriebssperre>();
         builder.Services.AddSingleton<IHostedService>(s=>s.GetRequiredService<LokaleDokumentdateien>());builder.Services.AddHostedService<Betriebsplattform.Web.Betrieb.PilotStartpruefung>();
+        if(scanAktiv)builder.Services.AddHostedService<PersistenterScanordnerDienst>();
         var app=builder.Build();Webschutz.Konfigurieren(app,aktiv);Anmeldung.Pipeline(app,pilot);Anmeldung.Endpunkte(app,pilot);
         var api=app.MapGroup("/api");
         if(pilot.Aktiv)api.RequireAuthorization();
+        api.MapGet("/organisation",()=>Organisation.Lesen(builder.Configuration));
         bool DarfVerwalten(string aktion)=>schreiben.Darf(aktion)&&(!pilot.Aktiv||aktion is not ("Kategorien.Verwalten" or "Diagnose.Lesen")||app.Services.GetRequiredService<IHttpContextAccessor>().HttpContext!.User.IsInRole("Administrator"));
         void Darf(string aktion){if(!DarfVerwalten(aktion))throw new Arbeitsfehler("Für diese Aktion fehlt die Berechtigung.",403);}
         void Zugriff(string art,string? id){if(id is null)return;FirmenDaten.Id(id);if(!lesen.Erlaubt(art,id))throw new Arbeitsfehler("Für diesen Eintrag fehlt die Berechtigung.",403);}
@@ -57,7 +72,7 @@ public static class PostgreSqlHost
             catch(Exception e) when(e is DbUpdateException or NpgsqlException or TimeoutException or IOException or UnauthorizedAccessException){var f=Persistenzfehler.Beschreiben(e);return Results.Json(new ApiFehler(f.Meldung),statusCode:f.Status);}
         });
         api.MapGet("/persistenz",()=>new{provider="PostgreSQL",fluechtig=false,authentifizierung=pilot.Aktiv?"Individuelle Cookie-Anmeldung":"Keine produktive Authentifizierung",seeding="Nicht aktiviert"});
-        api.MapGet("/arbeitsumgebung",(HttpContext c)=>new{beispielkennzeichnung=!pilot.Aktiv||app.Environment.IsDevelopment(),diagnose=false,benutzer=pilot.Aktiv?c.User.Identity!.Name:Arbeitskontext.Benutzer,authentifiziert=pilot.Aktiv,administrator=pilot.Aktiv&&c.User.IsInRole("Administrator"),fluechtigeDaten=false,kategorienVerwalten=DarfVerwalten("Kategorien.Verwalten"),kontakteVerwalten=DarfVerwalten("Kontakte.Verwalten"),aktenVerwalten=DarfVerwalten("Akten.Verwalten")});
+        api.MapGet("/arbeitsumgebung",(HttpContext c)=>new{leistungsnachweiseAktiv=leistungen,beispielkennzeichnung=!pilot.Aktiv||app.Environment.IsDevelopment(),diagnose=false,benutzer=pilot.Aktiv?c.User.Identity!.Name:Arbeitskontext.Benutzer,authentifiziert=pilot.Aktiv,administrator=pilot.Aktiv&&c.User.IsInRole("Administrator"),fluechtigeDaten=false,kategorienVerwalten=DarfVerwalten("Kategorien.Verwalten"),kontakteVerwalten=DarfVerwalten("Kontakte.Verwalten"),aktenVerwalten=DarfVerwalten("Akten.Verwalten")});
         api.MapGet("/module",()=>new{module=aktiv.Liste,umgebung="Lokale Entwicklungsgrundlage",persistenz="PostgreSQL"});
         api.MapGet("/akten-status",()=>Vorgangsbearbeitung.Werte);
         api.MapGet("/kategorien",async(FirmenDaten d,CancellationToken ct)=>(await d.Db.Kategorien.AsNoTracking().OrderBy(k=>k.ElternId).ThenBy(k=>k.Reihenfolge).ThenBy(k=>k.Name).Take(100).ToArrayAsync(ct)).Select(FirmenDaten.KategorieAnsicht));
@@ -81,13 +96,8 @@ public static class PostgreSqlHost
             return a with{Vorgang=a.Vorgang with{Dokumentanzahl=docs.Length},Dokumente=docs,Kontaktvorschlaege=a.Kontaktvorschlaege.Where(v=>lesen.Erlaubt("Firma",v.FirmaId)&&lesen.Erlaubt("Dokument",v.DokumentId)).ToArray(),Korrespondenz=a.Korrespondenz.Where(k=>k.KontaktId is null||lesen.Erlaubt("Firma",k.KontaktId)).Select(k=>k with{DokumentIds=k.DokumentIds?.Where(id=>lesen.Erlaubt("Dokument",id)).ToArray()}).ToArray()};
         }).WithMetadata(new Ressource("Vorgang","akte"));
         api.MapPost("/akten/{akte}/bearbeitungsstatus",(string akte,Bearbeitungsentscheidung e,FirmenDaten d,CancellationToken ct)=>d.AkteStatus(akte,e,ct)).WithMetadata(new Ressource("Vorgang","akte","Akten.Verwalten"));
-        api.MapGet("/posteingang",async(HttpContext c,FirmenDaten d,CancellationToken ct)=>{
-            if(lesen is not LokalerDemozugriff)throw new Arbeitsfehler("Für diese Liste fehlt ein Datenbank-Rechtefilter.",403);
-            var result=await d.EingangSuchen(Listenfilter.Lesen(c),Page(c),ct,aktiv);
-            return new{dokumente=result.Eintraege,anzahl=result.Anzahl,scanner=new{aktiv=false,status="Scan-Ordner ist im PostgreSQL-Modus noch nicht angebunden. Direkte Aktenablage und Upload sind möglich.",uebernommen=0,fehler=0,wartend=0}};
-        });
-        api.MapGet("/posteingang/{id}",async(string id,FirmenDaten d,CancellationToken ct)=>(await d.DokumentAnsichten([await d.DokumentMetadaten().SingleOrDefaultAsync(x=>x.Id==FirmenDaten.Id(id),ct)??throw new Arbeitsfehler("Dokument nicht gefunden.",404)],ct)).Single()).WithMetadata(new Ressource("Dokument","id"));
-        api.MapPost("/posteingang/{id}/zuordnen",async(string id,Zuordnung e,FirmenDaten d,CancellationToken ct)=>{await AkteZugriff(d,e.VorgangId,ct);Zugriff("Firma",e.FirmaId);return (await d.DokumentAnsichten([await d.Erstzuordnen(id,e,ct)],ct)).Single();}).WithMetadata(new Ressource("Dokument","id","Akten.Verwalten"));
+        if(pilot.Aktiv)EingangsDienst.Endpunkte(app,schreiben,aktiv);
+        if(!pilot.Aktiv)api.MapPost("/posteingang/{id}/zuordnen",async(string id,Zuordnung e,FirmenDaten d,CancellationToken ct)=>{await AkteZugriff(d,e.VorgangId,ct);Zugriff("Firma",e.FirmaId);return (await d.DokumentAnsichten([await d.Erstzuordnen(id,e,ct)],ct)).Single();}).WithMetadata(new Ressource("Dokument","id","Akten.Verwalten"));
         api.MapPost("/dokumente/{id}/umordnen",async(string id,Umzuordnung e,FirmenDaten d,CancellationToken ct)=>{await AkteZugriff(d,e.BisherigerVorgangId,ct);await AkteZugriff(d,e.NeuerVorgangId,ct);Zugriff("Firma",e.FirmaId);return (await d.DokumentAnsichten([await d.Umordnen(id,e,ct)],ct)).Single();}).WithMetadata(new Ressource("Dokument","id","Akten.Verwalten"));
         api.MapPost("/kontaktvorschlaege/{id}",async(string id,Kontaktfreigabe e,FirmenDaten d,CancellationToken ct)=>{
             Darf("Kontakte.Verwalten");var v=await d.Db.Kontaktvorschlaege.AsNoTracking().SingleOrDefaultAsync(v=>v.Id==FirmenDaten.Id(id),ct)??throw new Arbeitsfehler("Vorschlag nicht gefunden.",404);Zugriff("Firma",v.KontaktId);Zugriff("Dokument",v.DokumentId);return await d.KontaktvorschlagEntscheiden(id,e,ct);
@@ -128,6 +138,7 @@ public static class PostgreSqlHost
         // The old importer is explicitly synthetic and depends on demo identities: never silently reuse it here.
         api.MapGet("/importe",()=>Array.Empty<DemoImportansicht>());
         api.MapPost("/importe/{**pfad}",()=>Results.Json(new ApiFehler("Die strukturierte Übernahme ist noch auf den getrennten Demo-Modus begrenzt."),statusCode:409));
+        if(pilot.Aktiv){Betriebsplattform.Web.Aufgaben.AufgabenEndpunkte.Registrieren(app);Betriebsplattform.Web.Aufgaben.Kalender.Endpunkte(app);Betriebsplattform.Web.Aufgaben.Termindienst.Endpunkte(app);if(leistungen)Betriebsplattform.Web.Leistungen.Leistungsdienst.Endpunkte(app);Bildverwaltung.Endpunkte(app);Betriebsplattform.Web.Assistenz.Assistenzkontext.Endpunkte(api,lesen,aktiv);}
         Webschutz.Oberflaeche(app,frontend);return app;
     }
     private sealed record Ressource(string Art,string Parameter,string? Schreibrecht=null);

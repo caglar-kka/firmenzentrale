@@ -31,7 +31,7 @@ internal sealed partial class Kontaktpflege
  internal static bool Gueltig(string art,string wert)=>art switch{
   "E-Mail"=>Regex.IsMatch(wert,@"\A[A-Za-z0-9_+.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\z")&&!wert.Contains("..")&&wert.Length<=254,
   "Website"=>Uri.TryCreate(wert,UriKind.Absolute,out var uri)&&uri.Scheme is "https" or "http"&&uri.UserInfo.Length==0&&!string.IsNullOrWhiteSpace(uri.Host),
-  "Telefon"=>Regex.IsMatch(wert,@"\A(?:\+[1-9]|0)[0-9 ()/-]{5,25}\z"),_=>wert.Length is >0 and <=200&&!wert.Any(char.IsControl)
+  "Telefon"=>Kontaktvalidierung.Telefon(wert),_=>wert.Length is >0 and <=200&&!wert.Any(char.IsControl)
  };
  internal Firmenkontakt Entscheiden(string id,Kontaktfreigabe e){
   if(!vorschlaege.TryGetValue(id,out var v))throw new Arbeitsfehler("Kontaktvorschlag nicht gefunden.",404);

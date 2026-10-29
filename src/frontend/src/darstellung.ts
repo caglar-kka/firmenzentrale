@@ -18,7 +18,7 @@ export function datumAnzeigen(iso: string, region: Region = 'DE'): string {
 export type Statusdarstellung = { text: string; ton: 'neutral' | 'erfolg' | 'arbeit' | 'warnung' | 'fehler'; symbol: string };
 export function zahlungsstatus(text: string): Statusdarstellung {
   if (text === 'Bezahlt' || text === 'Bestätigt' || text === 'Bestätigt (synthetisch)') return { text: text.startsWith('Bestätigt')?'Zahlung bestätigt':text, ton: 'erfolg', symbol: '✓' };
-  if(text==='Offen')return{text,ton:'warnung',symbol:'○'};
+  if(text==='Offen')return{text,ton:'neutral',symbol:'○'};
   if(text==='Überfällig')return{text,ton:'fehler',symbol:'!'};
   if (text === 'Teilzahlung') return { text: 'Teilweise bezahlt', ton: 'arbeit', symbol: '◐' };
   if (text === 'Zur Prüfung') return { text, ton: 'warnung', symbol: '△' };
@@ -36,7 +36,7 @@ function einFehler(a:string,b:string):boolean{if(Math.abs(a.length-b.length)>1)r
 export function suchePasst(q:string,text:string):boolean{if(q.length>120)return false;const a=suchwoerter(q),w=suchwoerter(text);return a.length?a.every(t=>w.some(s=>s.includes(t)||(t.length>=4&&s.length>=4&&einFehler(t,s)))):!q.trim();}
 export function geldSortierwert(s:string):number|null{const t=s.replace(/\s/g,'').replace(/€$/,'');if(!/^-?(?:\d{1,3}(?:\.\d{3})*|\d+),\d{2}$/.test(t))return null;const n=Number(t.replace(/\./g,'').replace(',','.'));return Number.isFinite(n)?n:null;}
 export function rechnungenFiltern(rechnungen:Rechnung[],suche:string,status:string,sortierung:Sortierung,ab=sortierung==='datum',richtung='Alle'):Rechnung[]{
- return rechnungen.filter(r=>(status==='Alle'||r.status===status)&&suchePasst(suche,[r.nummer,r.aussteller,r.empfaenger,r.beleg,r.quellenort].join(' '))&&(richtung==='Alle'||r.status!=='Bezahlt'&&eigeneRolle(r)===(richtung==='Forderungen'?'Aussteller':'Empfänger'))).sort((a,b)=>{
+ return rechnungen.filter(r=>(status==='Alle'||r.status===status)&&suchePasst(suche,[r.nummer,r.aussteller,r.empfaenger,r.beleg,r.quellenort].join(' '))&&(richtung==='Alle'||(['Eingang','Ausgang'].includes(richtung)?eigeneRolle(r)===(richtung==='Ausgang'?'Aussteller':'Empfänger'):r.status!=='Bezahlt'&&eigeneRolle(r)===(richtung==='Forderungen'?'Aussteller':'Empfänger')))).sort((a,b)=>{
   let n:number;if(sortierung==='betrag'){const x=geldSortierwert(a.betrag),y=geldSortierwert(b.betrag);if(x===null||y===null)return x===y?0:x===null?1:-1;n=x-y;}
   else if(sortierung==='status')n=['Offen','Teilzahlung','Bezahlt'].indexOf(a.status)-['Offen','Teilzahlung','Bezahlt'].indexOf(b.status);
   else n=a[sortierung].localeCompare(b[sortierung],'de',{numeric:true});return (ab?-n:n)||a.nummer.localeCompare(b.nummer,'de');

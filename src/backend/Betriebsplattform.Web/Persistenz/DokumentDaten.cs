@@ -7,26 +7,27 @@ namespace Betriebsplattform.Web.Persistenz;
 
 public sealed partial class FirmenDaten
 {
-    public async Task<DokumentDatensatz> DokumentHinzufuegen(byte[] bytes,string name,string mime,string? akte,IDokumentdateien dateien,CancellationToken ct=default)
+    public async Task<DokumentDatensatz> DokumentHinzufuegen(byte[] bytes,string name,string mime,string? akte,IDokumentdateien dateien,CancellationToken ct=default,string kanal="Upload",string? scanauftragId=null,string? benutzer=null)
     {
         var gelesen=new Dokumentpruefung().Pruefen(bytes,name,mime);var hash=Convert.ToHexString(SHA256.HashData(bytes));
+        if(kanal is not ("Upload" or "Scan-Ordner")||scanauftragId is not null&&(kanal!="Scan-Ordner"||!await db.Scanauftraege.AnyAsync(j=>j.Id==scanauftragId&&j.Hash==hash&&j.Status=="In Bearbeitung",ct)))throw new Arbeitsfehler("Eingangsquelle nicht freigegeben.",403);
         if(pilot?.Aktiv==true)await (scanner??new Betriebsplattform.Web.Sicherheit.NichtKonfigurierterScanner()).Freigeben(bytes,ct);
         if(akte is not null){var a=await Finden<AkteDatensatz>(akte,ct);if(a.Status=="Archiviert")throw new Arbeitsfehler("Bitte eine aktive Akte wählen.");}
         var alt=await db.Dokumente.SingleOrDefaultAsync(d=>d.Hash==hash,ct);
         if(alt is not null){
             var bisher=await db.Dokumentzuordnungen.Where(z=>z.DokumentId==alt.Id).Select(z=>z.AkteId).SingleOrDefaultAsync(ct);
             if(akte is not null&&bisher!=akte)throw new Arbeitsfehler("Diese Datei ist bereits vorhanden. Bitte die bestehende Zuordnung prüfen oder ändern.",409);
-            db.Dokumentaktivitaeten.Add(new(){DokumentId=alt.Id,AkteId=bisher,Text="Identische Datei erneut eingegangen",Kanal="Upload",Benutzer=Arbeitskontext.Benutzer});alt.GeaendertAm=DateTimeOffset.UtcNow;
+            db.Dokumentaktivitaeten.Add(new(){DokumentId=alt.Id,AkteId=bisher,Text="Identische Datei erneut eingegangen",Kanal=kanal,ScanauftragId=scanauftragId,Benutzer=benutzer??Arbeitskontext.Benutzer});alt.GeaendertAm=DateTimeOffset.UtcNow;
             await db.SaveChangesAsync(ct);return alt;
         }
-        var d=new DokumentDatensatz{Titel=Path.GetFileNameWithoutExtension(name).Replace('_',' '),Dateiname=name,StorageKey=Guid.NewGuid().ToString("N"),Inhaltstyp=gelesen.Inhaltstyp,Groesse=bytes.Length,Hash=hash,Vorschau=gelesen.Vorschau,Text=gelesen.Text,Textmethode=gelesen.Textmethode,Status=akte is null?"Zur Prüfung":"Zugeordnet"};
+        var d=new DokumentDatensatz{Titel=Path.GetFileNameWithoutExtension(name).Replace('_',' '),Dateiname=name,StorageKey=Guid.NewGuid().ToString("N"),Inhaltstyp=gelesen.Inhaltstyp,Groesse=bytes.Length,Hash=hash,Vorschau=gelesen.Vorschau,Text=gelesen.Text,Textmethode=gelesen.Textmethode,Status=akte is null?"Zur Prüfung":"Zugeordnet",Kanal=kanal,Quelle=kanal};
         d.Suchtext=Normal(d.Titel+" "+d.Dateiname);if(d.Suchtext.Length>1000)d.Suchtext=d.Suchtext[..1000];
         d.Titel=Arbeitsregeln.Text(d.Titel,"Dokumenttitel",160);await dateien.Speichern(d.StorageKey,bytes,ct);
         var commitBegonnen=false;
         try{
         await using var tx=await db.Database.BeginTransactionAsync(ct);
         db.Dokumente.Add(d);if(akte is not null)db.Dokumentzuordnungen.Add(new(){DokumentId=d.Id,AkteId=akte});
-        db.Dokumentaktivitaeten.Add(new(){DokumentId=d.Id,AkteId=akte,Text="Dokument eingegangen",Kanal="Upload",Benutzer=Arbeitskontext.Benutzer});
+        db.Dokumentaktivitaeten.Add(new(){DokumentId=d.Id,AkteId=akte,Text="Dokument eingegangen",Kanal=kanal,ScanauftragId=scanauftragId,Benutzer=benutzer??Arbeitskontext.Benutzer});
         await db.SaveChangesAsync(ct);if(akte is not null){await KontaktangabenErkennen(d,akte,ct);await db.SaveChangesAsync(ct);}commitBegonnen=true;await tx.CommitAsync(ct);return d;
         }catch{
             // Transaction disposal/rollback precedes compensation, including cancellation.

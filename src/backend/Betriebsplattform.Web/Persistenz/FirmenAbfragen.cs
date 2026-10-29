@@ -14,6 +14,17 @@ public sealed partial class FirmenDaten
         var werte=await db.Kontaktwerte.AsNoTracking().Where(w=>kontaktIds.Contains(w.KontaktId)&&w.Aktiv).Take(10000).ToArrayAsync(ct);
         return ids.ToDictionary(id=>id!,id=>string.Join(" ",kontakte.Where(k=>k.Id==id||k.FirmaId==id).Select(k=>k.Name+" "+k.Anschrift+" "+k.Ort+" "+k.Rolle+" "+string.Join(" ",werte.Where(w=>w.KontaktId==k.Id).Select(w=>w.Wert)))));
     }
+    // Keep memory bounded while counting all fuzzy-search matches before selecting a page.
+    private static async Task<Ergebnisseite<T>> Suchseite<T>(IQueryable<T> query,int skip,int take,Func<T[],Task<T[]>> pruefen,CancellationToken ct)
+    {
+        var seite=new List<T>();var anzahl=0;
+        for(var offset=0;;offset+=200){
+            ct.ThrowIfCancellationRequested();var batch=await query.Skip(offset).Take(200).ToArrayAsync(ct);
+            foreach(var row in await pruefen(batch)){if(anzahl>=skip&&seite.Count<take)seite.Add(row);anzahl++;}
+            if(batch.Length<200)break;
+        }
+        return new(seite.ToArray(),anzahl);
+    }
     private static string Geld(decimal wert)=>wert.ToString("N2",CultureInfo.GetCultureInfo("de-DE"))+" €";
     public async Task<object> AktenSuchen(string? text,string? status,string? kategorie,string? sort,bool ab,int seite,bool paginiert,ILesezugriff rechte,CancellationToken ct=default,Arbeitsmodule? module=null)
     {
@@ -30,10 +41,13 @@ public sealed partial class FirmenDaten
         if(stems.Length>0)query=query.Where(a=>stems.Any(t=>a.Suchtext.Contains(t)||a.FirmenSuche.Contains(t)||a.Kategorie.ToLower().Contains(t))||docAkten.Contains(a.Id)||db.Kontakte.Any(p=>p.FirmaId==a.FirmaId&&stems.Any(t=>p.Suchname.Contains(t))));
         var geordnet=sort switch{"titel"=>ab?query.OrderByDescending(a=>a.Titel):query.OrderBy(a=>a.Titel),"kategorie"=>ab?query.OrderByDescending(a=>a.Kategorie):query.OrderBy(a=>a.Kategorie),"status"=>ab?query.OrderByDescending(a=>a.Status):query.OrderBy(a=>a.Status),_=>ab?query.OrderByDescending(a=>a.GeaendertAm):query.OrderBy(a=>a.GeaendertAm)};
         var gesamt=stems.Length==0?await query.CountAsync(ct):0;
-        var kandidaten=await geordnet.ThenBy(a=>a.Id).Skip(stems.Length==0?seite*20:0).Take(stems.Length==0?(paginiert?20:100):200).ToArrayAsync(ct);
+        var kandidaten=woerter.Length>0?[]:await geordnet.ThenBy(a=>a.Id).Skip(seite*20).Take(paginiert?20:100).ToArrayAsync(ct);
+        if(woerter.Length>0){var gefunden=await Suchseite(geordnet.ThenBy(a=>a.Id),seite*20,paginiert?20:100,async batch=>{
+            var partner=await Partnertexte(batch.Select(a=>a.FirmaId),rechte,ct);
+            return batch.Where(a=>rechte.Erlaubt("Vorgang",a.Id)&&(a.FirmaId is null||rechte.Erlaubt("Firma",a.FirmaId))&&Suchvergleich.Passt(text,"Akte "+a.Titel+" "+a.Kategorie+" "+a.Firma+" "+a.Nummer+" "+(a.FirmaId is null?"":partner.GetValueOrDefault(a.FirmaId,""))+" "+string.Join(' ',docMatches.Where(d=>d.AkteId==a.Id).Select(d=>d.Suchtext)))).ToArray();
+        },ct);kandidaten=gefunden.Eintraege;gesamt=gefunden.Anzahl;}
         var aktenPartner=await Partnertexte(kandidaten.Select(a=>a.FirmaId),rechte,ct);
         var result=kandidaten.Where(a=>rechte.Erlaubt("Vorgang",a.Id)&&(a.FirmaId is null||rechte.Erlaubt("Firma",a.FirmaId))&&(woerter.Length==0||Suchvergleich.Passt(text,"Akte "+a.Titel+" "+a.Kategorie+" "+a.Firma+" "+a.Nummer+" "+(a.FirmaId is null?"":aktenPartner.GetValueOrDefault(a.FirmaId,""))+" "+string.Join(' ',docMatches.Where(d=>d.AkteId==a.Id).Select(d=>d.Suchtext))))).Select(a=>new Vorgang(a.Id,a.Titel,a.Kategorie,a.FirmaId,a.Nummer,a.KategorieId,a.Firma,a.Status,a.GeaendertAm,a.Dokumentanzahl,"Dokumente und Schriftverkehr",a.Version)).ToArray();
-        if(stems.Length>0){gesamt=result.Length;result=result.Skip(seite*20).Take(paginiert?20:100).ToArray();}
         if(!paginiert)return result;
         if(rechte is not LokalerDemozugriff)throw new Arbeitsfehler("Berechtigte Gesamtzahlen benötigen einen Datenbank-Rechtefilter.",403);
         return new{eintraege=result,anzahl=gesamt};
@@ -43,22 +57,24 @@ public sealed partial class FirmenDaten
         if(rechte is not LokalerDemozugriff)throw new Arbeitsfehler("Berechtigte Finanzsummen benötigen einen Datenbank-Rechtefilter.",403);
         var basis=db.Rechnungen.Select(r=>new{r.Betrag,r.Richtung,Offen=r.Betrag-(db.Zahlungszuordnungen.Where(z=>z.RechnungId==r.Id).Sum(z=>(decimal?)z.Betrag)??0)});
         var sums=await basis.GroupBy(_=>1).Select(g=>new{Gesamt=g.Sum(x=>x.Betrag),Offen=g.Sum(x=>x.Offen),Forderungen=g.Sum(x=>x.Richtung=="Ausgang"?x.Offen:0),Verbindlichkeiten=g.Sum(x=>x.Richtung=="Eingang"?x.Offen:0),Unklar=g.Any(x=>x.Richtung=="Ungeklärt")}).SingleOrDefaultAsync(ct);
-        var f=filter??new Listenfilter();if(f.Text.Length>120)throw new Arbeitsfehler("Bitte höchstens 120 Suchzeichen eingeben.");var suchwoerter=Suchvergleich.Woerter(f.Text);var stems=suchwoerter.Where(t=>t.Length>1).Select(t=>t[..Math.Min(2,t.Length)]).ToArray();
+        var f=filter??new Listenfilter();if(!new[]{"","Eingang","Ausgang","Forderungen","Verbindlichkeiten"}.Contains(f.Richtung))throw new Arbeitsfehler("Bitte einen angebotenen Rechnungstyp wählen.");if(f.Text.Length>120)throw new Arbeitsfehler("Bitte höchstens 120 Suchzeichen eingeben.");var suchwoerter=Suchvergleich.Woerter(f.Text);var stems=suchwoerter.Where(t=>t.Length>1).Select(t=>t[..Math.Min(2,t.Length)]).ToArray();
         var query=from r in db.Rechnungen.AsNoTracking() join a in db.Kontakte on r.AusstellerId equals a.Id join e in db.Kontakte on r.EmpfaengerId equals e.Id
-                  where (f.Id==""||r.AkteId==f.Id)&&(f.Status==""||r.Zahlungsstatus==(f.Status=="Teilzahlung"?"Teilweise bezahlt":f.Status))
-                    &&(f.Richtung==""||r.Zahlungsstatus!="Bezahlt"&&(r.Richtung==(f.Richtung=="Forderungen"?"Ausgang":"Eingang")))
+                  where (f.Id==""||r.AkteId==f.Id||r.Id==f.Id)&&(f.Status==""||r.Zahlungsstatus==(f.Status=="Teilzahlung"?"Teilweise bezahlt":f.Status))
+                    &&(f.Richtung==""||(f.Richtung=="Eingang"||f.Richtung=="Ausgang"?r.Richtung==f.Richtung:r.Zahlungsstatus!="Bezahlt"&&r.Richtung==(f.Richtung=="Forderungen"?"Ausgang":"Eingang")))
                     &&(stems.Length==0||stems.Any(t=>r.Nummer.ToLower().Contains(t)||a.Suchname.Contains(t)||e.Suchname.Contains(t)||r.Beleg.ToLower().Contains(t)||db.Kontakte.Any(p=>(p.FirmaId==r.AusstellerId||p.FirmaId==r.EmpfaengerId)&&p.Suchname.Contains(t))))
                   select new{r,Aussteller=a.Name,Empfaenger=e.Name,Bezahlt=db.Zahlungszuordnungen.Where(z=>z.RechnungId==r.Id).Sum(z=>(decimal?)z.Betrag)??0};
         var anzahl=await query.CountAsync(ct);var bestand=await db.Rechnungen.CountAsync(ct);
         var sortiert=f.Sort switch{"datum"=>f.Ab?query.OrderByDescending(x=>x.r.Datum):query.OrderBy(x=>x.r.Datum),"betrag"=>f.Ab?query.OrderByDescending(x=>x.r.Betrag):query.OrderBy(x=>x.r.Betrag),"aussteller"=>f.Ab?query.OrderByDescending(x=>x.Aussteller):query.OrderBy(x=>x.Aussteller),"empfaenger"=>f.Ab?query.OrderByDescending(x=>x.Empfaenger):query.OrderBy(x=>x.Empfaenger),"status"=>f.Ab?query.OrderByDescending(x=>x.r.Zahlungsstatus):query.OrderBy(x=>x.r.Zahlungsstatus),_=>f.Ab?query.OrderByDescending(x=>x.r.Nummer):query.OrderBy(x=>x.r.Nummer)};
-        var daten=await sortiert.ThenBy(x=>x.r.Id).Skip(stems.Length==0?Seite(seite)*20:0).Take(stems.Length==0?20:200).ToArrayAsync(ct);
-        var rechnungsPartner=await Partnertexte(daten.SelectMany(x=>new[]{x.r.AusstellerId,x.r.EmpfaengerId}),rechte,ct);
-        if(suchwoerter.Length>0){daten=daten.Where(x=>Suchvergleich.Passt(f.Text,"Rechnung "+x.r.Nummer+" "+x.Aussteller+" "+x.Empfaenger+" "+x.r.Beleg+" "+rechnungsPartner.GetValueOrDefault(x.r.AusstellerId,"")+" "+rechnungsPartner.GetValueOrDefault(x.r.EmpfaengerId,""))).ToArray();anzahl=daten.Length;daten=daten.Skip(Seite(seite)*20).Take(20).ToArray();}
+        var daten=suchwoerter.Length>0?[]:await sortiert.ThenBy(x=>x.r.Id).Skip(Seite(seite)*20).Take(20).ToArrayAsync(ct);
+        if(suchwoerter.Length>0){var gefunden=await Suchseite(sortiert.ThenBy(x=>x.r.Id),Seite(seite)*20,20,async batch=>{
+            var partner=await Partnertexte(batch.SelectMany(x=>new[]{x.r.AusstellerId,x.r.EmpfaengerId}),rechte,ct);
+            return batch.Where(x=>Suchvergleich.Passt(f.Text,"Rechnung "+x.r.Nummer+" "+x.Aussteller+" "+x.Empfaenger+" "+x.r.Beleg+" "+partner.GetValueOrDefault(x.r.AusstellerId,"")+" "+partner.GetValueOrDefault(x.r.EmpfaengerId,""))).ToArray();
+        },ct);daten=gefunden.Eintraege;anzahl=gefunden.Anzahl;}
         var ids=daten.Select(x=>x.r.Id).ToArray();var zahlungen=await (from z in db.Zahlungszuordnungen join p in db.Zahlungen on z.ZahlungId equals p.Id join a in db.Kontakte on p.ZahlerId equals a.Id into zahler from a in zahler.DefaultIfEmpty() join e in db.Kontakte on p.EmpfaengerId equals e.Id into empfaenger from e in empfaenger.DefaultIfEmpty() where ids.Contains(z.RechnungId) orderby p.Datum,p.Id select new{z.RechnungId,p.Id,p.Datum,Zahler=a==null?"Nicht freigegebener Kontakt":a.Name,Empfaenger=e==null?"Nicht freigegebener Kontakt":e.Name,p.Betrag,Zugeordnet=z.Betrag,p.Beleg,p.Quelle}).Take(2000).ToArrayAsync(ct);
         var kontaktIds=daten.SelectMany(x=>new[]{x.r.AusstellerId,x.r.EmpfaengerId}).Distinct().ToArray();
         var kontaktwerte=await db.Kontaktwerte.AsNoTracking().Where(w=>kontaktIds.Contains(w.KontaktId)&&w.Aktiv).OrderByDescending(w=>w.Primaer).ThenBy(w=>w.Id).Take(1200).ToArrayAsync(ct);
         Kontaktansicht Kontakt(string id){var emails=kontaktwerte.Where(w=>w.KontaktId==id&&w.Art=="E-Mail").Select(w=>w.Wert).ToArray();var telefone=kontaktwerte.Where(w=>w.KontaktId==id&&w.Art=="Telefon").Select(w=>w.Wert).ToArray();return new(null,emails.FirstOrDefault(),telefone.FirstOrDefault(),"Zentrale Kontaktverwaltung",emails,telefone,[]);}
-        var rows=daten.Select(x=>{var bezahlt=x.Bezahlt;var offen=x.r.Betrag-bezahlt;return new Rechnungsansicht(x.r.Nummer,x.r.Datum.ToString("yyyy-MM-dd"),x.Aussteller,x.Empfaenger,Geld(x.r.Betrag),Geld(offen),Geld(bezahlt),offen==0?"Bezahlt":bezahlt==0?"Offen":"Teilzahlung",x.r.Beleg,x.r.Quelle,zahlungen.Where(z=>z.RechnungId==x.r.Id).Select(z=>new Zahlungsansicht(z.Datum.ToString("yyyy-MM-dd"),z.Zahler,z.Empfaenger,Geld(z.Betrag),Geld(z.Zugeordnet),"Bestätigt",z.Beleg,z.Quelle,z.Id)).ToArray(),AusstellerKontakt:Kontakt(x.r.AusstellerId),EmpfaengerKontakt:Kontakt(x.r.EmpfaengerId),VorgangId:x.r.AkteId,Perspektive:x.r.Richtung=="Ungeklärt"?null:new(x.r.Richtung=="Ausgang"?x.Aussteller:x.Empfaenger,x.r.Richtung=="Ausgang"?"Aussteller":"Empfänger"),AusstellerId:x.r.AusstellerId,EmpfaengerId:x.r.EmpfaengerId);}).ToArray();
+        var rows=daten.Select(x=>{var bezahlt=x.Bezahlt;var offen=x.r.Betrag-bezahlt;return new Rechnungsansicht(x.r.Nummer,x.r.Datum.ToString("yyyy-MM-dd"),x.Aussteller,x.Empfaenger,Geld(x.r.Betrag),Geld(offen),Geld(bezahlt),offen==0?"Bezahlt":bezahlt==0?"Offen":"Teilzahlung",x.r.Beleg,x.r.Quelle,zahlungen.Where(z=>z.RechnungId==x.r.Id).Select(z=>new Zahlungsansicht(z.Datum.ToString("yyyy-MM-dd"),z.Zahler,z.Empfaenger,Geld(z.Betrag),Geld(z.Zugeordnet),"Bestätigt",z.Beleg,z.Quelle,z.Id)).ToArray(),AusstellerKontakt:Kontakt(x.r.AusstellerId),EmpfaengerKontakt:Kontakt(x.r.EmpfaengerId),VorgangId:x.r.AkteId,Perspektive:x.r.Richtung=="Ungeklärt"?null:new(x.r.Richtung=="Ausgang"?x.Aussteller:x.Empfaenger,x.r.Richtung=="Ausgang"?"Aussteller":"Empfänger"),AusstellerId:x.r.AusstellerId,EmpfaengerId:x.r.EmpfaengerId,RechnungId:x.r.Id);}).ToArray();
         return new(true,Geld(sums?.Gesamt??0),Geld(sums?.Offen??0),rows,sums?.Unklar==true?null:Geld(sums?.Forderungen??0),sums?.Unklar==true?null:Geld(sums?.Verbindlichkeiten??0),anzahl,bestand);
     }
     public async Task<Dictionary<string,int>> Arbeitszahlen(string firma,ILesezugriff rechte,Arbeitsmodule module,CancellationToken ct=default)
@@ -85,7 +101,7 @@ public sealed partial class FirmenDaten
         if(text.Length>120)throw new Arbeitsfehler("Bitte höchstens 120 Suchzeichen eingeben.");if(text.Trim().Length<2)return[];
         var words=Suchvergleich.Woerter(text);if(words.Length==0)return[];
         var stems=words.Select(t=>t[..Math.Min(2,t.Length)]).ToArray();var treffer=new List<Suchtreffer>();
-        var kontakte=await db.Kontakte.AsNoTracking().Where(k=>!k.Archiviert&&stems.Any(t=>k.Suchname.Contains(t))).OrderBy(k=>k.Suchname).Take(100).ToArrayAsync(ct);
+        var kontakte=!await db.KontaktaktionErlaubt("Lesen",ct)?[]:await db.Kontakte.AsNoTracking().Where(k=>!k.Archiviert&&stems.Any(t=>k.Suchname.Contains(t))).OrderBy(k=>k.Suchname).Take(100).ToArrayAsync(ct);
         treffer.AddRange(kontakte.Where(k=>rechte.Erlaubt("Firma",k.Id)&&(k.FirmaId is null||rechte.Erlaubt("Firma",k.FirmaId))&&Suchvergleich.Passt(text,k.Art+" Kontakt "+k.Name+" "+k.Ort)).Select(k=>new Suchtreffer(k.Id,k.Art,k.Name,k.Art=="Person"?"Ansprechpartner":"Kontaktakte","kontakt")));
         if(module.Aktiv("Akten")){var a=(Vorgang[])await AktenSuchen(text,null,null,"titel",false,0,false,rechte,ct,module);treffer.AddRange(a.Take(10).Select(v=>new Suchtreffer(v.Id,"Akte",v.Titel,v.Kategorie+" · "+v.Firma,"vorgang",v.Id)));}
         if(module.Aktiv("Dokumente")){
@@ -125,9 +141,11 @@ public sealed partial class FirmenDaten
         if(stems.Length>0)q=q.Where(k=>stems.Any(t=>k.Suchname.Contains(t)||k.Ort.ToLower().Contains(t)||k.Strasse.ToLower().Contains(t)||db.Kontaktwerte.Any(w=>w.KontaktId==k.Id&&w.Aktiv&&w.Vergleichswert.Contains(t))));
         var sorted=f.Sort switch{"art"=>f.Ab?q.OrderByDescending(k=>k.Art):q.OrderBy(k=>k.Art),"firma"=>f.Ab?q.OrderByDescending(k=>db.Kontakte.Where(firma=>firma.Id==k.FirmaId).Select(firma=>firma.Name).FirstOrDefault()):q.OrderBy(k=>db.Kontakte.Where(firma=>firma.Id==k.FirmaId).Select(firma=>firma.Name).FirstOrDefault()),_=>f.Ab?q.OrderByDescending(k=>k.Art=="Person"?k.Nachname:k.Name).ThenByDescending(k=>k.Vorname):q.OrderBy(k=>k.Art=="Person"?k.Nachname:k.Name).ThenBy(k=>k.Vorname)};
         var count=stems.Length==0?await q.CountAsync(ct):0;
-        var rows=await sorted.ThenBy(k=>k.Id).Skip(stems.Length==0?Seite(seite)*20:0).Take(stems.Length==0?20:200).ToArrayAsync(ct);
-        if(stems.Length>0){var ids=rows.Select(k=>k.Id).ToArray();var werte=await db.Kontaktwerte.AsNoTracking().Where(w=>ids.Contains(w.KontaktId)&&w.Aktiv).Take(6000).ToArrayAsync(ct);
-            rows=rows.Where(k=>Suchvergleich.Passt(f.Text,k.Art+" "+k.Name+" "+k.Anschrift+" "+k.Strasse+" "+k.Plz+" "+k.Ort+" "+string.Join(' ',werte.Where(w=>w.KontaktId==k.Id).Select(w=>w.Wert)))).ToArray();count=rows.Length;rows=rows.Skip(Seite(seite)*20).Take(20).ToArray();}
+        var rows=woerter.Length>0?[]:await sorted.ThenBy(k=>k.Id).Skip(Seite(seite)*20).Take(20).ToArrayAsync(ct);
+        if(woerter.Length>0){var gefunden=await Suchseite(sorted.ThenBy(k=>k.Id),Seite(seite)*20,20,async batch=>{
+            var ids=batch.Select(k=>k.Id).ToArray();var werte=await db.Kontaktwerte.AsNoTracking().Where(w=>ids.Contains(w.KontaktId)&&w.Aktiv).Take(6000).ToArrayAsync(ct);
+            return batch.Where(k=>Suchvergleich.Passt(f.Text,k.Art+" "+k.Name+" "+k.Anschrift+" "+k.Strasse+" "+k.Plz+" "+k.Ort+" "+string.Join(' ',werte.Where(w=>w.KontaktId==k.Id).Select(w=>w.Wert)))).ToArray();
+        },ct);rows=gefunden.Eintraege;count=gefunden.Anzahl;}
         return new(await KontaktAnsichten(rows,ct,false),count);
     }
     public async Task<Ergebnisseite<Aktendokument>> EingangSuchen(Listenfilter f,int seite,CancellationToken ct=default,Arbeitsmodule? module=null)

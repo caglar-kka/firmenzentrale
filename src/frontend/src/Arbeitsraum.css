@@ -1,5 +1,5 @@
 .studio {
-  display: grid; grid-template-columns: 232px minmax(0,1fr); min-height: 100vh; background: var(--rail); color: var(--text);
+  display: grid; grid-template-columns: 200px minmax(0,1fr); min-height: 100vh; background: var(--rail); color: var(--text);
   font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 16px; line-height: 1.55;
 }
 .studio [hidden] { display: none !important; }
@@ -29,7 +29,7 @@
 .studio nav a:hover { background: var(--rail-hover); color: var(--rail-text); }
 .studio .p-railfuss { margin-top: auto; padding-top: 30px; font-size: 14px; }
 .studio .p-railfuss small { display: block; font-size: 13px; color: var(--rail-leise); margin-top: 4px; }
-.studio .p-collapse { background: transparent; color: var(--rail-text); border: 1px solid #858594; width: 100%; text-align: left; display: flex; align-items: center; gap: 10px; }
+.studio .p-collapse { background: transparent; color: var(--rail-text); border: 1px solid var(--eingaberand); width: 100%; text-align: left; display: flex; align-items: center; gap: 10px; }
 .studio .p-collapse .icon { margin: 0; }
 .studio .p-seitenleiste :focus-visible { outline-color: var(--rail-fokus); }
 .studio[data-compact="true"] .p-markenbereich > div, .studio[data-compact="true"] .p-arbeitskontext, .studio[data-compact="true"] .p-navgruppe, .studio[data-compact="true"] nav a span, .studio[data-compact="true"] .p-railfuss p, .studio[data-compact="true"] .p-collapse span { display: none; }
@@ -387,7 +387,7 @@
 
 /* MVP-01.5: fachliche Listen, gemeinsame kompakte Kopfaktionen. */
 .studio .p-sortierkopf{display:inline-flex;gap:.3rem;align-items:center;padding:3px 4px;min-height:32px;background:transparent;color:inherit;border:0;font:inherit;font-weight:600;white-space:nowrap}.studio .p-sortierkopf:hover{background:var(--akzent-hell);color:var(--akzent-dunkel)}
-.studio .status.offen{color:var(--warnung-text,#805000);background:var(--warnung-bg,#fff2d5);border:1px solid currentColor;font-weight:600}
+.studio .status.offen{color:var(--neutral-text);background:var(--neutral-bg);border:1px solid currentColor;font-weight:600}
 .studio .p-kontaktstamm{max-width:64rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:1rem;margin:1.2rem 0}.studio .p-kontaktstamm dd{margin:4px 0;overflow-wrap:anywhere}
 .studio .p-kategoriefilter{flex:0 1 19rem;max-width:100%}.studio .p-kategorieoptionen{max-height:200px}.studio .p-kategoriefilter details[open]{position:absolute;inset:24px 0 auto;min-width:0}.studio .p-akte-zeit{font-size:var(--schrift-neben);color:var(--leise);margin:.6rem 0}
 .studio .p-kategorien-kompakt{width:min(100%,52rem)}.studio .p-kategorien-kompakt th,.studio .p-kategorien-kompakt td{padding:8px 12px}.studio .p-kategorien-kompakt td:last-child{width:10rem}.studio .p-kategorien-kompakt .p-sortieraktionen{justify-content:flex-start}.studio .p-baum-toggle{padding:2px 6px;min-width:30px;min-height:30px;background:transparent;color:var(--text);border:0;margin-right:5px}.studio .p-baum-abstand{display:inline-block;width:35px}
@@ -418,3 +418,453 @@
 .studio .p-filter button,.studio .p-sortierung select{font-size:var(--schrift-liste)}
 
 .p-anmeldung{max-inline-size:28rem;margin:8vh auto;padding:1.5rem}.p-anmeldung form,.p-anmeldung label{display:grid;gap:.6rem}.p-anmeldung form{gap:1rem}
+.p-anmeldung{color:var(--text);background:#fff;border:1px solid var(--rand);border-radius:8px;font-size:16px;box-shadow:0 8px 24px rgb(18 36 61 / 7%)}
+.p-anmeldung button{background:var(--akzent);color:#fff;border:1px solid var(--akzent);min-height:44px;font-size:16px;border-radius:5px;margin-block:4px}
+.p-anmeldung button:hover{background:var(--akzent-dunkel)}.p-anmeldung button:focus-visible,.p-anmeldung input:focus-visible{outline:3px solid var(--akzent);outline-offset:3px}
+.p-anmeldung input{font-size:16px;color:var(--text);border:1px solid var(--eingaberand);border-radius:5px;background:#fff}
+.p-anmeldung .p-button-leise{background:#fff;color:var(--akzent-dunkel);border-color:var(--eingaberand)}
+/* Document review uses the existing workspace palette and native controls. */
+.studio .p-pruefteilung{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:1.25rem;margin-block:1rem;align-items:start}
+.studio .p-pruefquelle,.studio .p-prueffelder{min-width:0}.studio .p-pruefquelle{position:sticky;top:3.5rem}
+.studio .p-pruefwerkzeuge{display:flex;gap:.75rem;align-items:end;flex-wrap:wrap;margin-bottom:.75rem}.studio .p-pruefwerkzeuge h4{margin:0 auto 0 0}.studio .p-pruefwerkzeuge label{max-inline-size:7rem}
+.studio .p-pruefscroll{overflow:auto;max-height:65vh;border:1px solid var(--rand);background:var(--weich);overscroll-behavior:contain}
+.studio .p-pruefseite{position:relative;max-width:none;flex:none}.studio .p-pruefseite img{display:block;width:100%;height:100%;max-width:none}
+.studio .p-pruefseite .p-textfundstelle{position:absolute;min-height:16px;height:16px;min-width:12px;padding:0;transform:translateY(-100%);border:0;border-bottom:2px solid var(--akzent);background:color-mix(in srgb,var(--akzent) 6%,transparent);border-radius:0;box-shadow:none}
+.studio .p-pruefseite .p-textfundstelle[aria-pressed=true]{background:color-mix(in srgb,var(--warnung-text) 15%,transparent);border-color:var(--warnung-text);outline:2px solid var(--warnung-text)}
+.studio .p-feldgruppe{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem .75rem;border:0;border-top:1px solid var(--rand);padding:1rem 0;margin:.75rem 0;min-inline-size:0}
+.studio .p-feldgruppe legend{font-weight:650;padding-right:.75rem}.studio .p-prueffeld{display:grid;align-content:start;gap:.375rem;min-width:0}.studio .p-prueffeld[data-format=lang]{grid-column:1/-1}
+.studio .p-prueffeld>label{margin:0}.studio .p-prueffeld>input{margin:0;min-width:0;max-inline-size:32ch}.studio .p-prueffeld[data-format=betrag]>input{max-inline-size:16ch}.studio .p-prueffeld[data-format=datum]>input{max-inline-size:21ch}.studio .p-prueffeld[data-format=lang]>input{max-inline-size:48ch}
+.studio .p-prueffeld>span{font-size:.8125rem;color:var(--leise);overflow-wrap:anywhere}.studio .p-prueffeld[data-pruefstatus=Widerspruch]>span{color:var(--fehler-text);font-weight:600}
+.studio .p-feldaktionen{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.studio .p-feldaktionen>button{min-height:36px;padding:.375rem .5rem;font-size:.875rem;max-width:100%;white-space:normal;text-align:left}
+.studio .p-prueffelder h4{margin:0 0 .75rem}.studio .p-pruefquelle details button{display:block;text-align:left;margin-block:.375rem;white-space:normal}
+.studio .p-analysekopf p{margin:.375rem 0}.studio .p-analysehinweise{margin:.5rem 0;padding-inline-start:1.25rem;font-size:.875rem}.studio .p-vorschlaege{font-size:.875rem;text-align:left;white-space:normal}
+.studio .p-quellenwahl,.studio .p-verwerfhinweis{padding:1rem;border:1px solid var(--warnung-text);background:var(--warnung-bg);color:var(--text)}.studio .p-quellenwahl button{display:block;margin-top:.5rem}
+.studio .p-quellendetails,.studio .p-erkennungsoptionen{margin-block:.75rem}.studio .p-erkennungsoptionen>button{margin-block:.75rem}
+.studio .p-dialog:has(.p-dokumentpruefung){inline-size:min(1280px,96vw)}
+.studio .p-dokumentformular h3{font-size:1rem;margin:0 0 .5rem}.studio .p-dokumentformular section{min-width:0}.studio .p-kontextfelder{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:1rem}.studio .p-kontextfelder .p-aufgaben-planung{display:block}
+.studio .p-pruefzuordnung,.studio .p-pruefentscheidung{border-top:1px solid var(--rand);padding-top:1rem}.studio .p-zuordnungsraster{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.studio .p-zuordnungsraster>div{display:grid;align-content:start;gap:.75rem;min-width:0}.studio .p-zuordnungsraster button{justify-self:start;white-space:normal}
+.studio .p-entscheidungsraster{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:1rem}.studio .p-entscheidungsraster>label:last-child{grid-column:1/-1}.studio .p-entscheidungsraster textarea{width:100%;box-sizing:border-box}
+.studio .p-dialog .p-dokumentformular>.p-pruefabschluss{justify-content:flex-start;gap:.75rem;position:static;border-top:1px solid var(--rand);padding-block:1rem;margin:1rem 0 0}.studio .p-verwerfhinweis{position:sticky;bottom:0;z-index:3;margin-top:1rem}.studio .p-verwerfhinweis .p-feldaktionen{gap:1.5rem}
+.studio .p-eingangswege{border:1px solid var(--rand);border-radius:.5rem;padding:1rem;margin-block:1rem}.studio .p-eingangswege h2{font-size:1rem;margin:0 0 .75rem}.studio .p-eingangskanaele{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.5rem}.studio .p-eingangswege .p-dateieingang{padding:0}.studio .p-eingangswege p{max-inline-size:65ch}.studio .p-eingangswege summary{cursor:pointer;color:var(--akzent-dunkel);padding-block:.5rem}
+@media(max-width:1000px){.studio .p-zuordnungsraster{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:850px){.studio .p-pruefteilung{grid-template-columns:minmax(0,1fr)}.studio .p-pruefquelle{position:static}.studio .p-pruefscroll{max-height:50vh}}
+@media(max-width:560px){.studio .p-kontextfelder,.studio .p-zuordnungsraster,.studio .p-entscheidungsraster,.studio .p-eingangskanaele,.studio .p-feldgruppe{grid-template-columns:minmax(0,1fr)}.studio .p-dokumentformular .p-feldaktionen>button{min-height:44px}.studio .p-dialog .p-dokumentformular>.p-pruefabschluss{flex-direction:column;align-items:flex-start}.studio .p-dokumentformular .p-pruefentscheidung select{max-inline-size:100%}}
+
+.studio .p-benutzer{position:relative;max-inline-size:100%}
+.studio .p-benutzer summary{display:flex;align-items:center;gap:10px;cursor:pointer;min-block-size:44px;color:var(--text)}
+.studio .p-benutzer summary small,.studio .p-benutzer summary strong{display:block}
+.studio .p-profilaktionen{position:absolute;inset-inline-end:0;top:100%;z-index:40;inline-size:min(320px,85vw);padding:16px;background:var(--flaeche);border:1px solid var(--rand);border-radius:8px}
+.studio .p-profilaktionen>button{display:block;inline-size:100%;text-align:start;white-space:normal}
+.studio .p-aufgabenformular fieldset{display:grid;gap:12px;min-inline-size:0}
+.studio .p-aufgabenformular label{display:grid;gap:6px}
+.studio .p-aufgabenformular input:not([type=checkbox]),.studio .p-aufgabenformular select,.studio .p-aufgabenformular textarea{inline-size:100%;min-block-size:44px}
+.studio .p-authenticator-qr{display:block;max-inline-size:100%;block-size:auto;margin-block:16px}
+.studio .p-aufgaben-kurz{display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-block-end:1px solid var(--rand);padding-block:12px;margin-block-end:16px}
+.studio .p-aufgaben-kurz h2{font-size:var(--schrift-listenkopf);margin:0}
+.p-anmeldung .p-authenticator-qr{max-inline-size:100%;block-size:auto}
+
+/* Quiet preview indication; account switching belongs to settings. */
+.studio .p-vorschaubadge{display:inline-flex;padding:3px 9px;border:1px solid var(--rand);border-radius:6px;background:var(--weich);color:var(--leise);font-size:13px;text-decoration:none}
+.studio .p-vorschaubadge:hover{color:var(--akzent-dunkel);border-color:var(--akzent)}
+.studio .p-vorschaueinstellungen{max-inline-size:660px;color:var(--leise)}
+.studio .p-vorschaueinstellungen label{display:grid;gap:6px;max-inline-size:360px;margin-block:12px}
+.studio .p-vorschaueinstellungen select{font:inherit;padding:10px;border:1px solid var(--eingaberand);border-radius:5px;background:var(--flaeche);color:var(--text)}
+.studio .p-vorschau-optionen{border-block-start:1px solid var(--rand);margin-block-start:28px;padding-block-start:16px}
+.studio .p-vorschau-optionen summary,.studio .p-vorschaueinstellungen summary{cursor:pointer;color:var(--leise);font-size:14px}
+.studio .p-kontextkopf>.p-suche{flex:0 1 320px;max-inline-size:320px;margin-inline-start:auto}
+.studio .p-kontextkopf>.p-suche>input{font-size:14px}
+.studio .p-profilaktionen>p{font-size:14px;color:var(--leise);margin-block:0 10px}
+.studio .p-profilaktionen>.p-profilsekundaer{border-block-start:1px solid var(--rand);margin-block-start:8px;padding-block-start:12px;color:var(--leise);font-size:14px}
+.studio .p-einstellungsgruppen{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;max-inline-size:900px;margin-block-start:24px}
+.studio .p-einstellungsgruppen>section{padding:20px;border:1px solid var(--rand);border-radius:8px;background:var(--flaeche)}
+.studio .p-einstellungsgruppen h2{font-size:18px;margin-block:0 16px}
+.studio .p-einstellungsgruppen p{font-size:14px;color:var(--leise);margin-block:8px 20px}
+
+.studio .p-aufgabenwerkzeuge{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-block:20px 8px}
+.studio .p-aufgabenansichten{display:flex;gap:4px;flex-wrap:wrap;border:0}
+.studio .p-aufgabenansichten button{min-block-size:40px;padding:8px 12px;font-size:14px;border-radius:6px}
+.studio .p-aufgabenansichten button[aria-pressed=true]{background:var(--akzent-hell);color:var(--akzent-dunkel);font-weight:600}
+.studio .p-aufgabensuche{flex:0 1 280px}
+.studio .p-aufgabensuche input,.studio .p-aufgabenfilter input,.studio .p-aufgabenfilter select{min-block-size:40px;inline-size:100%;padding:8px 10px;font:inherit;font-size:14px;border:1px solid var(--eingaberand);border-radius:5px;background:var(--flaeche);color:var(--text)}
+.studio .p-aufgabenfilter{margin-block-end:20px}
+.studio .p-aufgaben-filterraster{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));align-items:end;gap:12px;padding:16px;margin-block-start:8px;border:1px solid var(--rand);border-radius:8px;background:var(--grund)}
+.studio .p-aufgaben-filterraster label{display:grid;gap:6px;font-size:14px}
+.studio .p-aufgabenliste{table-layout:auto;font-size:16px}
+.studio .p-aufgabenliste th{font-size:14px;white-space:nowrap}
+.studio .p-aufgabenliste td{padding-block:16px;vertical-align:middle}
+.studio .p-aufgabenliste th:first-child{inline-size:40%}
+.studio .p-aufgabenliste td:first-child button{text-align:start;font-size:16px;font-weight:600;line-height:1.5}
+.studio .p-aufgabenliste td small,.studio .p-aufgabenliste td>strong{display:block;font-size:13px;font-weight:500}
+.studio .p-aufgabenliste .p-termin-ueberfaellig{color:var(--fehler-text)}
+.studio .p-aufgabenstatus{display:inline-block;padding:3px 8px;border-radius:5px;font-size:13px;background:var(--neutral-bg);color:var(--neutral-text);white-space:nowrap}
+.studio .p-aufgabenstatus[data-status="Erledigt"]{background:var(--erfolg-bg);color:var(--erfolg-text)}
+.studio .p-aufgabenstatus[data-status="In Bearbeitung"]{background:var(--akzent-hell);color:var(--akzent-dunkel)}
+.studio .p-aufgabenstatus[data-status="Abgebrochen"]{background:var(--weich);color:var(--leise)}
+.studio .p-aufgabenprioritaet{font-size:14px;color:var(--leise)}
+.studio .p-aufgabenprioritaet[data-prioritaet="Hoch"]{font-weight:600;color:var(--akzent-dunkel)}
+.studio .p-aufgabenprioritaet[data-prioritaet="Dringend"]{font-weight:600;color:var(--fehler-text)}
+.studio .p-dialog:has(.p-aufgabenformular){inline-size:min(820px,94vw);max-block-size:calc(100dvh - 48px)}
+.studio .p-aufgabenformular .p-aufgabenfelder{border:0;padding:0;margin:0;gap:16px}
+.studio .p-aufgabenformular h3{font-size:15px;margin:0 0 10px;font-weight:600}
+.studio .p-aufgabenformular label{font-size:14px;min-inline-size:0}
+.studio .p-aufgabenformular section>label+label{margin-block-start:12px}
+.studio .p-aufgabenformular textarea{resize:vertical;min-block-size:80px}
+.studio .p-aufgaben-formraster{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.3fr);gap:24px}
+.studio .p-aufgaben-planung{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.studio .p-aufgabenformular summary{cursor:pointer;font-size:14px;color:var(--leise);padding-block:4px}
+.studio .p-aufgabenbezug{border-block:1px solid var(--rand);padding-block:8px}
+.studio .p-aufgabenbezug>label,.studio .p-personensuche>label{margin-block:10px}
+.studio .p-aufgabenformular small,.studio .p-aufgaben-bezugshinweis{font-size:13px;color:var(--leise)}
+.studio .p-aufgabenformular small{display:block;margin-block-start:8px}
+.studio .p-aufgabenformular .p-archivwahl{display:flex;align-items:center;gap:8px;margin-block:10px}
+.studio .p-aufgaben-kurz{gap:12px;padding-block:8px;margin-block-end:12px;font-size:14px}
+.studio .p-aufgaben-kurz h2{font-size:14px;font-weight:600}
+.studio .p-aufgaben-kurz p{margin:0;color:var(--leise)}
+.studio .p-aufgaben-kurz button{margin-inline-start:auto;font-size:14px;min-block-size:36px}
+@media(max-width:680px){.studio .p-aufgaben-formraster{grid-template-columns:1fr;gap:20px}.studio .p-kontextkopf>.p-suche{flex:1 1 220px;max-inline-size:none;margin-inline-start:0}.studio .p-aufgabensuche{flex:1 1 100%}.studio .p-aufgabenansichten button{min-block-size:44px}.studio .p-aufgaben-kurz button{margin-inline-start:0}}
+@media print{.studio .p-vorschaubadge,.studio .p-vorschau-optionen,.studio .p-aufgabenwerkzeuge,.studio .p-aufgabenfilter{display:none!important}}
+.studio .p-eingangsformular{display:grid;gap:12px;border:0;padding:0;min-inline-size:0}
+.studio .p-eingangsformular label{display:grid;gap:6px;font-size:14px;min-inline-size:0}
+.studio .p-eingangsformular label:has(>input[type=checkbox]){display:flex;align-items:start;gap:8px}
+.studio .p-eingangsformular summary,.studio .p-eingang-dokument>summary,.studio .p-eingangsbezug>summary{cursor:pointer;color:var(--akzent-dunkel);padding-block:8px}
+.studio .p-dialog:has(.p-eingangsformular){inline-size:min(760px,94vw)}
+.studio .p-eingang-dokument{border-block:1px solid var(--rand);margin-block:20px;padding-block:8px}
+.studio .p-eingang-bearbeitung{margin-block:24px}
+.studio .p-eingang-bearbeitung h2{font-size:18px}
+.studio .p-eingangsbezug{padding-block:12px;margin-block:12px;border-block:1px solid var(--rand)}
+.studio .p-eingangsbezug h3{font-size:15px}.studio .p-eingangsbezug li{padding-block:4px}
+.studio .p-beispiel-eingang{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin-block:16px}
+.studio .p-beispiel-eingang label{display:grid;gap:6px}.studio .p-beispiel-eingang select{font:inherit;padding:8px;border:1px solid var(--eingaberand);border-radius:5px;background:var(--flaeche);color:var(--text)}
+.studio .p-buero-kurz{display:flex;flex-wrap:wrap;gap:8px 24px}.studio .p-buero-kurz>.p-aufgaben-kurz{flex:1 1 380px;font-size:13px;gap:8px}
+
+.studio .p-dialog:has(.p-eingangsformular):has(.p-dokumentpruefung){inline-size:min(1280px,96vw)}
+
+/* Kontextaktionen und wertgerechte Formulare; bestehende Tokens bleiben maßgeblich. */
+.studio .p-detailkopf{justify-content:flex-start;gap:16px 24px;flex-wrap:wrap}
+.studio .p-detailkopf>div:has(>button){flex-basis:100%;justify-content:flex-start}
+.studio .p-prueffelder .p-feldgruppe{gap:12px;padding:12px}
+.studio .p-prueffeld>input{min-block-size:36px}
+.studio .p-pruefquelle .p-vorschaukopf{flex-wrap:wrap}
+.studio .p-dokumentpruefung .p-dateiinfo{font-size:13px}
+.studio main a:not(.p-akteneintrag):not(.p-dashboard-kpi):not(.p-hub-modul):not(.p-dashboard-aktion),.studio main .p-button-leise,.studio .p-breadcrumb button{color:var(--akzent-dunkel);text-decoration:underline;text-underline-offset:.2em}
+.studio .p-rowlink small{display:block;font-size:13px;font-weight:400;color:var(--leise);text-decoration:none}
+.studio .p-detailkopf>div:has(>button),.studio .p-vorschaukopf>div{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.studio .p-aufgabe-erfolg{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px}
+.studio .p-kontaktauswahl{display:grid;gap:8px;min-inline-size:0;max-inline-size:36rem}
+.studio .p-kontaktauswahl label{min-inline-size:0}
+.studio .p-kontaktformular{display:grid;gap:16px;max-inline-size:48rem}
+.studio .p-kontaktformular fieldset{margin:0;min-inline-size:0}
+.studio .p-kontaktformular .p-adresszeile{display:grid;grid-template-columns:minmax(0,2fr) minmax(6rem,.65fr);gap:12px;max-inline-size:40rem}
+.studio .p-postzeile{display:grid;grid-template-columns:minmax(6rem,.65fr) minmax(0,2fr);gap:12px;max-inline-size:40rem}
+.studio .p-kontaktformular input[name=hausnummer],.studio .p-kontaktformular input[name=plz]{max-inline-size:12ch}
+.studio .p-kontaktformular input[name=land]{max-inline-size:28ch}
+.studio .p-kontaktformular .p-kontaktwert{gap:12px;align-items:end}
+.studio .p-kontaktwert label:has(input[type=tel]){flex:0 1 25ch}
+.studio .p-kontaktwert label:has(input[type=email]){flex:1 1 28ch;max-inline-size:44ch}
+.studio .p-kategorieoptionen{max-block-size:18rem;overflow:auto;overscroll-behavior:contain}
+.studio .p-dialog:has(.p-dokumentformular){max-block-size:94dvh}
+.studio .p-pruefquelle .p-textvorschau{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.6;padding:12px}
+.studio .p-pruefquelle iframe{min-block-size:55vh}
+@media(max-width:680px){.studio .p-detailkopf>div:has(>button){justify-content:flex-start}.studio .p-kontaktformular .p-adresszeile,.studio .p-postzeile{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.studio .p-kontaktwert label{max-inline-size:100%}.studio .p-kontaktformular fieldset{padding:12px}.studio .p-kontaktauswahl select{max-inline-size:100%}}
+@page{size:A4 portrait;margin:16mm}
+@media print{
+ html,body,.studio{background:white!important;color:black!important;font-size:11pt!important}
+ .studio .p-seitenleiste,.studio .p-kontextkopf,.studio .p-footer,.studio .p-filterleiste,.studio .p-suche,.studio .p-ergebnis,.studio .p-druckaktion,.studio .p-eingangswege,.studio .p-listenseiten,.studio .p-detailnavigation,.studio .p-aktionszeile,.studio .p-fussnote{display:none!important}
+ .studio [hidden]{display:none!important}
+ .studio .p-arbeitsraum,.studio main,.studio .p-register,.studio .p-detail,.studio .p-vorgang{margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;inline-size:auto!important;max-inline-size:none!important}
+ .studio .p-tabellenraum,.studio .p-tabellenscroll,.studio .p-aktenliste,.studio .p-textvorschau{max-block-size:none!important;overflow:visible!important}
+ .studio .p-rowlink,.studio .p-sortierkopf{display:inline!important;color:black!important;padding:0!important;border:0!important;background:none!important;text-decoration:none!important}
+ .studio .p-rowlink svg,.studio .p-sortierkopf span,.studio .p-nachweise{display:none!important}
+ .studio .p-detailraster{display:block!important}
+ .studio table{display:table!important;inline-size:100%;min-inline-size:0!important;font-size:10pt;table-layout:auto}
+ .studio tbody{display:table-row-group!important}
+ .studio tr{display:table-row!important}
+ .studio th,.studio td{display:table-cell!important;min-inline-size:0!important;white-space:normal!important;overflow-wrap:anywhere;padding:6pt!important}
+ .studio td::before{display:none!important}
+ .studio thead{display:table-header-group!important}
+ .studio tr,.studio .p-zahlungen article,.studio .p-detailbetraege>div{break-inside:avoid}
+ .studio h1,.studio h2,.studio h3{break-after:avoid}
+ .studio p,.studio pre{orphans:3;widows:3;white-space:pre-wrap;overflow-wrap:anywhere}
+ .studio .p-bilanz{break-inside:avoid}
+ .studio a{color:black!important}
+}
+.studio .p-korrespondenzkopf{display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:12px;margin-block:16px}
+.studio .p-korrespondenzkopf h3{margin:0;max-inline-size:48rem}
+.studio .p-druckhilfe{max-inline-size:48rem;margin-block:16px}
+@media print{
+ .p-druckpfad>:not(.p-druckpfad):not(.p-druckziel){display:none!important}
+ .p-druckpfad,.p-druckziel{display:block!important;position:static!important;inline-size:auto!important;max-inline-size:none!important;block-size:auto!important;max-block-size:none!important;overflow:visible!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;transform:none!important}
+ .p-druckziel .p-vorschaukopf{display:block!important}
+ .p-druckziel .p-dialogaktionen h3{margin:0 0 12pt}
+ .p-druckziel .p-dateiinfo,.p-druckziel a[download],.p-druckziel .p-textaktion,.p-druckhilfe{display:none!important}
+}
+.studio .p-aufgaben-detailaktionen,.studio .p-eingang-bearbeitung>.p-dialogaktionen{justify-content:flex-start;gap:12px;margin-block:16px}
+@media print{.studio .p-mehrzeilig{max-block-size:none!important;overflow:visible!important;display:block!important}}
+
+/* MBOP Wei?-Blau: gemeinsame Komponenten, keine zweite Fachoberfl?che. */
+.studio .p-brand-symbol,.p-brand-symbol{width:40px;height:40px;flex:0 0 40px;color:var(--hero-linie)}
+.studio .p-markenbereich{padding-bottom:24px}.studio .p-markenbereich strong{font-size:26px;letter-spacing:-.04em}.studio .p-markenbereich small{font-size:11px;letter-spacing:.04em}
+.studio .p-seitenleiste{padding:20px 12px 14px;overflow:hidden;scrollbar-width:thin;scrollbar-color:var(--rail-rand) var(--rail)}
+.studio .p-arbeitskontext{margin-bottom:22px;font-size:13px;border-color:var(--rail-rand);padding:12px 10px}.studio .p-arbeitskontext small{font-size:11px}
+.studio nav[aria-label="Hauptnavigation"]{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}.studio nav[aria-label="Hauptnavigation"] a{padding:10px 12px;min-height:44px;margin:4px 0;font-size:14px}
+.studio nav[aria-label="Hauptnavigation"] a[aria-current]{background:var(--rail-active);box-shadow:inset 3px 0 var(--cyan)}
+.studio .p-railfuss{padding-top:18px}.studio .p-railprofil{display:flex;align-items:center;gap:10px;padding:14px 4px 18px;color:var(--rail-text);text-decoration:none;min-width:0}.studio .p-railprofil>span:last-child{min-width:0;overflow-wrap:anywhere}.studio .p-railprofil strong{font-size:13px}.studio .p-railprofil small{font-size:11px;color:var(--rail-leise)}
+.studio .p-avatar{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border:1px solid var(--rail-rand);border-radius:50%;background:var(--rail-hover);color:var(--rail-text);font-weight:600}
+.studio .p-collapse{border-color:var(--rail-rand);font-size:13px;min-height:36px}.studio[data-compact="true"] .p-railprofil>span:last-child{display:none}
+.studio .p-kontextkopf{padding:16px 22px;gap:20px;background:var(--grund);border-bottom:0;min-height:84px}.studio main{padding:0 22px 24px;min-width:0}.studio h1{font-size:clamp(26px,2.3vw,34px);letter-spacing:-.035em}.studio h2{color:var(--text)}
+.studio .p-register,.studio .p-detailbetraege,.studio .p-zahlungsfolge article,.studio .p-dateiauswahl,.studio .p-aufgaben-kurz{box-shadow:var(--schatten);background:var(--flaeche);border-color:var(--rand)}
+.studio .p-bilanz{background:var(--flaeche);border:1px solid var(--rand);border-radius:12px;padding:22px 24px;box-shadow:var(--schatten)}.studio .p-bilanz>div:first-child dd{font-size:34px}
+.studio .p-rowlink{color:var(--akzent-dunkel);text-decoration:underline;text-underline-offset:4px}.studio .p-tabelle th,.studio .p-tabelle td{padding:14px 16px}.studio .status{border-radius:20px}
+.studio .p-button-sekundaer{background:var(--flaeche);border-color:var(--akzent);color:var(--akzent-dunkel)}.studio .p-button-sekundaer:hover{background:var(--akzent-hell)}
+.studio button:disabled,.p-anmeldung button:disabled{opacity:1;background:var(--disabled-bg);color:var(--disabled-text);border-color:var(--eingaberand);cursor:not-allowed}
+.studio .p-dialog{background:var(--flaeche);border:1px solid var(--rand);border-radius:16px;box-shadow:var(--schatten-dialog)}.studio textarea{border-color:var(--eingaberand);border-radius:7px;background:var(--flaeche);color:var(--text);font:inherit;padding:10px 12px}
+.studio .p-dashboard{display:grid;gap:14px}.studio .p-dashboard-kopf{display:flex;align-items:center;justify-content:space-between;gap:16px}.studio .p-dashboard-kopf h1{margin-bottom:6px;font-size:clamp(24px,2vw,30px)}.studio .p-dashboard-kopf p{margin:0;color:var(--leise);font-size:14px}
+.studio .p-dashboard-aktion{display:inline-flex;gap:10px;align-items:center;border-radius:8px;background:var(--akzent);color:var(--flaeche);text-decoration:none;padding:11px 16px;font-size:14px;font-weight:600}.studio .p-dashboard-aktion:hover{background:var(--akzent-dunkel)}
+.p-kommando{position:relative;isolation:isolate;overflow:hidden;border-radius:12px;background:var(--hero);color:var(--rail-text);min-height:190px;display:flex;align-items:center;padding:24px 28px}.p-bruecke{position:absolute;inset:0;width:100%;height:100%;z-index:-1}.p-kommando>div{max-width:55%;position:relative}.p-kommando>div::before{content:"";position:absolute;inset:-28px -65px -28px -32px;background:linear-gradient(90deg,var(--szene-nacht) 25%,rgb(6 19 40 / 88%) 60%,transparent);z-index:-1}.p-hero-marke{display:flex;align-items:center;gap:12px;font-size:38px;font-weight:750;letter-spacing:-.04em}.studio .p-kommando h2{color:var(--rail-text);text-transform:uppercase;letter-spacing:.2em;font-size:clamp(16px,1.4vw,22px);font-weight:500;margin:8px 0 10px}.p-kommando p{font-size:15px;margin:0 0 14px;color:var(--hero-text)}.p-kommando small{font-size:12px;color:var(--hero-text)}
+.studio .p-dashboard-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.studio .p-dashboard-kpi{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--rand);border-radius:10px;background:var(--flaeche);box-shadow:var(--schatten);color:var(--text);text-decoration:none;min-width:0}.studio .p-dashboard-kpi>span:nth-child(2){min-width:0;flex:1}.studio .p-dashboard-kpi>span>span{font-size:12px;display:block}.studio .p-dashboard-kpi strong{display:block;font-size:28px;line-height:1.4;overflow-wrap:anywhere}.studio .p-dashboard-kpi small{display:block;font-size:11px;color:var(--leise)}.studio .p-dashboard-kpi>.icon{width:15px;flex-basis:15px;color:var(--leise)}.studio .p-kpi-icon{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border-radius:10px;color:var(--akzent);background:var(--akzent-hell)}.studio .p-kpi-icon .icon{width:26px;height:26px}.studio .p-dashboard-kpi[data-ton="teal"] .p-kpi-icon{color:var(--teal);background:var(--teal-hell)}.studio .p-dashboard-kpi:hover{border-color:var(--akzent)}
+.studio .p-dashboard-raster{display:grid;grid-template-columns:minmax(0,2fr) minmax(270px,1fr);gap:18px}.studio .p-dashboard-panel{padding:18px;background:var(--flaeche);border:1px solid var(--rand);border-radius:12px;box-shadow:var(--schatten);min-width:0}.studio .p-dashboard-panel>header{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;align-items:center;margin-bottom:12px}.studio .p-dashboard-panel h2{font-size:17px}.studio .p-dashboard-panel p{color:var(--leise);font-size:13px}.studio .p-dashboard-panel a{font-size:13px;text-underline-offset:3px}.studio .p-operativ>header{display:block}.studio .p-operativ>header p{margin:6px 0 0}
+.studio .p-hub{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 150px minmax(0,1fr);grid-template-rows:52px repeat(3,76px);gap:12px 20px;align-items:center;margin:24px 0 4px}.studio .p-hub-linien{position:absolute;inset:0;width:100%;height:100%;color:var(--cyan);pointer-events:none}.studio .p-hub-kern{grid-column:2;grid-row:2/5;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;justify-self:center;gap:4px;width:140px;height:140px;background:radial-gradient(circle at 70% 20%,var(--rail-active),var(--rail));border:2px solid var(--cyan);outline:8px solid var(--akzent-hell);border-radius:50%;color:var(--rail-text);box-shadow:0 0 0 14px var(--teal-hell)}.studio .p-hub-kern strong{font-size:24px}.studio .p-hub-kern small{font-size:10px;color:var(--rail-leise)}
+.studio .p-hub-modul{position:relative;z-index:1;display:flex;gap:10px;align-items:center;min-width:0;padding:14px 10px;background:linear-gradient(120deg,var(--flaeche),var(--detail));border:1px solid var(--rand);border-radius:10px;color:var(--text);text-decoration:none;box-shadow:var(--schatten);min-height:76px}.studio .p-hub-modul>span:first-child{background:var(--akzent-hell);color:var(--akzent);padding:8px;border-radius:8px}.studio .p-hub-modul strong{display:block;font-size:14px}.studio .p-hub-modul small{display:block;font-size:11px;color:var(--leise)}.studio .p-hub-modul>.icon{margin-left:auto;width:14px;flex-basis:14px;transform:rotate(-90deg);color:var(--akzent)}.studio .p-hub-modul:hover,.studio .p-hub-modul:focus-visible{border-color:var(--akzent);background:var(--akzent-hell)}.studio .p-hub-modul-0{grid-column:1;grid-row:2}.studio .p-hub-modul-1{grid-column:3;grid-row:2}.studio .p-hub-modul-2{grid-column:1;grid-row:3}.studio .p-hub-modul-3{grid-column:3;grid-row:3}.studio .p-hub-modul-4{grid-column:1;grid-row:4}.studio .p-hub-modul-5{grid-column:3;grid-row:4}
+.studio .p-dashboard-hinweise h2>.icon{color:var(--ki);margin-right:8px}.studio .p-ki-status{border:1px solid var(--rand);background:var(--tabellenkopf);border-radius:10px;padding:16px;margin:16px 0}.studio .p-ki-label{color:var(--ki);background:var(--ki-hell);font-size:11px;font-weight:650;padding:3px 8px;border-radius:20px}.studio .p-ki-status h3{font-size:14px;margin:12px 0 8px}.studio .p-hinweisliste{list-style:none;padding:0;margin:0}.studio .p-hinweisliste li{display:flex;gap:12px;border-top:1px solid var(--rand);padding:14px 0}.studio .p-hinweisliste li>.icon{color:var(--teal);margin-top:3px}.studio .p-hinweisliste strong{font-size:13px}.studio .p-hinweisliste p{margin:4px 0;font-size:12px}
+.studio .p-dashboard-unten{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:18px}.studio .p-dashboard-unten header>a{font-size:12px}.studio .p-dashboard-betrag{font-size:32px;font-variant-numeric:tabular-nums}.studio .p-dashboard-leise{font-size:12px;color:var(--leise);margin:12px 0 0}.studio .p-prioritaetenliste{list-style:none;padding:0;margin:0}.studio .p-prioritaetenliste li{display:flex;gap:10px;align-items:start;padding:9px 0;border-bottom:1px solid var(--rand)}.studio .p-prioritaetenliste button{font-size:13px;text-align:left;min-height:0;padding:0}.studio .p-prioritaetenliste small{display:block;color:var(--leise);font-size:11px;margin-top:4px}.studio .p-prioritaetspunkt{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:var(--teal);margin-top:7px}.studio .p-prioritaetspunkt[data-hoch="true"]{background:var(--warnung-text)}.studio .p-dashboard-wege{padding-left:18px}.studio .p-dashboard-wege li{padding:6px 0}
+.p-login-layout{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,1fr);background:var(--grund);color:var(--text)}.p-login-marke{position:relative;isolation:isolate;overflow:hidden;background:var(--hero);color:var(--rail-text);padding:clamp(32px,5vw,80px);display:flex;flex-direction:column;justify-content:center}.p-login-marke>.p-bruecke{opacity:.65;object-fit:cover}.p-login-marke>div{position:relative;z-index:1;background:linear-gradient(90deg,var(--hero),transparent);padding-block:24px}.p-login-logo{display:flex;align-items:center;gap:12px;font-size:36px;font-weight:750;margin-bottom:64px}.p-login-marke h2{font-size:clamp(28px,3.2vw,48px);letter-spacing:-.04em;line-height:1.2}.p-login-marke p{color:var(--hero-text)}.p-login-marke .p-eyebrow{font-size:11px;letter-spacing:.14em}.p-login-marke>small{position:absolute;bottom:32px;font-size:12px;color:var(--hero-text);max-width:80%}.p-login-formular{display:grid;place-items:center;padding:40px 24px}.p-anmeldung{margin:0;width:100%;max-inline-size:420px;padding:32px;background:var(--flaeche);color:var(--text);border:1px solid var(--rand);border-radius:16px;box-shadow:var(--schatten)}.p-anmeldung h1{font-size:26px;letter-spacing:-.03em}.p-anmeldung p{color:var(--leise);font-size:14px}.p-login-produkt{display:flex;gap:10px;align-items:center;font-size:24px;font-weight:750;margin-bottom:32px}.p-anmeldung button{background:var(--akzent);border-color:var(--akzent)}.p-anmeldung input{color:var(--text);border-color:var(--eingaberand)}.p-anmeldung .p-button-leise{color:var(--akzent-dunkel);border-color:transparent;background:transparent;text-decoration:underline}.p-anmeldung [role="alert"]{color:var(--fehler-text);background:var(--fehler-bg);padding:12px;border-radius:8px}.p-anmeldung :focus-visible{outline-color:var(--fokus)}
+
+/* Rechnungsnummer und Geldwerte bleiben auch in kompakten Tabellen zusammen. */
+.studio [aria-label="Rechnungstabelle"] .p-tabelle{min-width:1250px;table-layout:auto}
+.studio [aria-label="Rechnungstabelle"] .p-rowlink{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:190px}
+.studio [aria-label="Rechnungstabelle"] .p-rowlink>.p-sub{flex-basis:100%;margin:0}
+.studio [aria-label="Rechnungstabelle"] td.geld{white-space:nowrap;overflow-wrap:normal;min-width:105px}
+.studio .p-dashboard-kpi strong{font-size:clamp(20px,2vw,28px)}
+
+.studio .p-mobile-toggle{display:none}
+.studio .p-shell-begruessung h1{color:var(--text);font-size:26px;letter-spacing:-.035em;margin:0 0 4px;line-height:1.2}.studio .p-shell-begruessung p{font-size:13px;margin:0;color:var(--leise)}.studio .p-shell-begruessung{margin-right:auto}.studio .p-bereichspfad{margin-right:auto;font-size:13px}
+.studio .p-nav-geplant{display:grid;grid-template-columns:20px minmax(0,1fr);gap:2px 12px;align-items:center;color:var(--rail-leise);padding:10px 12px;min-height:44px;font-size:13px}.studio .p-nav-geplant small{grid-column:2;justify-self:start;margin:0;font-size:10px;color:var(--rail-leise);border:1px solid var(--rail-rand);border-radius:4px;padding:1px 4px}.studio .p-nav-werkzeuge{border-top:1px solid var(--rail-rand);margin-top:10px;padding-top:8px}
+.studio .p-railfuss{flex-shrink:0;padding-top:10px}.studio .p-railprofil{position:relative;display:block;padding:0;border:0;margin:0 0 10px}.studio .p-railprofil summary{color:var(--rail-text);gap:10px;padding:8px 0}.studio .p-railprofil summary small{color:var(--rail-leise);font-size:11px}.studio .p-railprofil summary strong{font-size:13px}.studio .p-railprofil .p-profilaktionen{position:fixed;left:12px;right:auto;top:auto;bottom:110px;box-shadow:var(--schatten-dialog);max-height:70vh;overflow-y:auto;color:var(--text)}.studio .p-railprofil[open]>summary{margin:0}.studio .p-railprofil summary::after{content:'›';margin-left:auto;font-size:22px}
+.studio .p-hub-plan{position:relative;z-index:1;grid-column:2;grid-row:1;display:flex;gap:10px;align-items:center;justify-content:center;background:var(--rail-active);color:var(--rail-text);border:1px solid var(--cyan);border-radius:10px;padding:9px;min-width:170px;justify-self:center;box-shadow:var(--schatten)}.studio .p-hub-plan strong{display:block;font-size:13px}.studio .p-hub-plan small{display:block;font-size:10px;color:var(--hero-text)}.studio .p-hub-plan .icon{color:var(--cyan)}
+.studio .p-prioritaetsflagge{display:inline-flex;align-items:center;gap:5px;color:var(--leise);font-size:12px;white-space:nowrap}.studio .p-prioritaetsflagge>.icon{width:15px;height:15px;flex-basis:15px}.studio .p-prioritaetsflagge[data-prioritaet="Hoch"]{color:var(--warnung-text)}.studio .p-prioritaetsflagge[data-prioritaet="Dringend"]{color:var(--fehler-text)}.studio .p-prioritaetsflagge[data-prioritaet="Niedrig"]{color:var(--teal)}
+.studio .p-modulseite{display:grid;gap:18px;min-width:0}.studio .p-seitenkopf{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:0;padding:20px 0 8px}.studio .p-seitenkopf .p-titel{margin:0}.studio .p-seitenkopf h1{font-size:28px;margin:0 0 6px}.studio .p-seitenkopf .p-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;margin-bottom:6px;color:var(--teal)}.studio .p-seitenkopf p{font-size:13px;color:var(--leise);margin:0}.studio .p-seitenkopf>.p-dialogaktionen{margin:0}
+.studio .p-listenpanel{min-width:0;background:var(--flaeche);border:1px solid var(--rand);border-radius:12px;box-shadow:var(--schatten);overflow:clip}.studio .p-listenpanel>.p-arbeitsfilter,.studio .p-listenpanel>.p-aufgabenwerkzeuge{margin:0;padding:18px 20px;border-bottom:1px solid var(--rand);background:var(--tabellenkopf)}.studio .p-listenpanel>.p-arbeitsfilter label{grid-column:auto;grid-row:auto;flex:1 1 160px}.studio .p-listenpanel>.p-arbeitsfilter label:first-child{flex:2 1 260px}.studio .p-listenpanel>.p-arbeitsfilter label:has(input[type="checkbox"]){flex:0 1 auto;display:flex;align-items:center;gap:8px;padding-bottom:10px}.studio .p-listenpanel>p,.studio .p-listenpanel>.p-weitere-filter,.studio .p-listenpanel>.p-listenseiten{margin:0;padding:12px 20px}.studio .p-listenpanel .p-tabelle{table-layout:auto}.studio .p-listenpanel .p-tabelle th:first-child{width:auto}.studio .p-listenpanel .p-tabelle th:last-child{width:auto}.studio .p-listenpanel .p-aufgabenwerkzeuge input{background:var(--flaeche)}
+.studio .p-rechnungsliste .p-bilanz{padding:0;align-items:stretch;gap:12px;border:0;box-shadow:none;background:transparent;margin:0 0 18px;grid-template-columns:repeat(3,minmax(0,1fr))}.studio .p-rechnungsliste .p-bilanz>div{padding:16px 20px;border:1px solid var(--rand);border-radius:10px;background:var(--flaeche);box-shadow:var(--schatten)}.studio .p-rechnungsliste .p-bilanz dd,.studio .p-rechnungsliste .p-bilanz>div:first-child dd{font-size:26px}.studio .p-rechnungsliste .p-bilanz dt{font-size:12px}.studio .p-rechnungsliste .p-bilanz span{font-size:12px}.studio .p-rechnungsliste .p-registerkopf{padding:18px 20px;background:var(--flaeche)}.studio .p-rechnungsliste .p-registerkopf p{font-size:12px}.studio .p-rechnungsliste .p-filterleiste{background:var(--tabellenkopf);border-block:1px solid var(--rand);padding:12px 20px}.studio .p-rechnungsliste .p-ergebnis{padding:10px 20px}
+.studio .p-rechnungsobjekt .p-detailkopf{padding:18px 22px;background:var(--flaeche);border:1px solid var(--rand);border-radius:12px;margin:0}.studio .p-objektparteien .p-kontakte{border:0;padding:18px 22px;margin:0;background:var(--flaeche);border-radius:10px;border:1px solid var(--rand)}.studio .p-rechnungsobjekt .p-detailbetraege{margin:0}.studio .p-rechnungsobjekt .p-detailraster{grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);gap:18px}.studio .p-rechnungsobjekt .p-nachweise{padding:18px;min-width:0;background:var(--flaeche);border:1px solid var(--rand);border-radius:12px}.studio .p-rechnungsobjekt .p-vorgang{padding:20px;background:var(--flaeche);border:1px solid var(--rand);border-radius:12px}.studio .p-rechnungsobjekt .p-zahlungsfolge article{border:0;border-left:2px solid var(--rand);border-radius:0;padding:0 0 18px 16px;box-shadow:none}.studio .p-rechnungsobjekt .p-zahlungskopf{align-items:start;gap:8px}.studio .p-rechnungsobjekt .p-zahlungskopf strong{font-size:24px}.studio .p-rechnungsobjekt .p-zahlungsabschluss{display:grid;gap:10px}
+.studio .p-crm-layout{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,2fr);gap:20px;align-items:start}.studio .p-crm-stamm,.studio .p-crm-vorgaenge{padding:22px;border:1px solid var(--rand);border-radius:12px;background:var(--flaeche);box-shadow:var(--schatten);min-width:0}.studio .p-crm-stamm h2{margin-bottom:20px}.studio .p-crm-stamm .p-kontaktstamm{display:grid;grid-template-columns:1fr;gap:0}.studio .p-crm-stamm .p-kontaktstamm>div{padding:14px 0;border:0;border-bottom:1px solid var(--rand);background:transparent}.studio .p-crm-stamm .p-vorschaukopf{align-items:start;flex-wrap:wrap}.studio .p-crm-stamm .p-aktenliste{max-height:240px}.studio .p-crm-vorgaenge .p-firmenarbeit{margin:0}.studio .p-crm-vorgaenge .p-registertabs{margin-block:18px}.studio .p-crm-vorgaenge .p-aktenliste{max-height:460px}
+.studio .p-aktenobjekt{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;align-items:start}.studio .p-objektinfo{background:var(--flaeche);border:1px solid var(--rand);border-radius:12px;padding:20px}.studio .p-objektinfo dl>div{padding:16px 0;border-bottom:1px solid var(--rand)}.studio .p-objektinhalt{background:var(--flaeche);border:1px solid var(--rand);border-radius:12px;padding:20px;min-width:0}.studio .p-aktenseite>.p-statuswahl{margin:0;justify-self:start;padding:10px 14px;background:var(--flaeche);border:1px solid var(--rand);border-radius:8px}
+.studio .p-eingang-neu{border:1px solid var(--rand);border-radius:10px;background:var(--flaeche);padding:0 18px}.studio .p-eingang-neu>summary{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:54px}.studio .p-eingang-neu>summary small{font-size:12px;color:var(--leise);font-weight:400}.studio .p-eingang-neu .p-eingangswege{border:0;margin:0;padding:0 0 16px}.studio .p-eingang-review{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:20px;align-items:start}.studio .p-eingang-review>details,.studio .p-eingang-bearbeitung{padding:20px;background:var(--flaeche);border:1px solid var(--rand);border-radius:12px;margin:0}.studio .p-eingang-review .p-dialogaktionen{justify-content:flex-start}.studio .p-postseite>.p-eingangsdaten{padding:18px;background:var(--flaeche);border:1px solid var(--rand);border-radius:10px}.studio .p-dokumentpruefung .p-pruefquelle{background:var(--tabellenkopf);padding:12px;border:1px solid var(--rand);border-radius:10px}.studio .p-dokumentpruefung .p-prueffelder{padding:12px 16px;border:1px solid var(--rand);border-radius:10px;background:var(--flaeche)}
+
+.studio .p-modulseite .p-detailkopf>div:has(>button){flex-basis:auto;justify-content:flex-end}.studio .p-modulseite .p-detailkopf>div:first-child{min-width:0}
+.studio .p-objektfakten{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px}.studio .p-objektfakten .p-objektparteien,.studio .p-objektfakten .p-kontakte{height:100%}.studio .p-objektfakten .p-detailbetraege{padding:18px;gap:16px;align-items:center}.studio .p-objektfakten .p-detailbetraege dd{font-size:24px}.studio .p-objektfakten .p-detailbetraege dt{font-size:12px}.studio .p-rechnungsobjekt .p-detailnavigation{margin:0}
+.studio .p-crm-stamm .p-vorschaukopf{display:flex;flex-wrap:wrap;gap:10px;align-items:start}.studio .p-crm-stamm .p-vorschaukopf>button{min-width:0;max-width:100%}
+.studio .p-verwaltungsseite{padding-top:20px}.studio .p-verwaltungsseite>.p-einstellungsgruppen{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px}.studio .p-einstellungsgruppen>section{padding:22px;border:1px solid var(--rand);background:var(--flaeche);border-radius:12px}.studio .p-einstellungsgruppen h2{margin-bottom:18px}
+@media(max-width:1100px){.studio .p-objektfakten{grid-template-columns:1fr}}
+@media(max-width:680px){.studio .p-modulseite .p-detailkopf>div:has(>button){justify-content:flex-start;flex-basis:100%}.studio .p-objektfakten .p-detailbetraege{grid-template-columns:1fr}.studio .p-objektfakten .p-detailbetraege>div{padding-block:8px}}
+@media(min-width:681px) and (max-width:1050px){.studio .p-railprofil>span:last-child{display:none}.studio .p-railprofil{justify-content:center}}
+@media(max-width:1280px){.studio .p-dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.studio .p-dashboard-raster{grid-template-columns:minmax(0,1fr)}.studio .p-dashboard-hinweise{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px}.studio .p-dashboard-hinweise>h2{grid-column:1/-1}.studio .p-dashboard-hinweise>h3{display:none}.studio .p-dashboard-unten{grid-template-columns:1fr 1fr}.studio .p-dashboard-unten>section:last-child{grid-column:1/-1}.studio .p-ki-status{margin:0}}
+@media(max-width:680px){.studio main{padding:20px 16px}.studio .p-kontextkopf{padding:12px 16px}.studio .p-seitenleiste{overflow:visible}.studio nav[aria-label="Hauptnavigation"]{display:flex;flex-wrap:wrap;gap:4px}.studio nav[aria-label="Hauptnavigation"] a{padding:8px;min-height:40px;margin:0}.studio .p-dashboard-kopf{align-items:start;flex-direction:column}.studio .p-dashboard-kpis{gap:10px}.studio .p-dashboard-kpi{padding:14px 12px;gap:10px;align-items:start;flex-wrap:wrap}.studio .p-dashboard-kpi>.icon{display:none}.studio .p-dashboard-kpi strong{font-size:24px}.studio .p-dashboard-kpi .p-kpi-icon{width:32px;height:32px;flex-basis:32px}.studio .p-dashboard-panel{padding:18px}.studio .p-dashboard-hinweise,.studio .p-dashboard-unten{display:block}.studio .p-dashboard-unten>section{margin-bottom:16px}.studio .p-dashboard-hinweise>h3{display:block;margin-top:18px}.studio .p-kommando{min-height:210px;padding:24px}.studio .p-kommando>div{max-width:100%}.studio .p-kommando .p-bruecke{opacity:.4}.studio .p-hero-marke{font-size:30px}.studio .p-kommando h2{font-size:16px;letter-spacing:.1em}.studio .p-hub{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto;gap:12px;margin-top:20px}.studio .p-hub-linien{display:none}.studio .p-hub-kern{grid-column:1/-1;grid-row:auto;width:110px;height:110px;margin:12px 0 20px}.studio .p-hub-modul{grid-column:auto;grid-row:auto;flex-wrap:wrap;padding:12px}.studio .p-hub-modul>.icon{display:none}.studio .p-hub-modul strong{font-size:13px}.studio .p-dashboard-aktion{align-self:stretch;justify-content:center}.p-login-layout{display:block}.p-login-marke{padding:28px;min-height:240px}.p-login-logo{margin-bottom:20px;font-size:28px}.p-login-marke h2{font-size:28px}.p-login-marke>small{display:none}.p-login-formular{padding:24px 16px}.p-anmeldung{padding:24px}.p-login-produkt{margin-bottom:24px}}
+@media(prefers-reduced-motion:reduce){.studio *,.p-login-layout *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media print{.p-kommando,.p-login-marke,.p-hub-linien{display:none!important}.studio .p-dashboard-kpis,.studio .p-dashboard-raster,.studio .p-dashboard-unten{display:block}.studio .p-dashboard-panel{box-shadow:none;break-inside:avoid}.studio .p-dashboard-kpi{break-inside:avoid}}
+
+@media(min-width:681px) and (max-width:1050px){.studio .p-nav-geplant>span,.studio .p-nav-geplant>small,.studio .p-railprofil summary>span:last-child,.studio .p-railprofil summary::after{display:none}.studio .p-nav-geplant{justify-content:center;padding:10px}.studio .p-crm-layout{grid-template-columns:minmax(230px,1fr) minmax(0,1.5fr)}}
+@media(max-width:1100px){.studio .p-rechnungsobjekt .p-detailraster,.studio .p-eingang-review{grid-template-columns:1fr}.studio .p-aktenobjekt{grid-template-columns:190px minmax(0,1fr)}.studio .p-kontextkopf .p-suche{max-width:300px}}
+@media(max-width:680px){.studio .p-seitenleiste{position:relative;padding:14px 16px;overflow:visible}.studio .p-markenbereich{padding:0 0 8px}.studio .p-markenbereich strong{font-size:24px}.studio .p-mobile-toggle{display:flex;align-items:center;gap:6px;position:absolute;right:16px;top:16px;background:var(--rail-hover);color:var(--rail-text);border-color:var(--rail-rand);min-height:40px}.studio nav[aria-label="Hauptnavigation"]{display:none;max-height:55vh;overflow:auto;padding-block:12px}.studio[data-mobile-open="true"] nav[aria-label="Hauptnavigation"]{display:grid;grid-template-columns:1fr 1fr;gap:4px}.studio .p-nav-geplant{padding:8px;font-size:13px}.studio .p-nav-geplant small{font-size:9px}.studio .p-nav-werkzeuge{grid-column:1/-1}.studio .p-railfuss{display:block;padding:4px 0 0}.studio .p-railprofil{margin:0}.studio .p-railprofil summary{justify-content:flex-start;padding:4px 0}.studio .p-railprofil summary>span:last-child{display:block}.studio .p-railprofil .p-profilaktionen{top:100px;bottom:auto}.studio .p-collapse{display:none}.studio .p-kontextkopf{padding:18px 16px;min-height:0}.studio .p-shell-begruessung h1{font-size:23px}.studio .p-shell-begruessung{width:100%}.studio .p-seitenkopf{flex-wrap:wrap;align-items:start;padding:16px 0 8px;gap:14px}.studio .p-seitenkopf h1{font-size:26px}.studio .p-crm-layout,.studio .p-aktenobjekt{grid-template-columns:1fr}.studio .p-crm-stamm,.studio .p-crm-vorgaenge,.studio .p-objektinhalt{padding:16px}.studio .p-rechnungsliste .p-bilanz{grid-template-columns:1fr;gap:8px}.studio .p-rechnungsliste .p-bilanz>div{padding:12px 16px}.studio .p-listenpanel>.p-arbeitsfilter{padding:14px}.studio .p-listenpanel>.p-arbeitsfilter label{flex-basis:100%}.studio .p-eingang-neu>summary{display:grid;gap:0}.studio .p-hub-plan{grid-column:1/-1;grid-row:auto;min-width:0;justify-self:stretch}.studio .p-hub-kern{grid-row:auto}.studio .p-kommando>div{max-width:100%}.studio .p-kommando .p-bruecke{opacity:.65}}
+@media print{.studio .p-objektinfo{break-inside:avoid}.studio .p-railfuss,.studio .p-mobile-toggle,.studio .p-eingang-neu{display:none!important}.studio .p-crm-layout,.studio .p-aktenobjekt{display:block}}
+
+/* Originalbanner und kompakter vernetzter Arbeitskern (Handoff 22.10.). */
+.studio .p-kommando-original{min-height:0;padding:0;background:var(--hero);isolation:auto}
+.studio .p-kommando-original img{display:block;width:100%;height:auto;aspect-ratio:1389/189;object-fit:contain}
+.studio .p-hub{grid-template-columns:minmax(0,1fr) 160px minmax(0,1fr);gap:14px 22px;max-width:850px;margin:20px auto 6px}
+.studio .p-hub-modul{width:100%;max-width:235px;min-height:68px;padding:10px 12px}
+.studio .p-hub-modul:nth-of-type(odd){justify-self:end}
+.studio .p-hub-modul-4{transform:translateX(34px)}
+.studio .p-hub-modul-5{transform:translateX(-34px)}
+.studio .p-hub-linien circle{vector-effect:non-scaling-stroke}
+.studio .p-hub-modul-0>span:first-child,.studio .p-hub-modul-5>span:first-child{color:var(--ki);background:var(--ki-hell)}
+.studio .p-hub-modul-2>span:first-child,.studio .p-hub-modul-3>span:first-child{color:var(--teal);background:var(--teal-hell)}
+.studio .p-aggregat{display:grid;gap:20px}.studio .p-aggregat h1{margin:0}.studio .p-aggregat .p-seitenkopf{padding-top:0}
+.studio .p-agenda{list-style:none;padding:0;margin:0}.studio .p-agenda li{display:grid;grid-template-columns:125px minmax(0,1fr) auto;gap:20px;align-items:center;padding:16px 20px;border-bottom:1px solid var(--rand)}
+.studio .p-agenda time{font-variant-numeric:tabular-nums;color:var(--leise)}.studio .p-agenda small{display:block;color:var(--leise)}
+.studio .p-quellenliste{list-style:none;padding:0;margin:0}.studio .p-quellenliste li{padding:14px 20px;border-bottom:1px solid var(--rand)}.studio .p-quellenliste small{display:block;color:var(--leise)}
+.studio .p-berichtskarten{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.studio .p-berichtskarten section{padding:20px;background:var(--flaeche);border:1px solid var(--rand);border-radius:10px}.studio .p-berichtskarten strong{display:block;font-size:26px}.studio .p-berichtskarten h2{font-size:15px}
+.studio .p-assistent{position:fixed;right:0;top:0;bottom:0;width:min(440px,100%);background:var(--flaeche);z-index:25;box-shadow:var(--schatten-dialog);border-left:1px solid var(--rand);padding:24px;overflow:auto}.studio .p-assistent header{display:flex;justify-content:space-between;align-items:center;gap:16px}.studio .p-assistent h2{font-size:20px}.studio .p-assistent form{display:grid;gap:14px;margin-block:18px}.studio .p-assistent textarea{min-height:100px}.studio .p-assistent-antwort{white-space:pre-wrap;overflow-wrap:anywhere;padding:16px;background:var(--weich);border-radius:8px}.studio .p-assistent .p-quellenliste li{padding:12px 0}.studio .p-ki-oeffnen{display:flex;align-items:center;gap:8px}
+@media(min-width:1100px) and (max-width:1280px){.studio .p-dashboard-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.studio .p-dashboard-raster{grid-template-columns:minmax(0,2fr) minmax(270px,1fr)}.studio .p-dashboard-hinweise{display:block}.studio .p-dashboard-unten{grid-template-columns:repeat(3,minmax(0,1fr))}.studio .p-dashboard-unten>section:last-child{grid-column:auto}.studio .p-hub{grid-template-columns:minmax(0,1fr) 110px minmax(0,1fr);gap:12px}.studio .p-hub-kern{width:104px;height:104px}.studio .p-hub-modul small{font-size:10px}.studio .p-hub-modul{gap:6px;padding:10px 8px}.studio .p-hub-modul-4,.studio .p-hub-modul-5{transform:none}}
+@media(max-width:680px){.studio .p-kommando-original{padding:0;min-height:0}.studio .p-kommando-original img{min-height:90px;object-fit:cover;object-position:left center}.studio .p-hub{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.studio .p-hub-modul{max-width:none;transform:none}.studio .p-hub-modul:nth-of-type(odd){justify-self:stretch}.studio .p-agenda li{grid-template-columns:1fr;gap:8px}.studio .p-berichtskarten{grid-template-columns:1fr}.studio .p-ki-oeffnen span{display:none}}
+
+.studio .p-dialog:has(.p-assistent-inhalt){position:fixed;inset:0 0 0 auto;margin:0;width:min(480px,100%);max-width:100%;height:100dvh;max-height:100dvh;border-radius:0;padding:24px}.p-assistent-inhalt form{display:grid;gap:14px;margin-block:18px}.p-assistent-inhalt fieldset{border:0;padding:0;display:grid;gap:14px}.p-assistent-inhalt textarea{width:100%}.p-assistent-inhalt small{white-space:pre-wrap;overflow-wrap:anywhere}.studio .p-kontextkopf .p-suche{margin-left:auto}
+
+.studio .p-aggregat .p-arbeitsfilter label{flex:1 1 220px;max-width:420px}.studio .p-aggregat .p-quellenliste li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:12px 20px}.studio .p-aggregat .p-quellenliste small{grid-column:1}.studio .p-aggregat .p-quellenliste .p-dialogaktionen{grid-column:2;grid-row:1/3;margin:0;align-self:center}.studio .p-hub-kern{box-shadow:0 0 0 10px var(--teal-hell),0 0 0 11px var(--cyan),0 0 0 19px var(--akzent-hell),0 0 0 20px var(--rand)}
+@media(max-width:680px){.studio .p-aggregat .p-quellenliste li{grid-template-columns:1fr}.studio .p-aggregat .p-quellenliste .p-dialogaktionen{grid-column:1;grid-row:auto;justify-content:flex-start}.studio .p-hub-kern{box-shadow:0 0 0 10px var(--teal-hell)}}
+
+/* KMU Dashboard 2.0: kurze Wege, lesbare Werte, ein zentraler Assistent. */
+.studio .p-dashboard-kompakt{gap:14px}.studio .p-kmu-hero{min-height:0;padding:0;display:grid;grid-template-columns:minmax(250px,38%) minmax(0,1fr);height:112px;isolation:auto;background:var(--hero);overflow:hidden}.studio .p-kmu-hero>div{max-width:none}.studio .p-kmu-hero>div::before{display:none}.studio .p-kmu-hero-text{padding:14px 22px;color:var(--rail-text)}.studio .p-kmu-hero-text>span{font-size:14px;letter-spacing:.12em;font-weight:650}.studio .p-kmu-hero h2{font-size:24px;letter-spacing:0;text-transform:none;margin:2px 0}.studio .p-kmu-hero p{font-size:15px;margin:0;color:var(--hero-text)}.studio .p-kmu-hero-motiv{overflow:hidden;position:relative;min-width:0}.studio .p-kmu-hero-motiv img{display:block;position:absolute;top:50%;width:200%;max-width:none;height:auto;transform:translate(-34%,-50%)}
+.studio .p-dashboard-kompakt .p-dashboard-kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.studio .p-dashboard-kompakt .p-dashboard-kpi{padding:14px;gap:12px}.studio .p-dashboard-kompakt .p-dashboard-kpi>span>span{font-size:15px}.studio .p-dashboard-kompakt .p-dashboard-kpi strong{font-size:clamp(22px,2vw,30px);line-height:1.25;margin:4px 0}.studio .p-dashboard-kompakt .p-dashboard-kpi small{font-size:14px}.studio .p-dashboard-kompakt .p-dashboard-raster{grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);gap:14px}.studio .p-dashboard-kompakt .p-dashboard-panel{padding:16px}.studio .p-dashboard-kompakt .p-dashboard-panel h2{font-size:18px}.studio .p-dashboard-kompakt .p-dashboard-panel a,.studio .p-dashboard-kompakt .p-dashboard-panel p{font-size:15px}.studio .p-dashboard-kompakt .p-dashboard-panel>header{margin:0 0 10px}.studio .p-hub-kompakt{height:248px;grid-template-columns:minmax(0,1fr) 136px minmax(0,1fr);grid-template-rows:repeat(3,1fr);gap:12px 16px;margin:0 auto;max-width:800px}.studio .p-hub-kompakt .p-hub-kern{grid-column:2;grid-row:1/4;width:116px;height:116px;outline:none;box-shadow:0 0 0 8px var(--teal-hell),0 0 0 9px var(--cyan),0 0 0 15px var(--akzent-hell);padding:12px;text-align:center}.studio .p-hub-kompakt .p-hub-kern span{font-size:14px;line-height:1.2;overflow-wrap:anywhere;max-width:94px}.studio .p-hub-kompakt .p-firmeninitialen{font-size:24px}.studio .p-hub-kompakt .p-hub-modul{grid-row:auto;transform:none;min-height:58px;max-width:220px;padding:10px 12px;gap:10px;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.studio .p-hub-kompakt .p-hub-modul-0,.studio .p-hub-kompakt .p-hub-modul-1{grid-row:1}.studio .p-hub-kompakt .p-hub-modul-2,.studio .p-hub-kompakt .p-hub-modul-3{grid-row:2}.studio .p-hub-kompakt .p-hub-modul-4,.studio .p-hub-kompakt .p-hub-modul-5{grid-row:3}.studio .p-hub-kompakt .p-hub-modul strong{font-size:16px}.studio .p-hub-kompakt .p-hub-modul:hover,.studio .p-hub-kompakt .p-hub-modul:focus-visible{transform:translateY(-2px);box-shadow:0 6px 18px rgb(20 99 223 / 18%),0 0 0 2px var(--teal-hell);border-color:var(--akzent)}.studio .p-hub-kompakt .p-hub-modul:active{transform:translateY(0)}.studio .p-hub-kompakt .p-hub-linien{stroke:var(--rand);fill:var(--teal);stroke-width:1.5}.studio .p-hub-kompakt .p-hub-linien path{fill:none}.studio .p-hub-kompakt .p-verbindung-aktiv{stroke:var(--akzent);stroke-width:3;filter:drop-shadow(0 0 3px var(--cyan))}
+.studio .p-heute .p-prioritaetenliste{margin:0}.studio .p-heute .p-prioritaetenliste li{padding:8px 0}.studio .p-heute small{font-size:14px}.studio .p-heute .p-bestandsumfang{font-size:14px;margin:8px 0 12px;color:var(--leise)}.studio .p-heute-eingang{display:flex;align-items:center;gap:12px;border-top:1px solid var(--rand);padding:12px 0}.studio .p-heute-eingang strong,.studio .p-heute-eingang small{display:block}.studio .p-shell-begruessung p{font-size:14px}.studio .p-markenbereich small{font-size:12px;line-height:1.3}.studio .p-mehrmodule summary,.studio .p-rail-einstellungen{display:flex;gap:12px;align-items:center;padding:12px 10px;min-height:44px;color:var(--rail-text);font-size:15px;cursor:pointer;text-decoration:none}.studio .p-mehrmodule summary::marker{content:''}.studio .p-mehrmodule a{margin-left:8px}.studio .p-mehrmodule summary:hover,.studio .p-rail-einstellungen:hover{background:var(--rail-hover)}.studio .p-rail-einstellungen{margin-bottom:8px}.studio .p-modulverzeichnis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.studio .p-modulverzeichnis a{display:flex;gap:16px;padding:20px;border:1px solid var(--rand);border-radius:10px;background:var(--flaeche);font-size:16px}
+.studio .p-ki-orb{position:fixed;right:24px;bottom:24px;z-index:12;border-radius:50%;width:56px;height:56px;min-height:56px;border:2px solid var(--flaeche);background:radial-gradient(circle at 30% 25%,var(--cyan),var(--akzent) 58%,var(--ki));box-shadow:0 4px 20px rgb(20 99 223 / 28%);padding:0;display:grid;place-items:center}.studio .p-ki-orb:hover,.studio .p-ki-orb:focus-visible{box-shadow:0 0 0 5px var(--teal-hell),0 6px 22px rgb(20 99 223 / 32%)}.p-orb-kern{display:flex;gap:7px;border-radius:45%;width:32px;height:28px;align-items:center;justify-content:center;background:rgb(255 255 255 / 20%)}.p-orb-kern i{width:4px;height:7px;border-radius:4px;background:var(--rail-text)}
+@media(min-width:681px) and (max-width:1050px){.studio .p-mehrmodule summary span,.studio .p-rail-einstellungen span{display:none}}
+@media(max-width:900px){.studio .p-dashboard-kompakt .p-dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.studio .p-dashboard-kompakt .p-dashboard-raster{grid-template-columns:1fr}}
+@media(max-width:680px){.studio .p-kmu-hero{height:auto;min-height:100px;grid-template-columns:1fr}.studio .p-kmu-hero-text{padding:16px}.studio .p-kmu-hero-motiv{display:none}.studio .p-dashboard-kompakt .p-dashboard-kpi{padding:12px}.studio .p-dashboard-kompakt .p-dashboard-kpi>span>span{font-size:14px}.studio .p-hub-kompakt{height:auto;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto;gap:12px}.studio .p-hub-kompakt .p-hub-kern{grid-column:1/-1;grid-row:auto;margin:12px auto 18px}.studio .p-hub-kompakt .p-hub-modul{grid-column:auto;grid-row:auto;max-width:none}.studio .p-ki-orb{right:16px;bottom:16px}.studio .p-mehrmodule{grid-column:1/-1}}
+@media(prefers-reduced-motion:reduce){.studio .p-hub-kompakt .p-hub-modul{transition:none}.studio .p-hub-kompakt .p-hub-modul:hover,.studio .p-hub-kompakt .p-hub-modul:focus-visible{transform:none}.studio .p-verbindung-aktiv{filter:none}}
+@media print{.studio .p-ki-orb{display:none}}
+
+.studio .p-kalender-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}.studio .p-kalender-toolbar h2{font-size:21px;margin-right:auto}.studio .p-kalender-toolbar label{display:flex;align-items:center;gap:10px;font-size:15px}.studio .p-kalender-scroll{overflow:auto;border:1px solid var(--rand);border-radius:10px;background:var(--flaeche)}.studio .p-kalendermonat{min-width:650px}.studio .p-kalender-woche{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}.studio .p-kalender-woche>strong{font-size:14px;padding:10px;background:var(--tabellenkopf)}.studio .p-kalender-woche>div{min-height:88px;border-top:1px solid var(--rand);border-right:1px solid var(--rand);padding:6px;min-width:0}.studio .p-kalender-woche>div[data-fremd="true"]{background:var(--weich)}.studio .p-kalender-woche>div[data-heute="true"]{box-shadow:inset 0 0 0 2px var(--akzent)}.studio .p-kalender-tag{background:transparent;color:var(--text);font-size:14px;padding:4px 8px;min-height:32px;border:0}.studio .p-kalender-frist{display:block;position:relative;background:var(--akzent-hell);border-left:3px solid var(--akzent);padding:4px 6px;margin:3px 0;border-radius:4px;font-size:14px;overflow-wrap:anywhere}.studio .p-kalender-frist[data-erledigt="true"]{background:var(--neutral-bg);border-color:var(--leise)}.studio .p-kalender-zeit{display:grid;grid-template-columns:74px repeat(var(--tage),minmax(90px,1fr));min-width:650px}.studio .p-kalender-zeit>div,.studio .p-zeitzeile>div{border-bottom:1px solid var(--rand);border-right:1px solid var(--rand);min-height:52px;position:relative}.studio .p-zeitzeile{display:contents}.studio .p-zeitzeile>time,.studio .p-kalender-zeit>span{font-size:14px;padding:8px}.studio .p-zeit-waehlen{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0}.studio .p-zeit-waehlen:focus-visible{opacity:1;background:var(--akzent-hell)}.studio .p-kalender-hinweis{font-size:14px;color:var(--leise)}
+
+.studio .p-kmu-hero{align-items:stretch;height:auto;min-height:112px}.studio .p-kmu-hero-motiv{align-self:stretch;min-height:112px}.studio .p-kmu-hero h2{line-height:1.2}.studio .p-kmu-hero p{line-height:1.3}.studio .p-dashboard-kompakt .p-operativ>header{display:flex;align-items:center;justify-content:space-between}
+
+/* Persönliche Termine und bestehende Aufgabenfristen sind getrennte Quellen. */
+.studio .p-kalender-termin{display:block;position:relative;width:100%;text-align:left;background:var(--flaeche);color:var(--text);border:1px solid var(--akzent);border-left:4px solid var(--akzent);padding:5px 7px;margin:3px 0;border-radius:5px;font-size:14px;overflow-wrap:anywhere;min-height:36px}.studio .p-kalender-termin:hover{background:var(--akzent-hell)}.studio .p-terminformular{display:grid;gap:14px}.studio .p-terminzeiten{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.studio .p-terminzeiten input{min-width:0;width:100%}.studio .p-termindetail dd{white-space:pre-wrap;overflow-wrap:anywhere}.studio .p-termindetail dt{font-weight:650;margin-top:12px}.studio .p-termindetail dd{margin:4px 0}@media(max-width:600px){.studio .p-terminzeiten{grid-template-columns:1fr}}
+
+.studio .p-kalender .p-seitenkopf .p-aktionen{display:flex;gap:10px;flex-wrap:wrap}
+
+/* Bildverwaltung bleibt bis zur vollständigen sicheren Pipeline gesperrt. */
+.studio .p-bildverwaltung{margin-block:20px;padding:18px;border:1px solid var(--rand);border-radius:10px;background:var(--flaeche);max-width:760px}.studio .p-bildverwaltung p{font-size:15px;line-height:1.55}.studio .p-bildfallback{display:flex;gap:12px;align-items:center}.studio .p-bildfallback .p-avatar{flex-shrink:0}.studio .p-bildfallback small{display:block;color:var(--leise);font-size:14px}.studio .p-bildaktionen{display:flex;flex-wrap:wrap;gap:10px}.studio .p-bildverwaltung details{margin-block:12px}
+
+/* Focused office-form corrections, shared by existing screens. */
+.studio .p-aktionen{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.studio .p-formularfehler{border-inline-start:4px solid var(--gefahr,#b42318);background:var(--flaeche);padding:12px 16px;margin-block:12px;overflow-wrap:anywhere}
+.studio [aria-invalid=true]{border:2px solid var(--gefahr,#b42318)}
+.studio .p-kontaktformular>fieldset{background:var(--grund);border:1px solid var(--rand);border-radius:10px;padding:16px;margin-block:16px}
+.studio .p-kontaktformular legend{font-weight:650;padding-inline:6px}
+.studio .p-arbeitsfilter{align-items:end}
+.studio .p-kontaktart{flex:0 1 180px;max-width:220px}
+.studio .status.offen{color:var(--akzent);background:var(--akzent-hell);border-color:var(--eingaberand)}
+.studio .p-rechnungsart{display:block;color:var(--text);font-weight:600}
+.studio .p-terminformular .p-aktionen{margin-top:20px;justify-content:flex-end}
+.studio .p-dateieingang>small{font-size:14px;line-height:1.4;margin-block:6px}
+
+.studio .p-naechste-termine{border-top:1px solid var(--rand);padding-top:12px;margin-top:12px}.studio .p-naechste-termine h3{font-size:16px;margin-block:0 8px}.studio .p-naechste-termine ul{list-style:none;padding:0;margin:0}.studio .p-naechste-termine li{margin-bottom:8px}.studio .p-naechste-termine small{display:block;color:var(--leise);font-size:14px}
+
+/* Vorhandene Arbeitskarten: begrenzte Inhalte, kein Scroll-Lock oder zweiter KI-Einstieg. */
+.studio .p-dashboard-kompakt .p-arbeitsvorrat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}.studio .p-dashboard-kompakt .p-arbeitsvorrat>section:last-child{grid-column:auto}.studio .p-dashboard-kompakt .p-arbeitsvorrat>section:only-child{grid-column:1/-1}.studio .p-arbeitsvorrat .p-naechste-termine{border-top:1px solid var(--rand);margin-top:0}.studio .p-arbeitsvorrat ul{list-style:none;padding:0;margin:0}.studio .p-arbeitsvorrat li{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:6px 0}.studio .p-arbeitsvorrat li small{font-size:14px;color:var(--leise)}.studio .p-arbeitsvorrat p{margin:0}.studio .p-arbeitsvorrat a{overflow-wrap:anywhere}.studio .p-auswertungen{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.studio .p-auswertungen caption{text-align:left;font-size:14px;color:var(--leise);padding:8px 0}.studio .p-auswertungen th,.studio .p-auswertungen td{white-space:normal;overflow-wrap:anywhere}.studio .p-auswertungen p{font-size:15px}
+@media(max-width:900px){.studio .p-dashboard-kompakt .p-arbeitsvorrat,.studio .p-auswertungen{grid-template-columns:minmax(0,1fr)}}
+@media print{.studio .p-auswertungen,.studio .p-dashboard-kompakt .p-arbeitsvorrat{display:block}.studio .p-auswertungen>section{break-inside:avoid;margin-bottom:16px}}
+
+/* Only real calendar actions receive the interactive pointer/hover. */
+.studio .p-kalender-tag,.studio .p-zeit-waehlen{cursor:pointer}.studio .p-kalender-tag:hover{background:var(--akzent-hell);color:var(--akzent-dunkel)}.studio .p-zeit-waehlen:hover{opacity:1;background:var(--akzent-hell);color:var(--akzent-dunkel)}
+
+/* Long module names remain readable inside the existing scrollable navigation. */
+.studio .p-seitenleiste nav a{min-width:0;max-width:100%}.studio .p-seitenleiste nav a>span{min-width:0;white-space:normal;overflow-wrap:anywhere;hyphens:auto}
+
+/* Login navigation stays legible independently of primary button styles. */
+.p-anmeldung .p-login-link{display:inline-flex;align-items:center;min-height:44px;padding:8px 10px;color:#174a83;background:transparent;border-radius:6px;text-decoration:underline;text-underline-offset:3px}
+.p-anmeldung .p-login-link:visited{color:#174a83}
+.p-anmeldung .p-login-link:hover,.p-anmeldung .p-login-link:active{color:#10365f;background:#e8f2fc}
+.p-anmeldung .p-login-link:focus-visible{outline:3px solid #1676c6;outline-offset:3px;color:#10365f;background:#e8f2fc}
+
+.p-anmeldung .p-button-leise:hover,.p-anmeldung .p-button-leise:focus-visible{background:#e8f2fc;color:#10365f}
+
+/* In-flow reminder callout: main actions move down rather than being covered. */
+.studio .p-erinnerungen{margin-left:auto;max-width:min(100%,400px);min-width:0}
+.studio .p-erinnerung-hinweis{display:grid;gap:8px;margin-top:8px;padding:14px;background:var(--flaeche);border:1px solid var(--eingaberand);border-left:4px solid var(--cyan);border-radius:8px;box-shadow:var(--schatten);overflow-wrap:anywhere}
+.studio .p-erinnerung-hinweis p{margin:0}.studio .p-erinnerung-hinweis time{font-size:14px}.studio .p-erinnerung-hinweis .p-aktionen{flex-wrap:wrap}
+.studio .p-markenbereich{filter:drop-shadow(0 0 5px rgb(41 210 237 / 15%))}
+@media(prefers-reduced-motion:reduce){.studio .p-markenbereich{filter:none}}
+@media(max-width:900px){.studio .p-kontextkopf{flex-wrap:wrap}.studio .p-erinnerungen{flex-basis:100%}}
+
+/* Compact user forms; the user list follows the page scroll, not the case-list viewport. */
+.studio .p-benutzerverwaltung{max-width:960px;min-width:0}
+.studio .p-benutzerverwaltung>details,.studio .p-benutzerliste>li{padding:20px;border:1px solid var(--rand);border-radius:10px;background:var(--flaeche);margin-block:20px}
+.studio .p-benutzerverwaltung form,.p-erstzugang-formular{width:100%;max-width:440px;min-width:0}
+.studio .p-benutzerverwaltung fieldset{display:grid;gap:12px;min-width:0;border:0;padding:0;margin:0}
+.studio .p-benutzerverwaltung label{min-width:0;margin:0;overflow-wrap:anywhere}
+.studio .p-benutzerverwaltung input:not([type=checkbox]),.p-erstzugang-formular input{display:block;width:100%;min-width:0;margin-top:6px}
+.studio .p-benutzerverwaltung select{display:block;width:100%;max-width:240px;min-width:0;height:auto;min-height:44px;line-height:1.5;margin-top:6px;padding:10px 36px 10px 12px;color:var(--text);background-color:var(--flaeche);text-overflow:clip}
+.studio .p-benutzerverwaltung select option{color:var(--text);background:var(--flaeche)}
+.studio .p-benutzerverwaltung label:has(>input[type=checkbox]){display:flex;align-items:center;gap:10px;font-weight:400}
+.studio .p-benutzerverwaltung input[type=checkbox]{width:20px;min-height:20px;height:20px;flex:0 0 20px;margin:0}
+.p-benutzer-aktionen{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.p-benutzer-aktionen>button{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.studio .p-benutzerverwaltung form button{justify-self:start}
+.studio .p-benutzerlistenbereich{margin-top:28px;scroll-margin-top:24px}
+.studio .p-benutzerlistenbereich>header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--rand);padding-bottom:12px}
+.studio .p-benutzerlistenbereich h3,.studio .p-benutzerliste h4{margin:0}
+.studio .p-benutzerlistenbereich>header p,.studio .p-benutzerliste>li>header p{margin:0;color:var(--leise)}
+.studio .p-benutzerliste{list-style:none;padding:0;margin:0}
+.studio .p-benutzersuche{display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px 16px;margin-block:16px}
+.studio .p-benutzersuche>label{flex:1 1 240px;max-width:440px}
+.studio .p-benutzersuche>p{flex-basis:100%;order:1;margin:0;color:var(--leise);font-size:14px}
+.studio .p-benutzertreffer{display:grid;gap:8px;list-style:none;padding:0;margin:0}
+.studio .p-benutzertreffer li{min-width:0}
+.studio .p-benutzertreffer button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 16px;width:100%;padding:12px 16px;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.studio .p-benutzertreffer button>span:first-of-type{grid-column:1;color:var(--leise);font-weight:400}
+.studio .p-benutzertreffer button>span:last-child{grid-column:2;grid-row:1/3;align-self:center}
+.studio .p-benutzerbearbeitung{margin-top:20px;scroll-margin-top:24px;min-width:0}
+@media(max-width:480px){.studio .p-benutzertreffer button{grid-template-columns:minmax(0,1fr)}.studio .p-benutzertreffer button>span:last-child{grid-column:1;grid-row:auto}}
+.studio .p-benutzerliste>li{display:grid;gap:20px;min-width:0;overflow-wrap:anywhere}
+.studio .p-benutzerliste>li>details{margin:0}
+.studio .p-benutzer-code{max-width:640px;min-width:0;padding:20px;margin-block:20px;border:1px solid var(--eingaberand);border-left:4px solid var(--akzent);border-radius:8px;background:var(--akzent-hell);scroll-margin-top:24px}
+.studio .p-benutzerliste .p-benutzer-code{margin:0}
+.studio .p-benutzer-code input{font-family:ui-monospace,Consolas,monospace;font-weight:400}
+.studio .p-benutzer-code [role=status]{margin-block:12px;color:var(--erfolg-text)}
+.studio .p-benutzer-fehler{padding:14px;border:1px solid var(--fehler-text);border-radius:8px;background:var(--fehler-bg);color:var(--fehler-text)}
+.p-erstzugang-formular{display:grid;gap:14px}
+.p-erstzugang-formular>p,.p-erstzugang-formular>label{margin:0}
+@media(max-width:680px){.studio .p-benutzerverwaltung>details,.studio .p-benutzerliste>li,.studio .p-benutzer-code{padding:16px}}
+
+/* Only the user administration page uses this compact vertical rhythm. */
+.studio main[data-bereich="benutzer"]{padding-block:18px}
+.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"])>.p-kontextkopf{min-height:0;padding-block:12px}
+.studio .p-benutzerseite{max-width:1100px;min-width:0}
+.studio .p-benutzerseite>h1{font-size:28px;margin-block:8px 12px}
+.studio .p-benutzerseite .p-benutzerverwaltung>h2{font-size:16px}
+.studio .p-benutzerseite .p-benutzerverwaltung>p{font-size:14px;margin-block:4px 12px}
+.studio .p-benutzerseite .p-benutzerverwaltung>details{margin-block:12px;padding:0 16px}
+.studio .p-benutzerseite .p-benutzerverwaltung>details[open]{padding-bottom:16px}
+.studio .p-benutzerseite .p-benutzerlistenbereich{margin-top:16px}
+.studio .p-benutzerseite .p-benutzerlistenbereich>header{padding-bottom:8px}
+.studio .p-benutzerseite .p-benutzersuche{margin-block:10px;gap:6px 12px}
+.studio .p-benutzerseite .p-benutzertreffer{gap:8px}
+.studio .p-benutzerseite .p-benutzertreffer button{padding:8px 12px;font-size:14px}
+.studio .p-benutzerseite .p-benutzerbearbeitung{margin-top:12px}
+.studio .p-benutzerseite .p-benutzerliste>li{gap:12px;margin-block:8px;padding:16px}
+.studio .p-benutzerseite .p-benutzer-mfa{max-width:960px;margin-top:16px;padding:0 16px;border:1px solid var(--rand);border-radius:8px;background:var(--flaeche)}
+.studio .p-benutzerseite .p-benutzer-mfa[open]{padding-bottom:16px}
+.studio .p-benutzerseite .p-benutzer-mfa>summary{margin-bottom:0}
+.studio .p-benutzerseite .p-benutzer-mfa[open]>summary{margin-bottom:12px}
+@media(min-width:1200px){.studio .p-benutzerseite .p-benutzertreffer{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Settings overview only: independent tiles without stretched administration cards. */
+.studio main[data-bereich="einstellungen"]{padding:8px 22px 20px}
+.studio .p-einstellungsuebersicht{gap:16px;min-width:0;padding:0}
+.studio .p-einstellungen-kopf h1{font-size:28px;margin:0 0 4px}
+.studio .p-einstellungen-kopf p{margin:0;color:var(--leise);font-size:14px}
+.studio .p-einstellungskacheln{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:14px;align-items:start}
+.studio .p-einstellungskacheln>section{display:grid;gap:12px;min-width:0;margin:0;padding:18px;border:1px solid var(--rand);border-radius:10px;background:var(--flaeche);max-width:none}
+.studio .p-einstellungskacheln h2{font-size:17px;margin:0}
+.studio .p-einstellungskacheln p{margin:0;font-size:14px;overflow-wrap:anywhere}
+.studio .p-einstellungskacheln button{justify-self:start;white-space:normal;overflow-wrap:anywhere}
+.studio .p-einstellungskacheln .p-druckhilfe,.studio .p-einstellungskacheln .p-bildhinweise{margin:0;min-width:0;font-size:14px}
+.studio .p-einstellungskacheln details[open]>p{margin-block:12px}
+.studio .p-einstellungskacheln .p-bildfallback{align-items:start}
+.studio .p-einstellungskacheln .p-bildfallback p{min-width:0}
+.studio .p-einstellungskacheln .p-bildfallback small{font-size:12px}
+.studio .p-einstellungskacheln .p-logo-sperre{justify-self:start;padding:3px 8px;border-radius:5px;background:var(--warnung-bg);color:var(--warnung-text);font-size:13px}
+.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"])>.p-kontextkopf{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,400px) auto;align-items:center;gap:10px 16px;min-height:0;padding:12px 22px}
+.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"])>.p-kontextkopf>.p-suche{width:100%;max-width:none;min-width:0;margin:0}
+.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"])>.p-kontextkopf>.p-erinnerungen{display:contents}
+.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"]) .p-kontextkopf .p-erinnerung-hinweis{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0;padding:10px 14px;max-width:100%;min-width:0}
+.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"]) .p-erinnerung-hinweis>strong{flex:1 1 200px;min-width:0}
+.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"]) .p-erinnerung-hinweis>.p-aktionen{gap:8px}
+@media(max-width:1100px){.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"])>.p-kontextkopf{grid-template-columns:minmax(0,1fr) auto}.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"])>.p-kontextkopf>.p-bereichspfad{grid-column:1/-1}}
+@media(max-width:680px){.studio main[data-bereich="einstellungen"]{padding:12px 16px 20px}.studio .p-einstellungskacheln>section{padding:16px}.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"])>.p-kontextkopf{padding:12px 16px;gap:8px}.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"])>.p-kontextkopf{grid-template-columns:minmax(0,1fr)}.studio .p-arbeitsraum:has(>main[data-bereich="einstellungen"]) .p-erinnerungen>button{justify-self:start}}
+
+/* User administration: search first, compact creation below, no settings-overview changes. */
+.studio .p-kontaktrechte{padding:16px;border:1px solid var(--rand);border-radius:8px;min-width:0}
+.studio .p-benutzerverwaltung .p-kontaktrechte form{max-width:720px}
+.studio .p-kontaktrechte p{font-size:14px;line-height:1.5;margin-block:8px}
+.studio .p-benutzerverwaltung .p-kontaktrechte select{max-width:100%}
+.studio .p-kontaktrechte .p-rechtematrix{overflow-x:auto;max-width:100%}
+.studio .p-kontaktrechte th,.studio .p-kontaktrechte td{padding:8px;font-size:14px}
+.studio .p-kontaktrechte caption{padding:8px 0}
+.studio .p-kontaktrechte td button{font-size:13px;min-height:36px}
+.studio .p-rechte-bestand{background:var(--warnung-bg);color:var(--warnung-text);padding:12px;border-radius:6px}
+.studio main[data-bereich="benutzer"]{padding-top:8px}
+.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"])>.p-kontextkopf{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,400px) auto;gap:10px 16px;padding-block:12px;min-height:0}
+.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"])>.p-kontextkopf>.p-suche{width:100%;min-width:0;max-width:none;margin:0}
+.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"])>.p-kontextkopf>.p-erinnerungen{display:contents}
+.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"]) .p-kontextkopf .p-erinnerung-hinweis{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0;padding:10px 14px;max-width:100%;min-width:0}
+.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"]) .p-erinnerung-hinweis>strong{flex:1 1 200px;min-width:0}
+.studio .p-benutzerseite .p-benutzerlistenbereich{margin-top:10px}
+.studio .p-benutzerseite .p-benutzeranlage form{max-width:720px}
+.studio .p-benutzerseite .p-benutzeranlage fieldset{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;align-items:end}
+.studio .p-benutzerseite .p-benutzeranlage fieldset>p{grid-column:1/-1;margin:0;font-size:14px}
+.studio .p-benutzerseite .p-benutzeranlage label:has(select){grid-column:1;grid-row:3}
+.studio .p-benutzerseite .p-benutzeranlage fieldset>button{grid-column:2;grid-row:3;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:1100px){.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"])>.p-kontextkopf{grid-template-columns:minmax(0,1fr) auto}.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"])>.p-kontextkopf>.p-bereichspfad{grid-column:1/-1}}
+@media(max-width:680px){.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"])>.p-kontextkopf{grid-template-columns:minmax(0,1fr);gap:8px}.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"]) .p-erinnerungen>button{justify-self:start}.studio .p-benutzerseite .p-benutzeranlage fieldset{grid-template-columns:minmax(0,1fr)}.studio .p-benutzerseite .p-benutzeranlage label:has(select),.studio .p-benutzerseite .p-benutzeranlage fieldset>button{grid-column:1;grid-row:auto}}

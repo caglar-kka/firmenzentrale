@@ -44,7 +44,7 @@ public sealed partial class FirmenDbContext(DbContextOptions<FirmenDbContext> op
         Fk<AkteDatensatz,KategorieDatensatz>(a,"KategorieId");Fk<AkteDatensatz,KontaktDatensatz>(a,"FirmaId");
         a.HasIndex(x=>new{x.Status,x.GeaendertAm});a.HasIndex(x=>x.Suchtext);Check(a,"Akte_Titel","length(trim(\"Titel\")) > 0");
         Check(a,"Akte_Status","\"Status\" IN ('Offen','In Bearbeitung','Wartet auf Rückmeldung','Erledigt','Archiviert')");
-        var d=Versioniert<DokumentDatensatz>(b,"Dokumente");d.Property(x=>x.Titel).HasMaxLength(160);d.Property(x=>x.Dateiname).HasMaxLength(180);d.Property(x=>x.StorageKey).HasMaxLength(64);d.Property(x=>x.Hash).HasMaxLength(64);d.Property(x=>x.Suchtext).HasMaxLength(1000);d.Property(x=>x.Text).HasMaxLength(64000);
+        var d=Versioniert<DokumentDatensatz>(b,"Dokumente");d.Property(x=>x.Titel).HasMaxLength(160);d.Property(x=>x.Dateiname).HasMaxLength(180);d.Property(x=>x.StorageKey).HasMaxLength(64);d.Property(x=>x.Hash).HasMaxLength(64);d.Property(x=>x.Suchtext).HasMaxLength(1000);d.Property(x=>x.Text).HasMaxLength(64000);d.Property(x=>x.AnalyseJson).HasMaxLength(500000);
         d.HasIndex(x=>x.Hash).IsUnique();d.HasIndex(x=>x.StorageKey).IsUnique();d.HasIndex(x=>new{x.Status,x.ErstelltAm});d.HasIndex(x=>x.GeaendertAm);
         Fk<DokumentDatensatz,KategorieDatensatz>(d,"KategorieId");Fk<DokumentDatensatz,KontaktDatensatz>(d,"AbsenderId");
         Check(d,"Dokument_Datei","\"Groesse\" > 0 AND \"Groesse\" <= 20000000 AND length(\"Hash\") = 64 AND length(\"StorageKey\") = 32");
@@ -61,11 +61,11 @@ public sealed partial class FirmenDbContext(DbContextOptions<FirmenDbContext> op
         var zb=b.Entity<ZahlungsbestaetigungDatensatz>();zb.ToTable("Zahlungsbestaetigungen");zb.HasKey(x=>x.ZahlungId);Fk<ZahlungsbestaetigungDatensatz,ZahlungDatensatz>(zb,"ZahlungId");
         var zz=Eintrag<ZahlungszuordnungDatensatz>(b,"Zahlungszuordnungen");Fk<ZahlungszuordnungDatensatz,RechnungDatensatz>(zz,"RechnungId");Fk<ZahlungszuordnungDatensatz,ZahlungsbestaetigungDatensatz>(zz,"ZahlungId");zz.Property(x=>x.Betrag).HasPrecision(18,2);zz.HasIndex(x=>new{x.RechnungId,x.ZahlungId}).IsUnique();Check(zz,"Zahlungszuordnung_Betrag","\"Betrag\" > 0");
         foreach(var e in b.Model.GetEntityTypes())foreach(var prop in e.GetProperties().Where(p=>p.ClrType==typeof(string))){if(prop.GetMaxLength() is null)prop.SetMaxLength(prop.Name.EndsWith("Id",StringComparison.Ordinal)||prop.Name=="Id"?64:200);}
-        Pilotmodell(b);
+        Scanauftragsmodell(b);Dokumentmustermodell(b);Pilotmodell(b);Aufgabenmodell(b);Eingangsmodell(b);Terminmodell(b);Leistungsmodell20261023(b);Berechtigungsmodell(b);
         // SQLite is test-only; its timestamp ordering needs a UTC conversion. PostgreSQL
         // uses native timestamptz and is independently checked through its generated SQL.
         if(Database.ProviderName=="Microsoft.EntityFrameworkCore.Sqlite")
-            foreach(var e in b.Model.GetEntityTypes())foreach(var zeitProperty in e.GetProperties().Where(p=>p.ClrType==typeof(DateTimeOffset)))
+            foreach(var e in b.Model.GetEntityTypes())foreach(var zeitProperty in e.GetProperties().Where(p=>(Nullable.GetUnderlyingType(p.ClrType)??p.ClrType)==typeof(DateTimeOffset)))
                 zeitProperty.SetValueConverter(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTimeOffset,DateTime>(v=>v.UtcDateTime,v=>new DateTimeOffset(DateTime.SpecifyKind(v,DateTimeKind.Utc))));
     }
     private static EntityTypeBuilder<T> Eintrag<T>(ModelBuilder b,string table) where T:class
@@ -77,6 +77,8 @@ public sealed partial class FirmenDbContext(DbContextOptions<FirmenDbContext> op
     private void VersionenAktualisieren()
     {
         NeueFreigaben();
+        if(ChangeTracker.Entries().Any(e=>(e.State is EntityState.Modified or EntityState.Deleted)&&(e.Entity is Betriebsplattform.Web.Sicherheit.Rechtevorlagenversion or Betriebsplattform.Web.Sicherheit.Berechtigungsaenderung)))throw new Betriebsplattform.Web.Akten.Arbeitsfehler("Vorlagenversionen und Berechtigungsaudit sind unver?nderlich.",409);
+        if(ChangeTracker.Entries().Any(e=>e.State is EntityState.Modified or EntityState.Deleted && e.Entity is Betriebsplattform.Web.Leistungen.Leistungsnachweis or Betriebsplattform.Web.Leistungen.Leistungsplan or Betriebsplattform.Web.Leistungen.Leistungsaktion))throw new Betriebsplattform.Web.Akten.Arbeitsfehler("Historische Leistungspläne, Nachweise und Audit sind unveränderlich.",409);
         foreach(var e in ChangeTracker.Entries<VersionierterDatensatz>().Where(x=>x.State==EntityState.Modified))
         {e.Entity.Version=checked(e.Property(x=>x.Version).OriginalValue+1);e.Entity.GeaendertAm=DateTimeOffset.UtcNow;}
         }

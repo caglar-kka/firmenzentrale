@@ -17,7 +17,7 @@ public sealed class ProduktreifeTests
   Assert.True(k.Archivieren(sub.Id,1).Archiviert);
  }
  [Fact] public void KontakteHabenMehrereHauptwerteVersionHistorieUndArchiv(){
-  var b=new Aktenbestand();var k=b.KontaktSpeichern(null,new("Kieselwelle Service GmbH","Firma",null,"Beispielweg 8","","",[new("Telefon","+49 30 23125 081",true),new("Telefon","+49 30 23125 082",false),new("E-Mail","post@kieselwelle.invalid",true)],0));
+  var b=new Aktenbestand();var k=b.KontaktSpeichern(null,new("Kieselwelle Service GmbH","Firma",null,"Beispielweg 8","","",[new("Telefon","+49 30 23125 081",true),new("Telefon","+49 30 23125 082",false),new("E-Mail","post@kieselwelle.invalid",true)],0,Strasse:"Beispielweg",Hausnummer:"8",Plz:"00000",Ort:"Musterhafen",Land:"DE"));
   Assert.Equal(3,k.Werte.Count);Assert.Single(k.Werte,w=>w.Art=="Telefon"&&w.Primaer);
   var p=b.KontaktSpeichern(null,new("Mara Kiesfenn","Person",k.Id,"","Einkauf","Ansprechpartnerin",[new("Telefon","+49 30 23125 083",true)],0,Vorname:"Mara",Nachname:"Kiesfenn"));Assert.Equal(k.Id,p.FirmaId);
   Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(k.Id,new("Geändert","Firma",null,"","","",[],0)));
@@ -35,7 +35,7 @@ public sealed class ProduktreifeTests
   Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(a.Id,new("Nein","Firma",null,"","","",[],a.Version)));
  }
  [Fact] public void KontaktDuplikateUndMehrereHauptwerteBrauchenBewussteKorrektur(){
-  var b=new Aktenbestand();var e=new Kontakteingabe("Neue Firma","Firma",null,"","","",[new("Telefon","+49 30 23125 001",true),new("E-Mail","post@neuefirma.invalid",true)]);
+  var b=new Aktenbestand();var e=new Kontakteingabe("Neue Firma","Firma",null,"","","",[new("Telefon","+49 30 23125 001",true),new("E-Mail","post@neuefirma.invalid",true)],Strasse:"Testweg",Hausnummer:"4",Plz:"00000",Ort:"Musterhafen",Land:"DE");
   Assert.Equal(409,Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(null,e)).Status);
   Assert.NotNull(b.KontaktSpeichern(null,e with{DublettenBestaetigt=true}));
   Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(null,e with{Name="Andere",Werte=[new("Telefon","+49 30 23125 021",true),new("Telefon","+49 30 23125 022",true)]}));
@@ -126,7 +126,7 @@ public sealed class ProduktreifeTests
   var neu=b.KontaktSpeichern(null,x with{DublettenBestaetigt=true});Assert.NotEqual(k.Id,neu.Id);Assert.Equal("eins@fenn.invalid",b.Kontakte().Single(c=>c.Id==k.Id).Werte.Single(w=>w.Aktiv&&w.Art=="E-Mail").Wert);
  }
  [Fact] public void DatenqualitaetKontaktFelderWebsiteUndTelefonart(){
-  var b=new Aktenbestand();var e=new Kontakteingabe("Fennbogen Werkservice","Firma",null,"","","",[new("Telefon","040 123456",true,"Zentrale"),new("Website","https://fennbogen.invalid",true),new("E-Mail","post@fennbogen.invalid",true)],Strasse:"Fiktivbogen 3",Plz:"00000",Ort:"Beispielhafen",Land:"Deutschland");
+  var b=new Aktenbestand();var e=new Kontakteingabe("Fennbogen Werkservice","Firma",null,"","","",[new("Telefon","040 123456",true,"Zentrale"),new("Website","https://fennbogen.invalid",true),new("E-Mail","post@fennbogen.invalid",true)],Strasse:"Fiktivbogen",Hausnummer:"3",Plz:"00000",Ort:"Beispielhafen",Land:"Deutschland");
   var k=b.KontaktSpeichern(null,e);Assert.Contains("Beispielhafen",k.Anschrift);Assert.Contains(k.Werte,w=>w.Typ=="Zentrale");Assert.Contains(k.Werte,w=>w.Art=="Website");
   Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(null,e with{Werte=[new("Website","javascript:alert(1)",true)]}));
  }
@@ -146,7 +146,7 @@ public sealed class ProduktreifeTests
  [InlineData("Fennbogen Gebäudeservice GmbH","FENnBogen Gebäudeservice")]
  [InlineData("Fennbogen Gebäudeservice GmbH","Fennbogen Gebaeudeservice GmbH")]
  public void DatenqualitaetFirmenvergleichBewahrtOriginal(string original,string variante){
-  var b=new Aktenbestand();var e=new Kontakteingabe(original,"Firma",null,"Fiktivbogen 3","","",[new("E-Mail","INFO@FENNFELD.invalid",true),new("Telefon","+49 30 23125 087",true)]);
+  var b=new Aktenbestand();var e=new Kontakteingabe(original,"Firma",null,"Fiktivbogen 3","","",[new("E-Mail","INFO@FENNFELD.invalid",true),new("Telefon","+49 30 23125 087",true)],Strasse:"Fiktivbogen",Hausnummer:"3",Plz:"00000",Ort:"Beispielhafen",Land:"DE");
   var alt=b.KontaktSpeichern(null,e);var warn=Assert.Throws<Arbeitsfehler>(()=>b.KontaktSpeichern(null,e with{Name=variante}));Assert.Contains(warn.Hinweise,h=>h.Id==alt.Id);
   Assert.Equal(original,b.Kontakte().Single(k=>k.Id==alt.Id).Firma);
  }
@@ -167,7 +167,7 @@ public sealed class ProduktreifeTests
  }
 
  [Fact] public void DatenqualitaetSucheNormalisiertOhneBestandZuVeraendern(){
-  var b=new Aktenbestand();var k=b.KontaktSpeichern(null,new("Fennmüller Service","Firma",null,"","","",[new("E-Mail","INFO@FENNQUELL.invalid",true),new("Telefon","+49 30 23125 089",true)]));
+  var b=new Aktenbestand();var k=b.KontaktSpeichern(null,new("Fennmüller Service","Firma",null,"","","",[new("E-Mail","INFO@FENNQUELL.invalid",true),new("Telefon","+49 30 23125 089",true)],Strasse:"Testweg",Hausnummer:"9",Plz:"00000",Ort:"Musterhafen",Land:"DE"));
   var suche=new AktenSuche(b,()=>DemoDaten.UebersichtErstellen(),new(),new LokalerDemozugriff());
   Assert.Contains(suche.Finden("Fennmueller"),t=>t.Id==k.Id);Assert.Contains(suche.Finden("info@fennquell"),t=>t.Id==k.Id);Assert.Empty(suche.Finden("??"));
   Assert.Equal("Fennmüller Service",b.Kontakte().Single(c=>c.Id==k.Id).Firma);

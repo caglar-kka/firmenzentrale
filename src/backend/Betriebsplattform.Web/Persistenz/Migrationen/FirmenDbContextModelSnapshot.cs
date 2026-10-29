@@ -22,6 +22,888 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Betriebsplattform.Web.Akten.Dokumentmuster", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AbsenderId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Anker")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("AutomatikAktion")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Dokumentart")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTimeOffset>("ErstelltAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Feld")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("FreigabeVonId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("GeaendertAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LayoutHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("MusterVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OrganisationId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Quelle1EingangId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Quelle1Id")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("Quelle1Version")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Quelle2EingangId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Quelle2Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int?>("Quelle2Version")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Strategie")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AbsenderId");
+
+                    b.HasIndex("FreigabeVonId");
+
+                    b.HasIndex("Quelle1EingangId");
+
+                    b.HasIndex("Quelle1Id");
+
+                    b.HasIndex("Quelle2EingangId");
+
+                    b.HasIndex("Quelle2Id");
+
+                    b.HasIndex("OrganisationId", "AbsenderId", "Feld", "MusterVersion")
+                        .IsUnique();
+
+                    b.ToTable("Dokumentmuster", null, t =>
+                        {
+                            t.HasCheckConstraint("Dokumentmuster_Version", "\"Version\" > 0");
+
+                            t.HasCheckConstraint("Muster_Aktion", "\"AutomatikAktion\" IS NULL OR \"AutomatikAktion\" = 'Klassifizieren'");
+
+                            t.HasCheckConstraint("Muster_Status", "\"Status\" IN ('Entwurf','Aktiv','Pausiert')");
+
+                            t.HasCheckConstraint("Muster_Version", "\"MusterVersion\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Akten.Eingangsworkflow", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AbsenderId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AkteId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AngabenJson")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<string>("AufgabeId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("GeprueftAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GeprueftVonId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Rueckfrage")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ZustaendigId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AbsenderId");
+
+                    b.HasIndex("AkteId");
+
+                    b.HasIndex("AufgabeId")
+                        .IsUnique();
+
+                    b.HasIndex("GeprueftVonId");
+
+                    b.HasIndex("ZustaendigId");
+
+                    b.ToTable("Eingangsworkflows", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Eingang_Status", "\"Status\" IN ('Neu','Zur Prüfung','Zugeordnet','Erledigt')");
+                        });
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Akten.Scanauftrag", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Dateiname")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.Property<string>("DokumentId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("ErstelltAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Fehlercode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("GeaendertAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("LeaseId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("LeasingBis")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("QuelleId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Versuche")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DokumentId");
+
+                    b.HasIndex("QuelleId", "Hash")
+                        .IsUnique();
+
+                    b.ToTable("Scanauftraege", null, t =>
+                        {
+                            t.HasCheckConstraint("Scanauftraege_Version", "\"Version\" > 0");
+
+                            t.HasCheckConstraint("Scanauftrag_Status", "\"Status\" IN ('Wartend','In Bearbeitung','Erledigt','Blockiert','Fehler')");
+
+                            t.HasCheckConstraint("Scanauftrag_Versuche", "\"Versuche\" >= 0 AND \"Versuche\" <= 3");
+                        });
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Aufgaben.Aufgabe", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AkteId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("Archiviert")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Beschreibung")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Betreff")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("DokumentId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ErstellerId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("ErstelltAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("FaelligAm")
+                        .HasColumnType("date");
+
+                    b.Property<TimeOnly?>("FaelligUm")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<DateTimeOffset?>("FaelligUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FirmaId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("GeaendertAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("KontaktId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Prioritaet")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("RechnungId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ZustaendigId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AkteId");
+
+                    b.HasIndex("DokumentId");
+
+                    b.HasIndex("ErstellerId");
+
+                    b.HasIndex("FirmaId");
+
+                    b.HasIndex("KontaktId");
+
+                    b.HasIndex("RechnungId");
+
+                    b.HasIndex("ZustaendigId", "Archiviert", "FaelligAm");
+
+                    b.ToTable("Aufgaben", null, t =>
+                        {
+                            t.HasCheckConstraint("Aufgaben_Version", "\"Version\" > 0");
+
+                            t.HasCheckConstraint("CK_Aufgabe_Bezug", "(CASE WHEN \"RechnungId\" IS NULL THEN 0 ELSE 1 END + CASE WHEN \"AkteId\" IS NULL THEN 0 ELSE 1 END + CASE WHEN \"KontaktId\" IS NULL THEN 0 ELSE 1 END + CASE WHEN \"DokumentId\" IS NULL THEN 0 ELSE 1 END) <= 1");
+
+                            t.HasCheckConstraint("CK_Aufgabe_Prioritaet", "\"Prioritaet\" IN ('Niedrig','Normal','Hoch','Dringend')");
+
+                            t.HasCheckConstraint("CK_Aufgabe_Status", "\"Status\" IN ('Offen','In Bearbeitung','Erledigt','Abgebrochen')");
+
+                            t.HasCheckConstraint("CK_Aufgabe_Zeit", "\"FaelligUm\" IS NULL OR \"FaelligAm\" IS NOT NULL");
+                        });
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Aufgaben.Aufgabenverlauf", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AufgabeId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("BenutzerId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Nachher")
+                        .IsRequired()
+                        .HasMaxLength(32000)
+                        .HasColumnType("character varying(32000)");
+
+                    b.Property<string>("Vorher")
+                        .IsRequired()
+                        .HasMaxLength(32000)
+                        .HasColumnType("character varying(32000)");
+
+                    b.Property<DateTimeOffset>("Zeitpunkt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BenutzerId");
+
+                    b.HasIndex("AufgabeId", "Zeitpunkt");
+
+                    b.ToTable("Aufgabenverlauf", (string)null);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Aufgaben.Termin", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AnlageHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Beginn")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset>("BeginnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Beschreibung")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("EigentuemerId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Ende")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset>("EndeUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Entfernt")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("ErinnerungFaelligUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ErinnerungMinuten")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("ErinnerungQuittiert")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Erinnerungskennung")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("ErstelltAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Ganztaegig")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("GeaendertAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Hausnummer")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Land")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Ort")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Plz")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Stadt")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Strasse")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("Titel")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EigentuemerId", "ErinnerungFaelligUtc");
+
+                    b.HasIndex("EigentuemerId", "Entfernt", "Beginn");
+
+                    b.ToTable("Termine", null, t =>
+                        {
+                            t.HasCheckConstraint("Termin_Titel", "length(trim(\"Titel\")) > 0");
+
+                            t.HasCheckConstraint("Termin_Zeit", "\"EndeUtc\" > \"BeginnUtc\"");
+
+                            t.HasCheckConstraint("Termine_Version", "\"Version\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Aufgaben.Terminverlauf", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("BenutzerId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Nachher")
+                        .IsRequired()
+                        .HasMaxLength(32000)
+                        .HasColumnType("character varying(32000)");
+
+                    b.Property<string>("TerminId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Vorher")
+                        .IsRequired()
+                        .HasMaxLength(32000)
+                        .HasColumnType("character varying(32000)");
+
+                    b.Property<DateTimeOffset>("Zeitpunkt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BenutzerId");
+
+                    b.HasIndex("TerminId", "Zeitpunkt");
+
+                    b.ToTable("Terminverlauf", (string)null);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Katalogleistung", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("Aktiv")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Beschreibung")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset>("ErstelltAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("GeaendertAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kategorie")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<int>("Reihenfolge")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Reihenfolge", "Name");
+
+                    b.ToTable("Leistungskatalog", null, t =>
+                        {
+                            t.HasCheckConstraint("Leistungskatalog_Version", "\"Version\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Leistungsaktion", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AnfrageHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Art")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("BenutzerId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Ergebnis")
+                        .IsRequired()
+                        .HasMaxLength(200000)
+                        .HasColumnType("character varying(200000)");
+
+                    b.Property<string>("ObjektId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("Zeitpunkt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BenutzerId");
+
+                    b.HasIndex("ObjektId", "Zeitpunkt");
+
+                    b.ToTable("Leistungsaktionen", (string)null);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Leistungseinsatz", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Aenderungsgrund")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("AnlageHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateOnly>("Arbeitstag")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Daten")
+                        .IsRequired()
+                        .HasMaxLength(100000)
+                        .HasColumnType("character varying(100000)");
+
+                    b.Property<DateTimeOffset>("ErstelltAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("GeaendertAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MitarbeiterId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ObjektId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PlanId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VorgaengerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MitarbeiterId");
+
+                    b.HasIndex("PlanId");
+
+                    b.HasIndex("VorgaengerId");
+
+                    b.HasIndex("ObjektId", "Arbeitstag");
+
+                    b.ToTable("Leistungseinsaetze", null, t =>
+                        {
+                            t.HasCheckConstraint("Leistungseinsaetze_Version", "\"Version\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Leistungsnachweis", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("EinsatzId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("FreigegebenDurch")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("Zeitpunkt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EinsatzId")
+                        .IsUnique();
+
+                    b.HasIndex("FreigegebenDurch");
+
+                    b.ToTable("Leistungsnachweise", (string)null);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Leistungsobjekt", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AkteId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("Aktiv")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("AnlageHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Anschrift")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Bemerkung")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("BueroId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("ErstelltAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("GeaendertAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("KundeId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AkteId");
+
+                    b.HasIndex("BueroId");
+
+                    b.HasIndex("KundeId");
+
+                    b.ToTable("Leistungsobjekte", null, t =>
+                        {
+                            t.HasCheckConstraint("Leistungsobjekte_Version", "\"Version\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Leistungsplan", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AnlageHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("ErstelltAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("GeaendertAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("GiltAb")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<int>("Nummer")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ObjektId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Positionen")
+                        .IsRequired()
+                        .HasMaxLength(64000)
+                        .HasColumnType("character varying(64000)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ObjektId", "Nummer")
+                        .IsUnique();
+
+                    b.ToTable("Leistungsplaene", null, t =>
+                        {
+                            t.HasCheckConstraint("Leistungsplaene_Version", "\"Version\" > 0");
+                        });
+                });
+
             modelBuilder.Entity("Betriebsplattform.Web.Persistenz.AkteDatensatz", b =>
                 {
                     b.Property<string>("Id")
@@ -91,6 +973,10 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                     b.Property<string>("AbsenderId")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AnalyseJson")
+                        .HasMaxLength(500000)
+                        .HasColumnType("character varying(500000)");
 
                     b.Property<string>("Art")
                         .IsRequired()
@@ -221,9 +1107,21 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<string>("EingangsId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("Kanal")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PruefAbsenderId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ScanauftragId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -234,6 +1132,10 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<string>("VorherigerAbsenderId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTimeOffset>("Zeitpunkt")
                         .HasColumnType("timestamp with time zone");
 
@@ -241,7 +1143,16 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
 
                     b.HasIndex("AkteId");
 
+                    b.HasIndex("EingangsId");
+
+                    b.HasIndex("PruefAbsenderId");
+
+                    b.HasIndex("ScanauftragId")
+                        .IsUnique();
+
                     b.HasIndex("VorherigeAkteId");
+
+                    b.HasIndex("VorherigerAbsenderId");
 
                     b.HasIndex("DokumentId", "Zeitpunkt");
 
@@ -1001,6 +1912,46 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                         });
                 });
 
+            modelBuilder.Entity("Betriebsplattform.Web.Sicherheit.BenutzerRechteprofil", b =>
+                {
+                    b.Property<string>("BenutzerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Bereich")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AbweichungenJson")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Modus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VorlageId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("BenutzerId", "Bereich");
+
+                    b.HasIndex("VorlageId");
+
+                    b.ToTable("BenutzerRechteprofile", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Rechteprofil_Modus", "\"Modus\" IN ('Bestand','Explizit')");
+
+                            t.HasCheckConstraint("CK_Rechteprofil_Version", "\"Version\" > 0");
+                        });
+                });
+
             modelBuilder.Entity("Betriebsplattform.Web.Sicherheit.Benutzerkonto", b =>
                 {
                     b.Property<string>("Id")
@@ -1014,6 +1965,18 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("Eingerichtet")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTimeOffset?>("EinladungBis")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EinladungHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<DateTimeOffset>("ErstelltAm")
                         .HasColumnType("timestamp with time zone");
@@ -1032,10 +1995,55 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
 
+                    b.Property<DateTimeOffset?>("MfaChallengeBis")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MfaChallengeHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("MfaFehlversuche")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("MfaGeheimnis")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<long>("MfaLetztePeriode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(-1L);
+
+                    b.Property<bool>("MfaNeueinrichtung")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MfaRecoveryHashes")
+                        .HasMaxLength(600)
+                        .HasColumnType("character varying(600)");
+
+                    b.Property<DateTimeOffset?>("MfaStepupBis")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MfaStepupHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("MfaVorbereitung")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset?>("MfaVorbereitungBis")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PasswortHash")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("PasswortMfaGebunden")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Rolle")
                         .IsRequired()
@@ -1051,6 +2059,13 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
 
+                    b.Property<DateTimeOffset?>("WiederherstellungBis")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WiederherstellungHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Login")
@@ -1061,6 +2076,183 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                             t.HasCheckConstraint("CK_Benutzer_Pflicht", "length(trim(\"Login\")) > 0 AND length(trim(\"Anzeigename\")) > 0 AND length(\"PasswortHash\") > 0");
 
                             t.HasCheckConstraint("CK_Benutzer_Rolle", "\"Rolle\" IN ('Administrator','Mitarbeiter')");
+                        });
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Sicherheit.Berechtigungsaenderung", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AkteurId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Bereich")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Nachher")
+                        .IsRequired()
+                        .HasMaxLength(16000)
+                        .HasColumnType("character varying(16000)");
+
+                    b.Property<string>("Vorher")
+                        .IsRequired()
+                        .HasMaxLength(16000)
+                        .HasColumnType("character varying(16000)");
+
+                    b.Property<DateTimeOffset>("Zeitpunkt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ZielId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AkteurId");
+
+                    b.HasIndex("ZielId");
+
+                    b.ToTable("Berechtigungsaenderungen", (string)null);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Sicherheit.MfaNotfallfreigabe", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AntragstellerId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("AusgefuehrtAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("Bis")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GenehmigerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("GenehmigerKennung")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset?>("GenehmigtAm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Grund")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ZielId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ZielKennung")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("ZielVersion")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AntragstellerId");
+
+                    b.HasIndex("GenehmigerId");
+
+                    b.HasIndex("ZielId");
+
+                    b.ToTable("MfaNotfaelle", (string)null);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Sicherheit.MfaRegel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Administrator")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Mitarbeiter")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MfaRegeln", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_MfaRegel_Einzel", "\"Id\" = 1");
+                        });
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Sicherheit.Rechtevorlagenversion", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Bereich")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("RechteJson")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Rechtevorlagenversionen", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "buero:1",
+                            Bereich = "Kontakte",
+                            Name = "Büromitarbeiter",
+                            RechteJson = "{\"Lesen\":true,\"Erstellen\":true,\"Bearbeiten\":true,\"Archivieren\":false}",
+                            Version = 1
+                        },
+                        new
+                        {
+                            Id = "teamleitung:1",
+                            Bereich = "Kontakte",
+                            Name = "Teamleitung",
+                            RechteJson = "{\"Lesen\":true,\"Erstellen\":true,\"Bearbeiten\":true,\"Archivieren\":true}",
+                            Version = 1
                         });
                 });
 
@@ -1143,6 +2335,253 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                     b.ToTable("Sicherheitsereignisse", (string)null);
                 });
 
+            modelBuilder.Entity("Betriebsplattform.Web.Akten.Dokumentmuster", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Persistenz.KontaktDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("AbsenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("FreigabeVonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.KontaktDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("OrganisationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Akten.Eingangsworkflow", null)
+                        .WithMany()
+                        .HasForeignKey("Quelle1EingangId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.DokumentDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("Quelle1Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Akten.Eingangsworkflow", null)
+                        .WithMany()
+                        .HasForeignKey("Quelle2EingangId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.DokumentDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("Quelle2Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Akten.Eingangsworkflow", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Persistenz.KontaktDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("AbsenderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.AkteDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("AkteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Aufgaben.Aufgabe", null)
+                        .WithMany()
+                        .HasForeignKey("AufgabeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("GeprueftVonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.DokumentaktivitaetDatensatz", null)
+                        .WithOne()
+                        .HasForeignKey("Betriebsplattform.Web.Akten.Eingangsworkflow", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("ZustaendigId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Akten.Scanauftrag", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Persistenz.DokumentDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("DokumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Aufgaben.Aufgabe", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Persistenz.AkteDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("AkteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.DokumentDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("DokumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("ErstellerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.KontaktDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("FirmaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.KontaktDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("KontaktId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.RechnungDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("RechnungId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("ZustaendigId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Aufgaben.Aufgabenverlauf", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Aufgaben.Aufgabe", null)
+                        .WithMany()
+                        .HasForeignKey("AufgabeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("BenutzerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Aufgaben.Termin", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("EigentuemerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Aufgaben.Terminverlauf", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("BenutzerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Aufgaben.Termin", null)
+                        .WithMany()
+                        .HasForeignKey("TerminId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Leistungsaktion", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("BenutzerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Leistungen.Leistungsobjekt", null)
+                        .WithMany()
+                        .HasForeignKey("ObjektId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Leistungseinsatz", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("MitarbeiterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Leistungen.Leistungsobjekt", null)
+                        .WithMany()
+                        .HasForeignKey("ObjektId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Leistungen.Leistungsplan", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Leistungen.Leistungseinsatz", null)
+                        .WithMany()
+                        .HasForeignKey("VorgaengerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Leistungsnachweis", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Leistungen.Leistungseinsatz", null)
+                        .WithMany()
+                        .HasForeignKey("EinsatzId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("FreigegebenDurch")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Leistungsobjekt", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Persistenz.AkteDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("AkteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("BueroId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.KontaktDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("KundeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Leistungen.Leistungsplan", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Leistungen.Leistungsobjekt", null)
+                        .WithMany()
+                        .HasForeignKey("ObjektId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Betriebsplattform.Web.Persistenz.AkteDatensatz", b =>
                 {
                     b.HasOne("Betriebsplattform.Web.Persistenz.KontaktDatensatz", null)
@@ -1183,9 +2622,29 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Betriebsplattform.Web.Persistenz.DokumentaktivitaetDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("EingangsId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.KontaktDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("PruefAbsenderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Akten.Scanauftrag", null)
+                        .WithOne()
+                        .HasForeignKey("Betriebsplattform.Web.Persistenz.DokumentaktivitaetDatensatz", "ScanauftragId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Betriebsplattform.Web.Persistenz.AkteDatensatz", null)
                         .WithMany()
                         .HasForeignKey("VorherigeAkteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Persistenz.KontaktDatensatz", null)
+                        .WithMany()
+                        .HasForeignKey("VorherigerAbsenderId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
@@ -1362,6 +2821,55 @@ namespace Betriebsplattform.Web.Persistenz.Migrationen
                     b.HasOne("Betriebsplattform.Web.Persistenz.ZahlungsbestaetigungDatensatz", null)
                         .WithMany()
                         .HasForeignKey("ZahlungId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Sicherheit.BenutzerRechteprofil", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("BenutzerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Rechtevorlagenversion", null)
+                        .WithMany()
+                        .HasForeignKey("VorlageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Sicherheit.Berechtigungsaenderung", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("AkteurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("ZielId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Betriebsplattform.Web.Sicherheit.MfaNotfallfreigabe", b =>
+                {
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("AntragstellerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("GenehmigerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Betriebsplattform.Web.Sicherheit.Benutzerkonto", null)
+                        .WithMany()
+                        .HasForeignKey("ZielId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -7,6 +7,7 @@ export interface Kontakt {
   emails?:string[]; telefone?:string[]; ansprechpartnerListe?:string[]; ansprechpartner: string | null; email: string | null; telefon: string | null; quelle: string;
 }
 export interface Rechnung {
+  rechnungId?:string|null;
   nummer: string; datum: string; aussteller: string; empfaenger: string; betrag: string;
   offenerBetrag: string; bestaetigtZugeordnet: string; status: string; beleg: string; quellenort: string; zahlungen: Zahlung[];
   ausstellerKontakt?: Kontakt | null; empfaengerKontakt?: Kontakt | null;
