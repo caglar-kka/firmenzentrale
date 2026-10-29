@@ -8,11 +8,55 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.AspNetCore.DataProtection;
 using Xunit;
+using Betriebsplattform.Web;
+using System.Net;
+using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Betriebsplattform.Rechnungen.Tests;
 
 public sealed class KontaktberechtigungenTests
 {
+    [Fact] public async Task AdministratorRichtetMfaRegulaerEinUndBestaetigtDanachKontaktrechte()
+    {
+        var root=Path.Combine(Path.GetTempPath(),"MBOP-Kontaktrechte-Mfa",Guid.NewGuid().ToString("N"));Directory.CreateDirectory(root);
+        var connection="Data Source="+Path.Combine(root,"synthetisch.db");
+        FirmenDbContext Db()=>new(new DbContextOptionsBuilder<FirmenDbContext>().UseSqlite(connection).Options);
+        var pass=MfaTests.Secret();var h=Anmeldung.Passwortdienst();string adminId,zielId;
+        await using(var db=Db()){await db.Database.EnsureCreatedAsync();adminId=(await Anmeldung.Anlegen(db,h,new("admin","Synthetische Administration",pass,"Administrator"))).Id;zielId=(await Anmeldung.Anlegen(db,h,new("team","Synthetisches Team",pass,"Mitarbeiter"))).Id;}
+        using var rsa=RSA.Create(2048);var request=new CertificateRequest("CN=localhost",rsa,HashAlgorithmName.SHA256,RSASignaturePadding.Pkcs1);using var generated=request.CreateSelfSigned(DateTimeOffset.UtcNow.AddMinutes(-1),DateTimeOffset.UtcNow.AddHours(1));using var cert=X509CertificateLoader.LoadPkcs12(generated.Export(X509ContentType.Pkcs12),null,X509KeyStorageFlags.UserKeySet);
+        var clock=new MfaTests.Clock();var builder=WebApplication.CreateBuilder();builder.Logging.ClearProviders();builder.WebHost.ConfigureKestrel(o=>o.Listen(IPAddress.Loopback,0,l=>l.UseHttps(cert)));builder.Services.AddDbContext<FirmenDbContext>(o=>o.UseSqlite(connection));var pilot=new Pilotoptionen(true,null,null);Anmeldung.Dienste(builder,pilot,root);builder.Services.AddSingleton<TimeProvider>(clock);
+        await using var app=builder.Build();Webschutz.Konfigurieren(app,new Arbeitsmodule());Anmeldung.Pipeline(app,pilot);Anmeldung.Endpunkte(app,pilot);await app.StartAsync();
+        try{
+            var url=new Uri(app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single());using var client=new HttpClient(new HttpClientHandler{ServerCertificateCustomValidationCallback=(_,s,_,_)=>s?.GetCertHashString()==cert.GetCertHashString()}){BaseAddress=url};client.DefaultRequestHeaders.Add("Origin",url.GetLeftPart(UriPartial.Authority));client.DefaultRequestHeaders.Add("X-Arbeitsaktion","1");
+            async Task Csrf(){var s=await client.GetFromJsonAsync<JsonElement>("/api/auth/session");client.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");client.DefaultRequestHeaders.Add("X-CSRF-TOKEN",s.GetProperty("csrf").GetString());}
+            async Task<string> Code(bool falsch=false){await using var db=Db();var u=await db.Benutzer.AsNoTracking().SingleAsync(x=>x.Id==adminId);var p=app.Services.GetRequiredService<IDataProtectionProvider>();return falsch?MfaTests.BadCode(p,u,clock):MfaTests.Code(p,u,clock);}
+            var path="/api/admin/benutzer/"+zielId+"/kontaktrechte";
+            KontaktrechteEingabe Eingabe(string code)=>new(0,"buero:1",new(),false,new(pass,code));
+            await Csrf();Assert.Equal(HttpStatusCode.OK,(await client.PostAsJsonAsync("/api/auth/login",new{login="admin",passwort=pass})).StatusCode);await Csrf();
+            Assert.False((await client.GetFromJsonAsync<JsonElement>("/api/auth/mfa/status")).GetProperty("aktiv").GetBoolean());
+            Assert.Equal(HttpStatusCode.Forbidden,(await client.PostAsJsonAsync(path,Eingabe("123456"))).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest,(await client.PostAsJsonAsync("/api/auth/mfa/vorbereiten",new{passwort="Synthetisch falsch"})).StatusCode);
+            Assert.Equal(HttpStatusCode.OK,(await client.PostAsJsonAsync("/api/auth/mfa/vorbereiten",new{passwort=pass})).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest,(await client.PostAsJsonAsync("/api/auth/mfa/aktivieren",new{passwort=pass,code=await Code(true)})).StatusCode);
+            Assert.False((await client.GetFromJsonAsync<JsonElement>("/api/auth/mfa/status")).GetProperty("aktiv").GetBoolean());
+            var verbraucht=await Code();Assert.Equal(HttpStatusCode.OK,(await client.PostAsJsonAsync("/api/auth/mfa/aktivieren",new{passwort=pass,code=verbraucht})).StatusCode);await Csrf();
+            Assert.True((await client.GetFromJsonAsync<JsonElement>("/api/auth/mfa/status")).GetProperty("aktiv").GetBoolean());
+            Assert.Equal(HttpStatusCode.BadRequest,(await client.PostAsJsonAsync(path,Eingabe(verbraucht))).StatusCode);
+            await using(var db=Db()){Assert.Empty(await db.BenutzerRechteprofile.ToArrayAsync());Assert.Empty(await db.Berechtigungsaenderungen.ToArrayAsync());}
+            clock.Next();var saved=await client.PostAsJsonAsync(path,Eingabe(await Code()));Assert.Equal(HttpStatusCode.OK,saved.StatusCode);await Csrf();
+            var view=(await client.GetFromJsonAsync<KontaktrechteAnsicht>(path))!;Assert.Equal("buero:1",view.VorlageId);Assert.Equal(1,view.Version);Assert.Equal(new[]{"Lesen","Erstellen","Bearbeiten"},view.Aktionen.Where(x=>x.Erlaubt).Select(x=>x.Id));
+            await using(var db=Db()){Assert.Equal("buero:1",(await db.BenutzerRechteprofile.SingleAsync()).VorlageId);var audit=await db.Berechtigungsaenderungen.SingleAsync();Assert.Equal(adminId,audit.AkteurId);Assert.Equal(zielId,audit.ZielId);Assert.DoesNotContain(pass,audit.Nachher);Assert.Equal("Administrator",(await db.Benutzer.SingleAsync(x=>x.Id==adminId)).Rolle);}
+        }finally{await app.StopAsync();}
+    }
     [Fact] public void KatalogVerweigertUnbekanntesUndTrenntVorlageVonAbweichung()
     {
         var buero=Kontaktberechtigungen.Standardvorlagen().Single(x=>x.Id=="buero:1");

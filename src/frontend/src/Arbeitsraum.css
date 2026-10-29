@@ -868,3 +868,150 @@
 .studio .p-benutzerseite .p-benutzeranlage fieldset>button{grid-column:2;grid-row:3;white-space:normal;overflow-wrap:anywhere}
 @media(max-width:1100px){.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"])>.p-kontextkopf{grid-template-columns:minmax(0,1fr) auto}.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"])>.p-kontextkopf>.p-bereichspfad{grid-column:1/-1}}
 @media(max-width:680px){.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"])>.p-kontextkopf{grid-template-columns:minmax(0,1fr);gap:8px}.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"]) .p-erinnerungen>button{justify-self:start}.studio .p-benutzerseite .p-benutzeranlage fieldset{grid-template-columns:minmax(0,1fr)}.studio .p-benutzerseite .p-benutzeranlage label:has(select),.studio .p-benutzerseite .p-benutzeranlage fieldset>button{grid-column:1;grid-row:auto}}
+
+/* Benutzerverwaltung: Auswahl und einzelne Bearbeitung, ausschließlich lokal. */
+.studio .p-benutzerseite,.studio .p-benutzerverwaltung{max-width:none;min-width:0}
+.studio .p-benutzerarbeitsplatz{display:grid;grid-template-columns:minmax(280px,380px) minmax(0,1fr);align-items:start;gap:20px}
+.studio .p-benutzerarbeitsplatz>*,.studio .p-benutzerdetail{min-width:0}
+.studio .p-benutzerseite .p-benutzerlistenbereich,.studio .p-benutzerseite .p-benutzerbearbeitung{margin-top:0}
+.studio .p-benutzerlistenbereich>button{margin-top:10px}
+.studio .p-benutzerseite .p-benutzertreffer{grid-template-columns:minmax(0,1fr);gap:4px}
+.studio .p-benutzerseite .p-benutzertreffer button{padding:6px 10px;gap:0 8px;min-height:48px}
+.studio .p-benutzertreffer button[aria-pressed=true]{background:var(--akzent-hell);border-color:var(--akzent);box-shadow:inset 3px 0 var(--akzent)}
+.studio .p-benutzerseite .p-benutzerliste>li{margin:0;padding:16px;gap:12px}
+.studio .p-benutzerbearbeitung>h3{font-size:14px;color:var(--leise);margin:0 0 8px}
+.studio .p-benutzerliste h4{font-size:20px}
+.studio .p-benutzer-leer{padding:20px;border:1px dashed var(--rand);border-radius:8px}
+.studio .p-benutzer-leer h3{margin-top:0}
+.studio .p-benutzer-tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--eingaberand);padding:0 0 4px;margin-bottom:-12px}
+.studio .p-benutzer-tabs button{background:var(--grund);color:var(--text);border:1px solid var(--eingaberand);border-radius:6px 6px 0 0;padding:8px 14px;min-height:44px;line-height:1.3;flex:0 1 auto}
+.studio .p-benutzer-tabs button:hover{background:var(--akzent-hell);border-color:var(--akzent)}
+.studio .p-benutzer-tabs button[aria-selected=true]{color:var(--akzent-dunkel);background:var(--akzent-hell);border:2px solid var(--akzent);padding:7px 13px;box-shadow:inset 0 3px var(--akzent);font-weight:700}
+.studio .p-benutzer-tabs button:focus-visible{outline:3px solid var(--fokus);outline-offset:3px;position:relative;z-index:1}
+.studio .p-benutzerverwaltung [role=tabpanel]{border:1px solid var(--eingaberand);border-top:0;border-radius:0 0 8px 8px;padding:14px;min-width:0}
+.studio .p-benutzerverwaltung [role=tabpanel]>h4{margin:0 0 6px;font-size:16px}
+.studio .p-benutzerverwaltung [role=tabpanel]>p{font-size:14px;margin:0 0 10px}
+.studio .p-benutzerliste>li>header{background:var(--grund);border:1px solid var(--rand);border-radius:6px;padding:10px 12px}
+.studio .p-entwurf-hinweis{padding:8px 10px;border-left:3px solid var(--akzent);background:var(--akzent-hell);color:var(--text);font-size:14px}
+.studio .p-benutzerverwaltung [hidden]{display:none!important}
+.studio .p-benutzerverwaltung :is(input,select,button,summary):focus-visible{outline:3px solid var(--akzent);outline-offset:3px}
+.studio .p-benutzerverwaltung form{max-width:720px}
+.studio .p-benutzerverwaltung :is(input:not([type=checkbox]),select){max-width:340px}
+.studio .p-benutzerverwaltung input[type=search]{max-width:400px}
+.studio .p-benutzerverwaltung input[name=code]{max-width:280px}
+.studio .p-benutzerverwaltung .p-benutzer-code input{max-width:100%}
+.studio .p-benutzer-stammdaten{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.studio .p-benutzerverwaltung input[readonly]{background:var(--akzent-hell)}
+.studio .p-benutzerverwaltung form p{margin:0;font-size:14px}
+.studio .p-benutzerseite .p-benutzeranlage{padding:16px;border:1px solid var(--rand);border-radius:8px;background:var(--flaeche)}
+.studio .p-benutzeranlage h3{margin:0}
+.studio .p-benutzeranlage>button{margin:8px 0 12px}
+.studio .p-kontaktrechte{border:0;padding:0}
+.studio .p-kontaktrechte h3{margin:0 0 8px}
+.studio .p-kontaktrechte>label{display:block;max-width:340px}
+.studio .p-kontaktrechte .p-rechtematrix{overflow:visible}
+.studio .p-kontaktrechte table{width:100%;max-width:720px;table-layout:fixed;border-collapse:collapse}
+.studio .p-kontaktrechte th,.studio .p-kontaktrechte td{padding:8px 6px;border-bottom:1px solid var(--rand);text-align:left;overflow-wrap:anywhere;vertical-align:top}
+.studio .p-kontaktrechte td small,.studio .p-rechte-abweichung{display:block;font-size:12px;color:var(--leise)}
+.studio .p-rechte-abweichung button{display:block;padding:2px;min-height:32px}
+.studio .p-kontaktrechte .p-benutzer-aktionen{margin-top:12px}
+.studio .p-datenzugriff{margin-top:16px;border-top:1px solid var(--rand);padding-top:10px}
+.studio .p-datenzugriff p{font-size:14px}
+.studio .p-datenzugriff{background:var(--grund);border:1px solid var(--rand);border-radius:6px;padding:10px 12px}
+.studio .p-datenzugriff>summary{font-weight:600}
+.studio .p-sicherheitsgruppe{padding:12px;border:1px solid var(--rand);border-radius:6px;background:var(--flaeche)}
+.studio .p-sicherheitsgruppe+.p-sicherheitsgruppe{margin-top:12px}
+.studio .p-sicherheitsgruppe h4{margin:0 0 6px;font-size:16px}
+.studio .p-sicherheitsgruppe p{font-size:14px;margin:6px 0 10px}
+.studio .p-schutz-hinweis{display:inline-block;color:var(--warnung-text);background:var(--warnung-bg);padding:3px 8px;border-radius:4px;font-weight:600}
+.studio .p-kontaktrechte{width:100%;max-width:680px;min-width:0;margin-inline:0}
+.studio .p-rechte-status{margin:8px 0;font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.studio .p-rechte-status .p-rechte-stand{margin:0}
+.studio .p-rechte-status p{margin:6px 0 0;font-size:14px;line-height:1.5}
+.studio .p-kontaktrechte>p[role=alert]{padding:10px 12px;border:1px solid var(--fehler-text);border-left-width:3px;border-radius:6px;color:var(--fehler-text);background:var(--fehler-bg)}
+.studio .p-kontaktrechte .p-rechtematrix table{max-width:820px}
+.studio .p-kontaktrechte thead th{background:var(--akzent-hell);color:var(--text);font-weight:600}
+.studio .p-kontaktrechte tbody tr[data-geaendert=true]{background:var(--akzent-hell)}
+.studio .p-kontaktrechte th:first-child{width:18%}
+.studio .p-kontaktrechte td label{align-items:flex-start;gap:8px;line-height:1.4}
+.studio .p-kontaktrechte td input[type=checkbox]{margin-top:1px}
+.studio .p-kontaktrechte td small{margin-top:3px;line-height:1.4}
+.studio .p-recht-hinzu{color:var(--erfolg-text)}
+.studio .p-recht-entzug{color:var(--warnung-text)}
+.studio .p-kontaktrechte .p-rechtematrix table{max-width:none}
+.studio .p-benutzerverwaltung .p-profilwahl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0;padding:0;border:0}
+.studio .p-profilwahl legend{font-size:15px;font-weight:600;margin-bottom:8px}
+.studio .p-profilwahl .p-profil-option{display:grid;grid-template-columns:20px minmax(0,1fr);align-items:start;gap:10px;padding:10px 12px;border:1px solid var(--eingaberand);border-radius:6px;background:var(--flaeche);cursor:pointer}
+.studio .p-profilwahl .p-profil-option:has(:checked){border-color:var(--akzent);background:var(--akzent-hell)}
+.studio .p-profilwahl .p-profil-option:hover{border-color:var(--akzent)}
+.studio .p-profilwahl input[type=radio]{width:20px;min-width:20px;height:20px;min-height:20px;max-width:20px;margin:2px 0 0;accent-color:var(--akzent)}
+.studio .p-profilwahl strong,.studio .p-profilwahl small,.studio .p-rechte-stand>span{display:block}
+.studio .p-profilwahl small{font-size:13px;font-weight:400;line-height:1.45;color:var(--leise);margin-top:3px}
+.studio .p-rechte-stand>span{margin-top:4px;line-height:1.5}
+.studio .p-rechte-unveraendert{color:var(--leise)}
+.studio .p-mfa-einrichtungshilfe{padding:12px;border:1px solid var(--eingaberand);border-left:3px solid var(--akzent);border-radius:6px;background:var(--akzent-hell)}
+.studio .p-rechte-plan{margin:8px 0;font-size:14px;line-height:1.45}
+.studio .p-rechte-plan [role=status]{font-weight:600}
+.studio .p-rechte-plan p{margin:3px 0;font-size:14px;line-height:1.45}
+.studio .p-rechteliste{list-style:none;margin:8px 0;padding:0}
+.studio .p-rechteliste>li{margin:0;padding:0}
+
+
+.studio .p-rechteliste strong,.studio .p-rechteliste small{display:block;overflow-wrap:anywhere}
+.studio .p-rechteliste small{font-size:13px;line-height:1.45;color:var(--leise);margin-top:2px}
+
+.studio .p-kontaktrechte .p-rechteliste label{display:grid;grid-template-columns:20px minmax(0,1fr);align-items:start;gap:10px;margin:0;padding:6px 0;font-size:14px;line-height:1.4;cursor:pointer;min-height:44px;font-weight:400}
+.studio .p-kontaktrechte .p-rechteliste input[type=checkbox]{width:20px;min-width:20px;height:20px;min-height:20px;max-width:20px;margin:1px 0 0;padding:0;accent-color:var(--akzent)}
+.studio .p-rechte-abhaengigkeit{margin:8px 0;padding:0 0 0 10px;border-left:2px solid var(--warnung-text);color:var(--text);font-size:13px;line-height:1.4}
+.studio .p-rechte-abhaengigkeit p{margin:3px 0;font-size:13px}
+.studio .p-rechte-details{margin:8px 0;font-size:14px}
+.studio .p-rechte-details>summary{cursor:pointer;font-weight:600}
+.studio .p-rechte-details button{white-space:normal;text-align:left}
+@media(max-width:600px){.studio .p-rechte-details .p-rechtematrix{max-width:100%}}
+.studio .p-rechte-auswahl{font-size:14px;margin:8px 0;font-weight:600}
+.studio .p-rechte-anleitung{font-size:13px;color:var(--leise);margin:4px 0 0}
+.studio .p-kontaktrechte>.p-benutzer-aktionen{margin:8px 0;gap:8px;flex-wrap:wrap}
+.studio .p-kontaktrechte>.p-benutzer-aktionen button{white-space:normal}
+.studio .p-rechte-erfolg,.studio .p-mfa-erfolg{padding:14px;border:1px solid var(--erfolg-text);border-radius:8px;background:var(--flaeche)}
+.studio .p-rechte-erfolg h3,.studio .p-mfa-erfolg h3{color:var(--erfolg-text);margin-top:0}
+.studio .p-benutzerverwaltung .p-dialog>.p-vorschaukopf{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start}
+.studio .p-benutzerverwaltung .p-dialog>.p-vorschaukopf h2{margin:0;overflow-wrap:anywhere}
+.studio .p-benutzerverwaltung .p-dialog>.p-vorschaukopf>button{justify-self:end}
+.studio .p-mfa-eingebettet{min-width:0}
+.studio .p-rechte-kontext{display:grid;gap:4px;margin:0 0 14px;font-size:14px}
+.studio .p-rechte-kontext>div{display:flex;flex-wrap:wrap;gap:4px 8px}
+.studio .p-rechte-kontext dt{font-weight:600}
+.studio .p-rechte-kontext dd{margin:0;overflow-wrap:anywhere}
+.studio .p-rechte-aenderungen{padding:8px 12px;background:var(--grund);border:1px solid var(--rand);border-radius:6px;margin-bottom:12px}
+.studio .p-rechte-bestaetigung .p-code-hilfe{font-size:14px;padding-block:4px}
+.studio .p-rechte-bestaetigung input[type=password]{max-width:340px}
+.studio .p-rechte-bestaetigung input[name=code]{max-width:280px}
+.studio .p-kontaktrechte .p-rechte-erfolg{padding:12px 14px;border:1px solid var(--erfolg-text);background:var(--erfolg-bg,var(--flaeche));border-radius:7px;scroll-margin-block:16px;margin-block:10px}
+.studio .p-kontaktrechte .p-rechte-erfolg h3{display:flex;align-items:baseline;gap:8px;font-size:18px;line-height:1.35;margin:0 0 5px}
+.studio .p-kontaktrechte .p-rechte-erfolg p{margin:4px 0;line-height:1.4}
+.studio .p-erfolgs-symbol{font-size:20px;font-weight:700;flex:0 0 auto}
+.studio .p-kontaktrechte .p-rechte-erfolg:focus-visible{outline:3px solid var(--fokus);outline-offset:3px}
+.studio .p-rechte-erfolg .p-erfolg-abschluss{font-size:13px}
+.studio .p-rechte-pflicht{padding:10px 12px;background:var(--akzent-hell);border:1px solid var(--eingaberand);border-radius:6px}
+.studio .p-rechte-pflicht>label{font-weight:600;line-height:1.45}
+.studio .p-rechte-pflicht [role=alert]{margin:8px 0 0;color:var(--fehler-text)}
+.studio .p-rechte-bestaetigung>form>fieldset{gap:10px}
+.studio .p-rechte-informationen{margin-top:12px;font-size:14px}
+.studio .p-kontaktrechte th[scope=row] small{display:block;font-size:13px;line-height:1.4;font-weight:400;color:var(--leise);margin-top:4px}
+.studio .p-kontaktrechte .p-rechtematrix th:first-child{width:32%}
+.studio .p-kontaktrechte .p-rechtematrix[data-entwurf=false] th:first-child{width:65%}
+.studio .p-kontaktrechte .p-rechtematrix[data-entwurf=false] td label{align-items:center}
+@media(max-width:600px){.studio .p-benutzerverwaltung .p-profilwahl{grid-template-columns:minmax(0,1fr)}.studio .p-profilwahl .p-profil-option{padding:10px}.studio .p-kontaktrechte .p-rechtematrix[data-entwurf=false] tbody tr{grid-template-columns:minmax(0,1fr)}}
+.studio .p-rechte-bestaetigung>ul{padding:10px 10px 10px 28px;background:var(--akzent-hell);border-radius:6px}
+.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"]) .p-kontextkopf .p-erinnerung-hinweis{padding:6px 10px;gap:4px 12px;font-size:13px}
+.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"]) .p-erinnerung-hinweis p{margin:0}
+.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"]) .p-erinnerung-hinweis .p-aktionen{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.studio .p-arbeitsraum:has(>main[data-bereich="benutzer"]) .p-erinnerung-hinweis button{min-height:36px;padding:5px 8px;font-size:13px}
+.studio .p-datenzugriff details{margin-top:10px}
+.studio .p-benutzerverwaltung .p-dialog{width:min(540px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto}
+.studio .p-rechte-bestaetigung fieldset{gap:12px}
+.studio .p-rechte-bestaetigung form{max-width:100%}
+.studio .p-benutzerseite .p-benutzer-mfa{max-width:none;margin-top:12px}
+@media(max-width:1000px){.studio .p-benutzerarbeitsplatz{grid-template-columns:minmax(0,1fr)}.studio .p-benutzersuche>label{max-width:400px}}
+@media(max-width:600px){.studio .p-benutzer-stammdaten{grid-template-columns:minmax(0,1fr)}.studio .p-benutzerverwaltung :is(input:not([type=checkbox]),select){max-width:100%}.studio .p-kontaktrechte th,.studio .p-kontaktrechte td{font-size:12px;padding:8px 3px}.studio .p-benutzer-tabs button{padding:8px}.studio .p-benutzerseite .p-benutzerliste>li{padding:12px}}
+@media(max-width:600px){.studio .p-benutzer-tabs button{flex:1 1 90px;font-size:13px;padding:8px 5px}.studio .p-benutzer-tabs button[aria-selected=true]{padding:7px 4px}.studio .p-benutzerverwaltung [role=tabpanel]{padding:10px}.studio .p-kontaktrechte .p-rechtematrix thead{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%)}.studio .p-kontaktrechte .p-rechtematrix tbody{display:block}.studio .p-kontaktrechte .p-rechtematrix tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid var(--rand);margin-bottom:8px;border-radius:6px;padding:6px}.studio .p-kontaktrechte .p-rechtematrix th[scope=row]{grid-column:1/-1;width:auto}.studio .p-kontaktrechte .p-rechtematrix td:last-child{grid-column:1/-1}.studio .p-kontaktrechte .p-rechtematrix td::before{content:attr(data-label);display:block;font-weight:600;margin-bottom:4px}}

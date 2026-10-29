@@ -66,11 +66,36 @@ public sealed class KontaktrechtePostgreSqlTests(ITestOutputHelper output)
             var mfa=app.Services.GetRequiredService<MfaDienst>();string[] codes;
             await using(var db=Db(runtime.ConnectionString)){await mfa.Vorbereiten(db,h,adminId,new(pass,null));var u=await db.Benutzer.SingleAsync(x=>x.Id==adminId);var code=MfaTests.Code(app.Services.GetRequiredService<IDataProtectionProvider>(),u,new MfaTests.Clock());var result=await mfa.Verwalten(db,h,adminId,new(pass,code),"aktivieren");codes=result.Codes!.Codes;}
             await Login(admin,"admin");Assert.Equal(HttpStatusCode.OK,(await admin.PostAsJsonAsync("/api/auth/mfa-anmelden",new{code=codes[0],wiederherstellung=true})).StatusCode);await Csrf(admin);
+            string mfaRegeln,adminGeheimnis,adminPasswortHash;
+            await using(var db=Db(runtime.ConnectionString)){mfaRegeln=JsonSerializer.Serialize(await db.MfaRegeln.AsNoTracking().ToArrayAsync());var a=await db.Benutzer.AsNoTracking().SingleAsync(x=>x.Id==adminId);adminGeheimnis=a.MfaGeheimnis!;adminPasswortHash=a.PasswortHash;}
             var index=1;
-            async Task<KontaktrechteAnsicht> Save(string id,string? vorlage,Dictionary<string,bool> overrides,bool bestand=false){var stand=await admin.GetFromJsonAsync<KontaktrechteAnsicht>("/api/admin/benutzer/"+id+"/kontaktrechte");var r=await admin.PostAsJsonAsync("/api/admin/benutzer/"+id+"/kontaktrechte",new KontaktrechteEingabe(stand!.Version,vorlage,overrides,bestand,new(pass,codes[index++],true)));Assert.Equal(HttpStatusCode.OK,r.StatusCode);await Csrf(admin);return (await r.Content.ReadFromJsonAsync<KontaktrechteAnsicht>())!;}
+            async Task<KontaktrechteAnsicht> Save(string id,string? vorlage,Dictionary<string,bool> overrides,bool bestand=false){
+                var path="/api/admin/benutzer/"+id+"/kontaktrechte";var stand=await admin.GetFromJsonAsync<KontaktrechteAnsicht>(path);
+                var r=await admin.PostAsJsonAsync(path,new KontaktrechteEingabe(stand!.Version,vorlage,overrides,bestand,new(pass,codes[index++],true)));Assert.Equal(HttpStatusCode.OK,r.StatusCode);await Csrf(admin);
+                var saved=(await r.Content.ReadFromJsonAsync<KontaktrechteAnsicht>())!;var reloaded=(await admin.GetFromJsonAsync<KontaktrechteAnsicht>(path))!;
+                Assert.Equal(JsonSerializer.Serialize(saved),JsonSerializer.Serialize(reloaded));Assert.Equal(vorlage,reloaded.VorlageId);Assert.Equal(stand.Version+1,reloaded.Version);Assert.Equal("Explizit",reloaded.Modus);
+                // A new context proves persisted state, independently of the HTTP response/context.
+                await using var db=Db(runtime.ConnectionString);var profile=await db.BenutzerRechteprofile.AsNoTracking().SingleAsync(x=>x.BenutzerId==id&&x.Bereich=="Kontakte");
+                Assert.Equal(saved.Version,profile.Version);Assert.Equal(vorlage,profile.VorlageId);Assert.Equal(JsonSerializer.Serialize(overrides),profile.AbweichungenJson);
+                var audit=(await db.Berechtigungsaenderungen.AsNoTracking().Where(x=>x.ZielId==id).ToArrayAsync()).Single(x=>JsonDocument.Parse(x.Nachher).RootElement.GetProperty("Version").GetInt32()==saved.Version);
+                Assert.Equal(adminId,audit.AkteurId);Assert.Equal("Kontakte",audit.Bereich);Assert.Equal(JsonSerializer.Serialize(stand),audit.Vorher);
+                using var nachher=JsonDocument.Parse(audit.Nachher);Assert.Equal(vorlage,nachher.RootElement.GetProperty("VorlageId").GetString());Assert.Equal(JsonSerializer.Serialize(overrides),nachher.RootElement.GetProperty("Abweichungen").GetRawText());
+                foreach(var a in saved.Aktionen)Assert.Equal(a.Erlaubt,nachher.RootElement.GetProperty("Wirksam").GetProperty(a.Id).GetBoolean());
+                Assert.DoesNotContain(pass,audit.Nachher);Assert.DoesNotContain(codes[index-1],audit.Nachher);return saved;
+            }
+            async Task AbgelehnteBestaetigung(MfaPruefung pruefung){
+                var path="/api/admin/benutzer/"+neuId+"/kontaktrechte";var before=(await admin.GetFromJsonAsync<KontaktrechteAnsicht>(path))!;
+                await using var db=Db(runtime.ConnectionString);var count=await db.Berechtigungsaenderungen.CountAsync();
+                Assert.Equal(HttpStatusCode.BadRequest,(await admin.PostAsJsonAsync(path,new KontaktrechteEingabe(before.Version,"buero:1",new(),false,pruefung))).StatusCode);
+                Assert.Equal(JsonSerializer.Serialize(before),JsonSerializer.Serialize(await admin.GetFromJsonAsync<KontaktrechteAnsicht>(path)));Assert.Equal(count,await db.Berechtigungsaenderungen.CountAsync());
+                Assert.True((await db.Benutzer.AsNoTracking().SingleAsync(x=>x.Id==adminId)).MfaFehlversuche>0);
+            }
             Assert.Equal(HttpStatusCode.Forbidden,(await neu.PostAsJsonAsync("/api/admin/benutzer/"+neuId+"/kontaktrechte",new{})).StatusCode);
             Assert.Equal(HttpStatusCode.BadRequest,(await admin.GetAsync("/api/admin/benutzer/"+adminId+"/kontaktrechte")).StatusCode);
+            await AbgelehnteBestaetigung(new("Synthetisches falsches Passwort",codes[1],true));
+            await AbgelehnteBestaetigung(new(pass,"ungueltiger-synthetischer-faktor",true));
             await Save(neuId,"buero:1",new());
+            await AbgelehnteBestaetigung(new(pass,codes[1],true)); // A consumed recovery factor is never reusable.
             // Action grants do not replace the existing resource boundary.
             Assert.DoesNotContain("Synthetischer Kontakt",await neu.GetStringAsync("/api/kontakte?seite=0"));Assert.Equal(HttpStatusCode.NotFound,(await neu.GetAsync("/api/kontakte/geschuetzt")).StatusCode);
             Assert.Equal(HttpStatusCode.OK,(await admin.PostAsJsonAsync("/api/admin/benutzer/"+neuId+"/freigaben",new{art="Firma",id="erlaubt",erlaubt=true})).StatusCode);
@@ -84,11 +109,13 @@ public sealed class KontaktrechtePostgreSqlTests(ITestOutputHelper output)
             await Save(neuId,"teamleitung:1",new(){["Archivieren"]=false});
             Assert.Equal(HttpStatusCode.Forbidden,(await neu.PostAsJsonAsync("/api/kontakte/erlaubt/archivieren",new{version=1})).StatusCode);
             await Save(neuId,"teamleitung:1",new());
+            Assert.DoesNotContain("Geschuetzter Kontakt",await neu.GetStringAsync("/api/kontakte?seite=0"));Assert.Equal(HttpStatusCode.NotFound,(await neu.GetAsync("/api/kontakte/geschuetzt")).StatusCode);
             Assert.Equal(HttpStatusCode.OK,(await neu.PostAsJsonAsync("/api/kontakte/erlaubt/archivieren",new{version=1})).StatusCode);
             await Save(neuId,null,new());
             Assert.Equal(HttpStatusCode.Forbidden,(await neu.GetAsync("/api/kontakte/erlaubt")).StatusCode);
             Assert.DoesNotContain("\"ziel\":\"kontakt\"",await neu.GetStringAsync("/api/suche?text=Kontakt"));
             await using(var db=Db(runtime.ConnectionString)){Assert.Equal(5,await db.Berechtigungsaenderungen.CountAsync(x=>x.ZielId==neuId));Assert.All(await db.Berechtigungsaenderungen.ToArrayAsync(),a=>{Assert.Equal(adminId,a.AkteurId);Assert.Contains("Lesen",a.Vorher);Assert.Contains("Wirksam",a.Nachher);Assert.DoesNotContain(pass,a.Nachher);});Assert.Equal("Mitarbeiter",(await db.Benutzer.SingleAsync(x=>x.Id==neuId)).Rolle);}
+            await using(var db=Db(runtime.ConnectionString)){Assert.Equal(mfaRegeln,JsonSerializer.Serialize(await db.MfaRegeln.AsNoTracking().ToArrayAsync()));var a=await db.Benutzer.AsNoTracking().SingleAsync(x=>x.Id==adminId);Assert.Equal("Administrator",a.Rolle);Assert.Equal(adminGeheimnis,a.MfaGeheimnis);Assert.Equal(adminPasswortHash,a.PasswortHash);Assert.True(a.Aktiv);Assert.False(await db.BenutzerRechteprofile.AnyAsync(x=>x.BenutzerId==adminId));}
             await using(var db=Db(runtime.ConnectionString)){await Assert.ThrowsAsync<PostgresException>(()=>db.Database.ExecuteSqlRawAsync("UPDATE \"Rechtevorlagenversionen\" SET \"Name\"='Manipulation'"));await Assert.ThrowsAsync<PostgresException>(()=>db.Database.ExecuteSqlRawAsync("DELETE FROM \"Berechtigungsaenderungen\""));}
         }finally{await app.StopAsync();}
         output.WriteLine("Isolated synthetic PostgreSQL database retained: "+database+". Migration, restricted runtime, real HTTPS APIs, MFA-confirmed saves, action/resource intersection and audit passed; main database never opened.");
